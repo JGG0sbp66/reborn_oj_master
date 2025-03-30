@@ -11,7 +11,11 @@
     "type-check": "vue-tsc --build"
   },
   "dependencies": {
+<<<<<<< HEAD
     "axios": "^1.8.4",
+=======
+    "echarts": "^5.6.0",
+>>>>>>> 025126e8dd5abceb28b6cf1a20bf8fe45fcc3a11
     "vue": "^3.5.13",
     "vue-router": "^4.5.0"
   },
