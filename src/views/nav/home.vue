@@ -1,6 +1,5 @@
 <template>
     <showtitle text="这里是首页页面"/>
-    <div>chy</div>
     <navlinks/>
     
   </template>
