@@ -28,7 +28,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, defineProps, defineExpose } from 'vue';
+import { ref } from 'vue';
 
 const props = defineProps({
     duration: {

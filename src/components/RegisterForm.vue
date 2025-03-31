@@ -44,10 +44,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref } from 'vue';
+import { useRouter } from 'vue-router';
 import axios from 'axios'
 import cfCAPTCHA from "@/components/cfCAPTCHA.vue";
 import alertbox from "@/components/alertbox.vue";
+
+// 获取路由实例
+const router = useRouter();
 
 // 表单数据
 const form = ref({
@@ -62,18 +66,6 @@ const alertboxRef = ref<InstanceType<typeof alertbox>>();
 const handleSubmit = async () => {
     try {
         isSubmitting.value = true;
-        // 先验证 Cloudflare Token
-        const { data: cfData } = await axios({
-            url: 'http://localhost:5000/api/verify-cf',
-            method: 'post',
-            data: { cfToken: form.value.cfToken }
-        });
-
-        if (!cfData.success) {
-            alertboxRef.value?.show('未通过验证，原因：' + cfData.error, 2);
-            return;
-        }
-
         // 验证账号密码是否正确
         const { data: userData } = await axios({
             url: 'http://localhost:5000/api/register',
@@ -81,6 +73,7 @@ const handleSubmit = async () => {
             data: {
                 username: form.value.username,
                 password: form.value.password,
+                cfToken: form.value.cfToken
             }
         })
 
@@ -89,6 +82,10 @@ const handleSubmit = async () => {
             return;
         } else {
             alertboxRef.value?.show('注册成功！', 0);
+            // 注册成功后跳转到登录页面
+            setTimeout(() => {
+                router.push('/account/login');
+            }, 1000);
         }
     } catch (error) {
         alertboxRef.value?.show('发生未知错误，请联系管理员，错误原因：' + error, 2);
@@ -199,7 +196,6 @@ const handleSubmit = async () => {
 
 /* Turnstile验证码容器样式 */
 .cf-turnstile {
-    margin: 10px 0;
     width: 100%;
     display: flex;
     justify-content: center;
