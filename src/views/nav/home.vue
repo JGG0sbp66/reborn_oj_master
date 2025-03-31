@@ -1,7 +1,7 @@
 <template>
     <showtitle text="这里是首页页面"/>
     <navlinks/>
-    
+    <h1>这里是首页页面</h1>
   </template>
   
   
