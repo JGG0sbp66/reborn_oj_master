@@ -1,5 +1,6 @@
 <template>
     <showtitle text="这里是首页页面"/>
+    <div>首页测试</div>
     <navlinks/>
     
   </template>
