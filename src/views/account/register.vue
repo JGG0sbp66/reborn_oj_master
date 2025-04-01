@@ -11,4 +11,9 @@ import foot from "@/components/foot.vue";
 </script>
 
 <style scoped>
+footer {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+}
 </style>
