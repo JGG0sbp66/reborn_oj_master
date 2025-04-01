@@ -1,7 +1,6 @@
 <template>
     <showtitle text="这里是竞赛页面"/>
     <navlinks/>
-    
   </template>
   
   
