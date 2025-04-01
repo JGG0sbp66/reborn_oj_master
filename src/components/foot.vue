@@ -31,16 +31,17 @@ footer {
     height: 100px; /* 设置footer高度 */
     background-color: #1f2225;
     box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.1);
-    animation: fadeIn 1s ease-in-out; /* 添加淡入动画 */
+    overflow-x: hidden; /* 防止水平滚动 */
 }
 
 .footer {
-    max-width: 1200px;
+    max-width: 100%; /* 确保宽度不超出视口 */
     height: 100%;
     margin: 0 auto;
     display: flex;
     align-items: center;
     justify-content: center;
+    overflow-x: hidden; /* 防止水平滚动 */
 }
 
 .footer-left-title {
