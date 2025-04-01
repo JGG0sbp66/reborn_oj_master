@@ -31,16 +31,16 @@
                     </template>
                 </betInput>
 
-                <cfCAPTCHA ref="turnstileWidget" @verified="(token) => form.cfToken = token" class="cf-turnstile"
-                    sitekey="0x4AAAAAABC_ObuVF8KoPAhe" />
-
                 <!-- 提交按钮 -->
                 <div class="register-card-form-item">
                     <button type="submit" :disabled="isSubmitting">
-                        {{ isSubmitting ? '注册中...' : '注册' }}
+                        {{ isSubmitting ? '登陆中...' : '登陆' }}
                     </button>
                 </div>
             </form>
+            <div class="link-to-register">
+                <router-link :to="{ name: 'register' }">没有账号？点击注册</router-link>
+            </div>
         </div>
     </main>
 </template>
@@ -49,21 +49,20 @@
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import axios from 'axios'
-import cfCAPTCHA from "@/components/cfCAPTCHA.vue";
 import alertbox from "@/components/alertbox.vue";
 import betInput from './betInput.vue';
 
 const usernameRules = [
     {
-        pattern: /^[a-zA-Z0-9]{5,12}$/,
-        message: '用户名需为5-12位字母或数字'
+        pattern: /.{1,}/,
+        message: '请输入用户名'
     }
 ]
 
 const passwordRules = [
     {
-        pattern: /^[a-zA-Z0-9]{6,18}$/,
-        message: '密码需为6-18位字母或数字'
+        pattern: /.{1,}/,
+        message: '请输入密码'
     }
 ]
 
@@ -90,28 +89,27 @@ const handleSubmit = async () => {
         const isUsernameValid = usernameInput.value?.validate()
         const isPasswordValid = passwordInput.value?.validate()
         if (!isUsernameValid || !isPasswordValid) {
-            alertboxRef.value?.show('注册失败，账号或密码输入有误', 2);
+            alertboxRef.value?.show('登陆失败，账号或密码不能为空', 2);
             return;
         }
         // 验证账号密码是否正确
         const { data: userData } = await axios({
-            url: 'http://localhost:5000/api/register',
+            url: 'http://localhost:5000/api/login',
             method: 'post',
             data: {
                 username: form.value.username,
                 password: form.value.password,
-                cfToken: form.value.cfToken
             }
         })
 
         if (!userData.success) {
-            alertboxRef.value?.show('注册失败，' + userData.message, 2);
+            alertboxRef.value?.show('登陆失败，' + userData.message, 2);
             return;
         } else {
-            alertboxRef.value?.show('注册成功！', 0);
+            alertboxRef.value?.show('登陆成功！', 0);
             // 注册成功后跳转到登录页面
             setTimeout(() => {
-                router.push('/account/login');
+                router.push('/nav/home');
             }, 1000);
         }
     } catch (error) {
@@ -126,7 +124,6 @@ const handleSubmit = async () => {
 <style scoped>
 .register-card {
     height: 400px;
-    /* 增加高度以容纳验证码 */
     width: 420px;
     background-color: #ffffff;
     box-shadow:
@@ -150,7 +147,7 @@ const handleSubmit = async () => {
 
 .register-card-form {
     width: 300px;
-    height: 250px;
+    height: 150px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -166,12 +163,6 @@ const handleSubmit = async () => {
     border-radius: 10px;
     transition: all 0.3s;
     margin-top: 15px;
-}
-
-.CAPTCHA {
-    display: flex;
-    width: 100%;
-    justify-content: space-between;
 }
 
 .captcha-image {
@@ -212,10 +203,15 @@ const handleSubmit = async () => {
     cursor: not-allowed;
 }
 
-/* Turnstile验证码容器样式 */
-.cf-turnstile {
-    width: 100%;
-    display: flex;
-    justify-content: center;
+.link-to-register{
+    height: 34px;
+    width: 300px;
+}
+
+.link-to-register a{
+    float: right;
+    color: #18a058;
+    text-decoration: none;
+    font-size: 14px;
 }
 </style>
