@@ -34,12 +34,13 @@ footer {
 }
 
 .footer {
-    max-width: 1200px;
+    max-width: 100%; /* 确保宽度不超出视口 */
     height: 100%;
     margin: 0 auto;
     display: flex;
     align-items: center;
     justify-content: center;
+    overflow-x: hidden; /* 防止水平滚动 */
 }
 
 .footer-left-title {
