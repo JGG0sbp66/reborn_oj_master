@@ -1,9 +1,16 @@
 <template>
     <div class="turnstile-container">
-        <div class="cf-turnstile" :data-sitekey="sitekey" :data-theme="theme" ref="turnstileWidget"></div>
+        <!-- 占位符，当验证码未加载时显示 -->
+        <div v-if="!loaded" class="cf-placeholder">
+            <div class="cf-placeholder-spinner"></div>
+            <span>正在加载验证码...</span>
+        </div>
+
+        <!-- 实际验证码 -->
+        <div class="cf-turnstile" :data-sitekey="sitekey" :data-theme="theme" ref="turnstileWidget"
+            :style="{ display: loaded ? 'block' : 'none' }"></div>
     </div>
 </template>
-
 
 <script setup lang="ts">
 import { ref, defineEmits, onMounted, type PropType } from "vue"
@@ -19,10 +26,14 @@ const props = defineProps({
         default: 'light'
     }
 });
-// 定义事件，分别是成功（有token）和失败（没有token）
-const emit = defineEmits(['verified', 'error']);
+
+// 定义事件
+const emit = defineEmits(['verified', 'error', 'loaded']);
+
 const turnstileWidget = ref<HTMLElement>();
-// 定义函数
+const loaded = ref(false); // 控制验证码加载状态
+
+// 重置验证码
 const reset = () => {
     if (window.turnstile) {
         window.turnstile.reset(turnstileWidget.value);
@@ -30,12 +41,18 @@ const reset = () => {
 };
 
 const initTurnstile = () => {
+    setTimeout(() => {
+            loaded.value = true;
+            emit('loaded');
+        },8000);
     if (turnstileWidget.value) {
         window.turnstile?.render(turnstileWidget.value, {
             sitekey: props.sitekey,
             theme: props.theme,
             callback: (token: string) => { // 验证成功回调
-                emit('verified', token); // 通知父组件
+                loaded.value = true;
+                emit('loaded');
+                emit('verified', token);
             },
             'error-callback': () => { // 验证失败回调
                 emit('error', '验证码加载失败');
@@ -52,13 +69,59 @@ onMounted(() => {
         // 动态加载脚本
         const script = document.createElement('script');
         script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js';
-        script.onload = initTurnstile; // 脚本加载完成后初始化
+        script.onload = initTurnstile;
+        script.onerror = () => {
+            emit('error', '无法加载验证码脚本');
+        };
         document.head.appendChild(script);
     }
 });
 
-defineExpose({ reset});
+defineExpose({ reset });
 </script>
 
+<style scoped>
+.turnstile-container {
+    width: 100%;
+    min-height: 65px;
+    /* Cloudflare Turnstile 的标准高度 */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+}
 
-<style scoped></style>
+/* 占位符样式 */
+.cf-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 65px;
+    background-color: #f5f5f5;
+    border-radius: 4px;
+    color: #666;
+    font-size: 14px;
+}
+
+.cf-placeholder-spinner {
+    width: 24px;
+    height: 24px;
+    border: 3px solid rgba(0, 0, 0, 0.1);
+    border-radius: 50%;
+    border-top-color: #18a058;
+    animation: spin 1s ease-in-out infinite;
+    margin-bottom: 8px;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.cf-turnstile {
+    width: 100%;
+}
+</style>
