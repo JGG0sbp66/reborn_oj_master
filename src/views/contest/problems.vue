@@ -13,6 +13,7 @@
         </div>
         <div class="right-main">
           <competitioninformation />
+          <div></div>
         </div>
       </div>
     </div>
