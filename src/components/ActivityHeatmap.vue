@@ -10,16 +10,20 @@
             :disabled="selectedYear <= minYear"
             :title="selectedYear <= minYear ? '无更早数据' : '查看上一年'"
           >
-            &lt;
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="15 18 9 12 15 6"></polyline>
+            </svg>
           </button>
-          <span class="year-display">{{ selectedYear }}</span>
+          <div class="year-display">{{ selectedYear }}</div>
           <button 
             class="year-btn next-year" 
             @click="changeYear(1)"
             :disabled="selectedYear >= maxYear"
             :title="selectedYear >= maxYear ? '当前年份' : '查看下一年'"
           >
-            &gt;
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="9 18 15 12 9 6"></polyline>
+            </svg>
           </button>
         </div>
       </div>
@@ -171,9 +175,14 @@ const showTooltip = (event: MouseEvent, day: DayData) => {
     count: day.count
   };
   
-  // 先设置位置，然后再显示
-  const mouseX = event.clientX;
-  const mouseY = event.clientY;
+  // 获取热力图容器的位置
+  const target = event.currentTarget as HTMLElement;
+  const heatmapContainer = target.closest('.heatmap-container') as HTMLElement;
+  const rect = heatmapContainer.getBoundingClientRect();
+  
+  // 计算相对于容器的鼠标位置
+  const mouseX = event.clientX - rect.left;
+  const mouseY = event.clientY - rect.top;
   
   // 初始化位置到鼠标附近，但设为不可见
   Object.assign(tooltipStyle.value, {
@@ -206,21 +215,20 @@ const _updateTooltipPosition = (event: MouseEvent) => {
   // 即使动画还没完成，也允许更新位置
   if (!tooltipVisible.value) return;
   
-  const mouseX = event.clientX;
-  const mouseY = event.clientY;
+  // 获取热力图容器的位置
+  const target = event.currentTarget as HTMLElement;
+  const heatmapContainer = target.closest('.heatmap-container') as HTMLElement;
+  const rect = heatmapContainer.getBoundingClientRect();
   
-  // 如果正在进行显示动画，只更新位置而不影响透明度和变换
-  if (!isTooltipAnimated) {
-    Object.assign(tooltipStyle.value, {
-      top: `${mouseY - 15}px`,
-      left: `${mouseX + 15}px`
-    });
-  } else {
-    Object.assign(tooltipStyle.value, {
-      top: `${mouseY - 15}px`,
-      left: `${mouseX + 15}px`
-    });
-  }
+  // 计算相对于容器的鼠标位置
+  const mouseX = event.clientX - rect.left;
+  const mouseY = event.clientY - rect.top;
+  
+  // 更新提示框位置
+  Object.assign(tooltipStyle.value, {
+    top: `${mouseY - 15}px`,
+    left: `${mouseX + 15}px`
+  });
 };
 
 // 使用节流的更新提示框位置函数
@@ -376,6 +384,7 @@ onMounted(() => {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   color: #333333;
   border: 1px solid #eaeaea;
+  position: relative;
 }
 
 .heatmap-header {
@@ -389,6 +398,7 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 12px;
+  text-decoration: none;
 }
 
 .heatmap-title {
@@ -396,22 +406,35 @@ onMounted(() => {
   font-weight: 600;
   margin: 0;
   color: #333333;
+  text-decoration: none;
+  border-bottom: none;
 }
 
 .year-selector {
   display: flex;
   align-items: center;
-  gap: 4px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  padding: 3px;
   margin-left: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  text-decoration: none;
+  position: relative;
+  border: none;
+}
+
+.year-selector::before,
+.year-selector::after {
+  display: none;
 }
 
 .year-btn {
-  width: 24px;
-  height: 24px;
-  border-radius: 4px;
-  border: 1px solid #ddd;
-  background-color: #fff;
-  color: #666;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: none;
+  background-color: transparent;
+  color: #555;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -422,21 +445,59 @@ onMounted(() => {
 }
 
 .year-btn:hover:not(:disabled) {
-  background-color: #f0f0f0;
-  color: #333;
+  background-color: rgba(66, 185, 131, 0.1);
+  color: #42b983;
+}
+
+.year-btn:active:not(:disabled) {
+  background-color: rgba(66, 185, 131, 0.2);
+  transform: scale(0.95);
 }
 
 .year-btn:disabled {
-  opacity: 0.5;
+  opacity: 0.4;
   cursor: not-allowed;
-  background-color: #f5f5f5;
 }
 
 .year-display {
-  font-size: 14px;
-  color: #666;
-  min-width: 42px;
+  font-size: 15px;
+  font-weight: 500;
+  color: #444;
+  min-width: 50px;
   text-align: center;
+  padding: 0 8px;
+  background-color: white;
+  border-radius: 6px;
+  height: 28px;
+  line-height: 28px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  text-decoration: none;
+  border: none;
+  border-bottom: none;
+  position: relative;
+  margin: 0 2px;
+}
+
+.year-display::before,
+.year-display::after {
+  display: none;
+}
+
+/* 确保年份选择器和年份显示之间没有分隔线 */
+.year-btn + .year-display,
+.year-display + .year-btn {
+  border-left: none;
+  border-right: none;
+  margin-left: 0;
+  margin-right: 0;
+}
+
+/* 去掉其他可能的下划线 */
+.heatmap-container *,
+.heatmap-container *::before,
+.heatmap-container *::after {
+  text-decoration: none;
+  border-bottom: none;
 }
 
 .heatmap-legend {
@@ -444,6 +505,7 @@ onMounted(() => {
   align-items: center;
   font-size: 12px;
   color: #666666;
+  text-decoration: none;
 }
 
 .legend-cells {
@@ -480,6 +542,8 @@ onMounted(() => {
   font-size: 12px;
   color: #888888;
   white-space: nowrap;
+  text-decoration: none;
+  border-bottom: none;
 }
 
 .day-labels {
@@ -499,6 +563,8 @@ onMounted(() => {
   white-space: nowrap;
   font-weight: normal;
   line-height: 14px;
+  text-decoration: none;
+  border-bottom: none;
 }
 
 .day-label.mon {
@@ -576,7 +642,7 @@ onMounted(() => {
 
 /* 自定义悬停提示框样式 */
 .custom-tooltip {
-  position: fixed;
+  position: absolute;
   z-index: 1000;
   background-color: rgba(45, 45, 45, 0.95);
   color: white;

@@ -14,23 +14,19 @@
               <div class="banner-content">
                 <h3 class="fade-in-up" :style="{ animationDelay: '0.1s' }">{{ slide.title }}</h3>
                 <p class="fade-in-up" :style="{ animationDelay: '0.3s' }">{{ slide.subtitle }}</p>
-                <button class="banner-btn fade-in-up" :style="{ animationDelay: '0.5s' }">立即探索</button>
+                <button class="banner-btn fade-in-up" :style="{ animationDelay: '0.5s' }">
+                  立即探索
+                </button>
               </div>
             </div>
           </div>
           <div class="banner-controls">
-            <div class="banner-nav prev" @click="prevSlide">
-              <i class="nav-arrow left"></i>
-            </div>
             <div class="banner-dots">
               <span v-for="(slide, index) in bannerSlides" 
                     :key="index" 
                     class="dot" 
                     :class="{ active: currentSlide === index }"
                     @click="setSlide(index)"></span>
-            </div>
-            <div class="banner-nav next" @click="nextSlide">
-              <i class="nav-arrow right"></i>
             </div>
           </div>
         </div>
@@ -49,40 +45,27 @@
               <h2 class="section-title">最新竞赛</h2>
               <span class="subtitle">竞赛系统</span>
             </div>
-            <router-link to="/nav/competition" class="more-link">更多比赛 <i class="more-icon">›</i></router-link>
+            <router-link to="/nav/competition" class="more-link">
+              更多比赛 <i class="more-icon">›</i>
+            </router-link>
           </div>
 
           <!-- 竞赛列表 -->
           <div class="competition-list">
-            <!-- 竞赛项目1 -->
-            <div class="competition-item" v-for="(item, index) in competitions" :key="index">
-              <div class="competition-header">{{ item.title }}</div>
-              <div class="competition-logos">
-                <div class="logo-placeholder" v-for="(logo, i) in item.logos" :key="i">{{ logo }}</div>
-              </div>
-              <div class="competition-info">
-                <div class="time-info">
-                  <p>开始时间: {{ item.startTime }}</p>
-                  <p>结束时间: {{ item.endTime }}</p>
-                  <p>比赛时长: {{ item.duration }}</p>
-                </div>
-                <div class="action">
-                  <router-link to="/contest/problems">
-                    <button class="lets-go-btn">Let's go</button>
-                  </router-link>
-                </div>
-              </div>
-              <div class="competition-tags">
-                <span v-for="(tag, i) in item.tags" :key="i" class="tag" :class="tag.type">{{ tag.name }}</span>
-              </div>
-            </div>
+            <CompetitionCard
+              v-for="(item, index) in competitions"
+              :key="index"
+              :competition="item"
+              :appear="true"
+              :index="index"
+            />
           </div>
         </div>
 
         <!-- 侧边栏 -->
         <div class="sidebar">
           <!-- 欢迎部分 -->
-          <div class="welcome-section sidebar-section">
+          <div class="welcome-section sidebar-section" :class="{ appear: true }">
             <h3 class="sidebar-title"><i class="welcome-icon"></i> 欢迎来到 OJ Master</h3>
             <div class="welcome-content">
               <p>开始你的编程之旅，提升算法能力！</p>
@@ -104,7 +87,7 @@
           </div>
 
           <!-- 推荐题库 -->
-          <div class="sidebar-section">
+          <div class="sidebar-section" :class="{ appear: true }">
             <h3 class="sidebar-title">推荐题库</h3>
             <div class="tag-list">
               <a href="#" class="sidebar-tag">LibreOJ</a>
@@ -116,7 +99,7 @@
           </div>
 
           <!-- 最新题目 -->
-          <div class="sidebar-section">
+          <div class="sidebar-section" :class="{ appear: true }">
             <h3 class="sidebar-title"><i class="problem-icon"></i> 最新题目</h3>
             <div class="problem-list">
               <div class="problem-row" v-for="(problem, index) in latestProblems" :key="index">
@@ -127,7 +110,7 @@
           </div>
 
           <!-- 开源项目 -->
-          <div class="sidebar-section">
+          <div class="sidebar-section" :class="{ appear: true }">
             <h3 class="sidebar-title">开源项目</h3>
             <div class="link-list">
               <a href="#" class="sidebar-link">
@@ -142,7 +125,7 @@
           </div>
 
           <!-- 在线服务 -->
-          <div class="sidebar-section">
+          <div class="sidebar-section" :class="{ appear: true }">
             <h3 class="sidebar-title">在线服务</h3>
             <div class="link-list">
               <a href="#" class="sidebar-link">
@@ -166,9 +149,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, onBeforeUnmount } from "vue";
+import { ref, computed, reactive, onMounted, onBeforeUnmount } from "vue";
 import headerheader from "@/components/headerheader.vue";
 import ActivityHeatmap from "@/components/ActivityHeatmap.vue";
+import CompetitionCard from "@/components/yao/CompetitionCard.vue";
 import { Trophy } from '@element-plus/icons-vue';
 
 // 轮播图数据
@@ -176,17 +160,17 @@ const bannerSlides = [
   {
     title: "欢迎使用 OJ Master 在线评测系统",
     subtitle: "挑战算法，提升编程能力",
-    gradient: "linear-gradient(135deg, #42b983, #2979ff)"
+    gradient: "linear-gradient(120deg, #42b983 0%, #35a875 50%, #2979ff 100%)"
   },
   {
     title: "参加在线编程竞赛",
     subtitle: "与其他程序员一较高下",
-    gradient: "linear-gradient(135deg, #00c6ff, #0072ff)"
+    gradient: "linear-gradient(120deg, #36a985 0%, #2a9e89 50%, #0072ff 100%)"
   },
   {
     title: "丰富的题库资源",
     subtitle: "从基础到高级的编程挑战",
-    gradient: "linear-gradient(135deg, #11998e, #38ef7d)"
+    gradient: "linear-gradient(120deg, #33c6aa 0%, #2bb797 50%, #3399ff 100%)"
   }
 ];
 
@@ -268,10 +252,10 @@ const latestProblems = [
 onMounted(() => {
   startSlideshow();
   
-  // 添加页面滚动动画
+  // 添加页面滚动动画 - 优化动画参数
   const observerOptions = {
-    threshold: 0.1,
-    rootMargin: '0px 0px -100px 0px'
+    threshold: 0.05, // 降低可见阈值，使元素更早触发动画
+    rootMargin: '0px 0px -50px 0px' // 调整触发区域，提前触发
   };
   
   const observer = new IntersectionObserver((entries) => {
@@ -283,14 +267,26 @@ onMounted(() => {
     });
   }, observerOptions);
   
-  // 监听所有需要动画的元素
-  document.querySelectorAll('.competition-item, .sidebar-section').forEach(el => {
+  // 只监听热力图组件，不再监听竞赛卡片和侧边栏
+  document.querySelectorAll('.heatmap-container').forEach(el => {
     observer.observe(el);
   });
+  
+  // 预先添加热力图组件的出现类，避免滚动触发
+  setTimeout(() => {
+    document.querySelectorAll('.heatmap-container').forEach(el => {
+      el.classList.add('appear');
+    });
+  }, 100);
+
+  // 页面平滑滚动设置
+  document.documentElement.style.scrollBehavior = 'smooth';
 });
 
 onBeforeUnmount(() => {
   stopSlideshow();
+  // 移除平滑滚动设置
+  document.documentElement.style.scrollBehavior = '';
 });
 </script>
 
@@ -305,6 +301,16 @@ onBeforeUnmount(() => {
 .main-content {
   margin-top: 64px;
   padding: 0px 0 40px;
+  animation: fadeIn 0.5s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 /* 轮播图样式 */
@@ -319,10 +325,12 @@ onBeforeUnmount(() => {
   position: relative;
   width: 100%;
   height: 350px;
-  border-radius: 12px;
+  border-radius: 16px;
   overflow: hidden;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 10px 35px rgba(66, 185, 131, 0.15), 0 5px 25px rgba(41, 121, 255, 0.1);
   color: white;
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }
 
 .banner-slide {
@@ -330,9 +338,10 @@ onBeforeUnmount(() => {
   width: 100%;
   height: 100%;
   opacity: 0;
-  transition: opacity 1.2s ease, transform 1.2s ease;
+  transition: opacity 1.5s cubic-bezier(0.215, 0.61, 0.355, 1), transform 1.5s cubic-bezier(0.215, 0.61, 0.355, 1);
   transform: scale(1.05);
   z-index: 1;
+  will-change: opacity, transform;
 }
 
 .banner-slide.active {
@@ -351,95 +360,121 @@ onBeforeUnmount(() => {
   padding: 20px;
   background-size: 200% 200% !important;
   animation: gradientBG 15s ease infinite;
+  position: relative;
+}
+
+@keyframes gradientBG {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.banner-placeholder::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(circle at center, transparent 0%, rgba(0, 0, 0, 0.2) 100%);
+  opacity: 0.7;
+  z-index: 0;
 }
 
 .banner-content {
   max-width: 650px;
   padding: 20px;
+  margin-top: -50px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  z-index: 1;
 }
 
 .banner-placeholder h3 {
   font-size: 32px;
   margin-bottom: 16px;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
   font-weight: 700;
+  letter-spacing: 0.5px;
 }
 
 .banner-placeholder p {
   font-size: 20px;
   opacity: 0.9;
   margin-bottom: 30px;
+  max-width: 580px;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
 }
 
 .banner-btn {
   background-color: white;
   color: #42b983;
   border: none;
-  padding: 12px 28px;
+  padding: 12px 30px;
   border-radius: 30px;
   font-size: 16px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.215, 0.61, 0.355, 1);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  margin-top: 5px;
+  overflow: hidden;
+  position: relative;
+  z-index: 1;
+}
+
+.banner-btn::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, rgba(66, 185, 131, 0.1), rgba(0, 196, 255, 0.1));
+  z-index: -1;
+  transform: scaleX(0);
+  transform-origin: right;
+  transition: transform 0.5s cubic-bezier(0.215, 0.61, 0.355, 1);
 }
 
 .banner-btn:hover {
   transform: translateY(-2px);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
   background-color: #f8f8f8;
+  color: #33a06f;
+}
+
+.banner-btn:hover::after {
+  transform: scaleX(1);
+  transform-origin: left;
 }
 
 .banner-controls {
   position: absolute;
-  bottom: 30px;
+  bottom: 15px;
   left: 0;
   right: 0;
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 20px;
   z-index: 3;
-}
-
-.banner-nav {
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(10px);
-  border-radius: 50%;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.banner-nav:hover {
-  background-color: rgba(255, 255, 255, 0.3);
-  transform: scale(1.1);
-}
-
-.nav-arrow {
-  display: inline-block;
-  width: 10px;
-  height: 10px;
-  border-top: 2px solid white;
-  border-right: 2px solid white;
-}
-
-.nav-arrow.left {
-  transform: rotate(-135deg);
-}
-
-.nav-arrow.right {
-  transform: rotate(45deg);
 }
 
 .banner-dots {
   display: flex;
   gap: 12px;
   align-items: center;
+  padding: 8px 16px;
+  border-radius: 20px;
+  backdrop-filter: blur(4px);
 }
 
 .dot {
@@ -448,7 +483,8 @@ onBeforeUnmount(() => {
   border-radius: 2px;
   background-color: rgba(255, 255, 255, 0.5);
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.215, 0.61, 0.355, 1);
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.15);
 }
 
 .dot:hover {
@@ -460,6 +496,7 @@ onBeforeUnmount(() => {
   height: 4px;
   border-radius: 2px;
   background-color: white;
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
 }
 
 /* 内容区样式 */
@@ -469,11 +506,13 @@ onBeforeUnmount(() => {
   margin: 30px auto 0;
   padding: 0 20px;
   gap: 30px;
+  flex-wrap: wrap;
 }
 
 /* 竞赛区域样式 */
 .competitions-section {
   flex: 1;
+  min-width: 300px;
 }
 
 .section-header {
@@ -481,6 +520,8 @@ onBeforeUnmount(() => {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 .title-with-icon {
@@ -493,6 +534,7 @@ onBeforeUnmount(() => {
   width: 24px;
   height: 24px;
   color: #42b983;
+  filter: drop-shadow(0 2px 4px rgba(66, 185, 131, 0.2));
 }
 
 .section-title {
@@ -500,6 +542,7 @@ onBeforeUnmount(() => {
   font-weight: 600;
   color: #333;
   margin: 0;
+  position: relative;
 }
 
 .subtitle {
@@ -515,12 +558,15 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   gap: 5px;
-  transition: all 0.2s ease;
+  transition: all 0.2s cubic-bezier(0.215, 0.61, 0.355, 1);
+  padding: 5px 10px;
+  border-radius: 4px;
 }
 
 .more-link:hover {
   color: #33a06f;
   transform: translateX(2px);
+  background-color: rgba(66, 185, 131, 0.05);
 }
 
 .more-icon {
@@ -529,159 +575,31 @@ onBeforeUnmount(() => {
   line-height: 1;
 }
 
-/* 竞赛项目样式 */
+/* 竞赛列表样式 */
 .competition-list {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: 1fr;
   gap: 20px;
+  margin-top: 20px;
 }
 
-.competition-item {
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
-  overflow: hidden;
-  border: 1px solid #eee;
-  transition: all 0.3s ease;
+/* 热力图容器样式 */
+.heatmap-container {
   opacity: 0;
-  transform: translateY(20px);
+  transform: translateY(15px);
+  transition: all 0.25s ease;
+  will-change: opacity, transform;
 }
 
-.competition-item:hover {
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
-  transform: translateY(-2px) !important;
-}
-
-.competition-item.appear {
+.heatmap-container.appear {
   opacity: 1;
   transform: translateY(0);
-}
-
-.competition-header {
-  background-color: #f8f9fa;
-  padding: 14px 20px;
-  color: #333;
-  font-weight: 600;
-  border-bottom: 1px solid #eee;
-}
-
-.competition-logos {
-  display: flex;
-  gap: 15px;
-  padding: 15px 20px;
-}
-
-.logo-placeholder {
-  height: 40px;
-  width: 80px;
-  background-color: #f0f0f0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 6px;
-  font-weight: bold;
-  color: #666;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-}
-
-.competition-info {
-  display: flex;
-  justify-content: space-between;
-  padding: 14px 20px;
-  border-bottom: 1px solid #eee;
-}
-
-.time-info p {
-  margin: 4px 0;
-  color: #666;
-}
-
-.lets-go-btn {
-  background: linear-gradient(90deg, #42b983, #33c6aa);
-  color: white;
-  border: none;
-  padding: 10px 24px;
-  border-radius: 6px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(66, 185, 131, 0.3);
-  width: 100%;
-}
-
-.lets-go-btn:hover {
-  box-shadow: 0 6px 16px rgba(66, 185, 131, 0.4);
-  transform: translateY(-2px);
-}
-
-.competition-tags {
-  display: flex;
-  gap: 10px;
-  padding: 12px 20px;
-}
-
-.tag {
-  padding: 4px 12px;
-  border-radius: 20px;
-  font-size: 12px;
-  font-weight: 500;
-}
-
-.tag.running {
-  background-color: #e6f7f0;
-  color: #42b983;
-}
-
-.tag.individual {
-  background-color: #e6f1ff;
-  color: #3399ff;
-}
-
-.tag.oi {
-  background-color: #fff8e6;
-  color: #ffaa00;
-}
-
-.tag.regional {
-  background-color: #f2e6ff;
-  color: #9966cc;
 }
 
 /* 侧边栏样式 */
 .sidebar {
   width: 300px;
   flex-shrink: 0;
-}
-
-.sidebar-section {
-  background: white;
-  border-radius: 12px;
-  padding: 18px 20px;
-  margin-bottom: 24px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
-  transition: all 0.3s ease;
-  opacity: 0;
-  transform: translateY(20px);
-}
-
-.sidebar-section.appear {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-.sidebar-section:hover {
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-}
-
-.sidebar-title {
-  font-size: 16px;
-  margin-top: 0;
-  margin-bottom: 14px;
-  color: #333;
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  gap: 6px;
 }
 
 .welcome-icon::before {
@@ -696,12 +614,16 @@ onBeforeUnmount(() => {
   color: #666;
   margin-top: 0;
   margin-bottom: 16px;
+  line-height: 1.5;
 }
 
 .welcome-stats {
   display: flex;
   justify-content: space-between;
   margin-top: 16px;
+  background: linear-gradient(to right, rgba(66, 185, 131, 0.05), rgba(0, 196, 255, 0.05));
+  padding: 12px;
+  border-radius: 8px;
 }
 
 .stat-item {
@@ -712,6 +634,7 @@ onBeforeUnmount(() => {
   font-size: 18px;
   font-weight: 600;
   color: #42b983;
+  text-shadow: 0 1px 2px rgba(66, 185, 131, 0.1);
 }
 
 .stat-label {
@@ -734,12 +657,14 @@ onBeforeUnmount(() => {
   text-decoration: none;
   font-size: 13px;
   transition: all 0.2s ease;
+  border: 1px solid transparent;
 }
 
 .sidebar-tag:hover {
   background-color: #e0e0e0;
   color: #42b983;
   transform: translateY(-2px);
+  border-color: rgba(66, 185, 131, 0.1);
 }
 
 .link-list {
@@ -757,11 +682,14 @@ onBeforeUnmount(() => {
   flex-direction: column;
   padding: 8px 10px;
   border-radius: 6px;
+  border-left: 2px solid transparent;
 }
 
 .sidebar-link:hover {
   color: #42b983;
   background-color: #f5f5f5;
+  border-left-color: #42b983;
+  padding-left: 12px;
 }
 
 .link-title {
@@ -786,6 +714,12 @@ onBeforeUnmount(() => {
   align-items: center;
   padding: 8px 0;
   border-bottom: 1px solid #f0f0f0;
+  transition: all 0.2s ease;
+}
+
+.problem-row:hover {
+  background-color: rgba(66, 185, 131, 0.03);
+  padding-left: 5px;
 }
 
 .problem-row:last-child {
@@ -809,6 +743,11 @@ onBeforeUnmount(() => {
   border-radius: 12px;
   font-size: 12px;
   font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.problem-tag:hover {
+  transform: scale(1.05);
 }
 
 .problem-tag.entry {
@@ -836,61 +775,35 @@ onBeforeUnmount(() => {
   color: #9966cc;
 }
 
-/* 动画 */
-@keyframes gradientBG {
-  0% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-  100% {
-    background-position: 0% 50%;
-  }
-}
-
-.fade-in-up {
-  animation: fadeInUp 0.8s ease forwards;
-  opacity: 0;
-  transform: translateY(20px);
-}
-
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.competition-item:nth-child(1) {
-  transition-delay: 0.1s;
-}
-
-.competition-item:nth-child(2) {
-  transition-delay: 0.2s;
-}
-
+/* 保留侧边栏的动画延迟 */
 .sidebar-section:nth-child(1) {
-  transition-delay: 0.1s;
+  transition-delay: 0.05s;
 }
 
 .sidebar-section:nth-child(2) {
-  transition-delay: 0.2s;
+  transition-delay: 0.1s;
 }
 
 .sidebar-section:nth-child(3) {
-  transition-delay: 0.3s;
+  transition-delay: 0.15s;
 }
 
 .sidebar-section:nth-child(4) {
-  transition-delay: 0.4s;
+  transition-delay: 0.2s;
 }
 
 .sidebar-section:nth-child(5) {
-  transition-delay: 0.5s;
+  transition-delay: 0.25s;
+}
+
+@media (max-width: 768px) {
+  .content-wrapper {
+    flex-direction: column;
+  }
+  
+  .sidebar {
+    width: 100%;
+    margin-top: 30px;
+  }
 }
 </style>
