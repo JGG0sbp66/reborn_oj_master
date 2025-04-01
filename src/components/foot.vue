@@ -31,7 +31,6 @@ footer {
     height: 100px; /* 设置footer高度 */
     background-color: #1f2225;
     box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.1);
-    animation: fadeIn 1s ease-in-out; /* 添加淡入动画 */
 }
 
 .footer {
