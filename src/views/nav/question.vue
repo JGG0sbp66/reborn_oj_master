@@ -12,7 +12,7 @@
 
     </div>
   </main>
-
+ <foot />
 </template>
   
   
@@ -21,11 +21,13 @@ import { ref, reactive } from "vue";
 import showtitle from "@/components/test/showtitle.vue";
 import navlinks from "@/components/test/navlinks.vue";
 import questiobSum from "@/components/chy/questionSum.vue";
+import foot from "@/components/foot.vue";
 </script>
-  
-  
+
 <style scoped>
+footer {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+}
 </style>
-
-
-
