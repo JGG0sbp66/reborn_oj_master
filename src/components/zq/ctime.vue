@@ -32,26 +32,30 @@
     width: 10px;
     border-radius: 50%;
 }
-.not-start{
+
+.not-start {
     color: #18a058;
 }
-.finished{
+
+.finished {
     color: #d03050;
 }
-.not-start-border{
+
+.not-start-border {
     border: 2px solid #18a058;
 }
 
-.finished-border{
+.finished-border {
     border: 2px solid #d03050;
 }
-.time{
+
+.time {
     width: 296px;
     margin-top: 20px;
     display: flex;
 }
 
-.line{
+.line {
     height: 44.5px;
     width: 2px;
     background-color: #dbdbdf;
