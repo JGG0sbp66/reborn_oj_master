@@ -1,14 +1,12 @@
 <template>
-    <div class="right-main">
-        <div class="firpanel">
-            <ctypecnum />
-        </div>
-        <div id="panel-state" class="firpanel">
-            <cisbegin />
-        </div>
-        <div class="firpanel">
-            <ctime />
-        </div>
+    <div class="firpanel">
+        <ctypecnum />
+    </div>
+    <div id="panel-state" class="firpanel">
+        <cisbegin />
+    </div>
+    <div class="firpanel">
+        <ctime />
     </div>
 </template>
 
@@ -20,12 +18,6 @@ import ctime from "@/components/zq/ctime.vue";
 </script>
 
 <style scoped>
-.right-main {
-    max-width: 328px;
-    margin-left: 10px;
-    font-size: 14px;
-}
-
 .firpanel {
     background-color: #fff;
     border-radius: 15px;

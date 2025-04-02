@@ -1,20 +1,18 @@
 <template>
-    <div class="left-main">
-        <table class="problems-list">
-            <thead class="problems-head">
-                <tr>
-                    <th style="width: 100px;">状态</th>
-                    <th style="width: 225px;text-align: left;">题目</th>
-                    <th style="width: 250px;">一血</th>
-                    <th style="width: 120px;text-align: left;">提交/解决</th>
-                    <th style="width: 120px;text-align: left;">通过率</th>
-                </tr>
-            </thead>
-            <tbody class="problems-body">
+    <table class="problems-list">
+        <thead class="problems-head">
+            <tr>
+                <th style="width: 100px;">状态</th>
+                <th style="width: 225px;text-align: left;">题目</th>
+                <th style="width: 250px;">一血</th>
+                <th style="width: 120px;text-align: left;">提交/解决</th>
+                <th style="width: 120px;text-align: left;">通过率</th>
+            </tr>
+        </thead>
+        <tbody class="problems-body">
 
-            </tbody>
-        </table>
-    </div>
+        </tbody>
+    </table>
 </template>
 
 <script lang="ts" setup>
