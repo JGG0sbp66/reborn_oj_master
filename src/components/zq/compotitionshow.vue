@@ -16,6 +16,9 @@
 </template>
 
 <script lang="ts" setup>
+import { ref, reactive } from "vue";
+import axios from 'axios';
+
 
 </script>
 

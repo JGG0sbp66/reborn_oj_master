@@ -5,7 +5,7 @@
   <main>
     <div class="main-content">
       <div class="left-panel">
-        <sidebar />
+        <sidebarproblem />
       </div>
       <div class="content-area">
         <div class="content-wrapper">
@@ -26,10 +26,11 @@ import { ref, reactive } from "vue"
 import showtitle from "@/components/test/showtitle.vue"
 import navlinks from "@/components/test/navlinks.vue";
 import competition from "@/components/zq/competitionheader.vue";
-import sidebar from "@/components/zq/sidebar-problem.vue";
+import sidebarproblem from "@/components/zq/sidebar-problem.vue";
 import competitionshow from "@/components/zq/compotitionshow.vue";
 import competitioninformation from "@/components/zq/competitioninformation.vue";
 import Competitionheader from "@/components/zq/competitionheader.vue";
+
 </script>
 
 <style scoped>
@@ -50,7 +51,7 @@ import Competitionheader from "@/components/zq/competitionheader.vue";
   width: 200px;
   height: 200px;
   border-radius: 50%;
-  background: linear-gradient(135deg, rgba(79, 70, 229, 0.1) 0%, rgba(125, 211, 252, 0.1) 100%);
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(59, 130, 246, 0.1) 100%);
   filter: blur(40px);
   z-index: 0;
 }
@@ -63,7 +64,7 @@ import Competitionheader from "@/components/zq/competitionheader.vue";
   width: 200px;
   height: 200px;
   border-radius: 50%;
-  background: linear-gradient(135deg, rgba(125, 211, 252, 0.1) 0%, rgba(79, 70, 229, 0.1) 100%);
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(16, 185, 129, 0.1) 100%);
   filter: blur(40px);
   z-index: 0;
 }
@@ -81,7 +82,7 @@ import Competitionheader from "@/components/zq/competitionheader.vue";
   transform: translateX(-50%);
   width: 0;
   height: 2px;
-  background: linear-gradient(90deg, #4f46e5, #7dd3fc);
+  background: linear-gradient(90deg, #10b981, #3b82f6);
   transition: width 0.4s ease;
 }
 
@@ -159,7 +160,7 @@ import Competitionheader from "@/components/zq/competitionheader.vue";
   left: 0;
   width: 100%;
   height: 3px;
-  background: linear-gradient(90deg, #4f46e5, #7dd3fc);
+  background: linear-gradient(90deg, #10b981, #3b82f6);
   transform: scaleX(0);
   transform-origin: left;
   transition: transform 0.4s ease;
@@ -198,7 +199,7 @@ import Competitionheader from "@/components/zq/competitionheader.vue";
   left: 0;
   width: 100%;
   height: 3px;
-  background: linear-gradient(90deg, #7dd3fc, #4f46e5);
+  background: linear-gradient(90deg, #3b82f6, #10b981);
   transform: scaleX(0);
   transform-origin: right;
   transition: transform 0.4s ease;
@@ -270,8 +271,8 @@ main::before {
   width: 100%;
   height: 100%;
   background-image: 
-    radial-gradient(circle at 20% 20%, rgba(79, 70, 229, 0.03) 0, transparent 50px),
-    radial-gradient(circle at 80% 80%, rgba(125, 211, 252, 0.03) 0, transparent 50px);
+    radial-gradient(circle at 20% 20%, rgba(16, 185, 129, 0.03) 0, transparent 50px),
+    radial-gradient(circle at 80% 80%, rgba(59, 130, 246, 0.03) 0, transparent 50px);
 }
 
 .content-area {

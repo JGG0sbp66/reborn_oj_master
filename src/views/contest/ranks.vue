@@ -45,7 +45,7 @@ import rank from "@/components/zq/rank.vue";
   width: 200px;
   height: 200px;
   border-radius: 50%;
-  background: linear-gradient(135deg, rgba(79, 70, 229, 0.1) 0%, rgba(125, 211, 252, 0.1) 100%);
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(59, 130, 246, 0.1) 100%);
   filter: blur(40px);
   z-index: 0;
 }
@@ -58,7 +58,7 @@ import rank from "@/components/zq/rank.vue";
   width: 200px;
   height: 200px;
   border-radius: 50%;
-  background: linear-gradient(135deg, rgba(125, 211, 252, 0.1) 0%, rgba(79, 70, 229, 0.1) 100%);
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(16, 185, 129, 0.1) 100%);
   filter: blur(40px);
   z-index: 0;
 }
@@ -76,7 +76,7 @@ import rank from "@/components/zq/rank.vue";
   transform: translateX(-50%);
   width: 0;
   height: 2px;
-  background: linear-gradient(90deg, #4f46e5, #7dd3fc);
+  background: linear-gradient(90deg, #10b981, #3b82f6);
   transition: width 0.4s ease;
 }
 
@@ -147,7 +147,7 @@ import rank from "@/components/zq/rank.vue";
   left: 0;
   width: 100%;
   height: 3px;
-  background: linear-gradient(90deg, #4f46e5, #7dd3fc);
+  background: linear-gradient(90deg, #10b981, #3b82f6);
   transform: scaleX(0);
   transform-origin: left;
   transition: transform 0.4s ease;
@@ -186,7 +186,7 @@ import rank from "@/components/zq/rank.vue";
   left: 0;
   width: 100%;
   height: 3px;
-  background: linear-gradient(90deg, #7dd3fc, #4f46e5);
+  background: linear-gradient(90deg, #3b82f6, #10b981);
   transform: scaleX(0);
   transform-origin: right;
   transition: transform 0.4s ease;
@@ -358,9 +358,9 @@ main::before {
   position: absolute;
   width: 100%;
   height: 100%;
-  background-image:
-    radial-gradient(circle at 20% 20%, rgba(79, 70, 229, 0.03) 0, transparent 50px),
-    radial-gradient(circle at 80% 80%, rgba(125, 211, 252, 0.03) 0, transparent 50px);
+  background-image: 
+    radial-gradient(circle at 20% 20%, rgba(16, 185, 129, 0.03) 0, transparent 50px),
+    radial-gradient(circle at 80% 80%, rgba(59, 130, 246, 0.03) 0, transparent 50px);
 }
 
 /* 媒体查询适配不同屏幕尺寸 */
