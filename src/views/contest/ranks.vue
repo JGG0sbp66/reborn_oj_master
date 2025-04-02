@@ -92,16 +92,11 @@ import rank from "@/components/zq/rank.vue";
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 0;
-  animation: slideInLeft 0.5s ease-out;
+  padding-top: 16px;
   transition: width 0.3s ease;
   z-index: 10;
-  position: relative;
 }
 
-.left-panel:hover {
-  width: 75px;
-}
 
 .content-area {
   flex: 1;

@@ -99,14 +99,10 @@ import Competitionheader from "@/components/zq/competitionheader.vue";
   flex-direction: column;
   align-items: center;
   padding-top: 16px;
-  animation: slideInLeft 0.5s ease-out;
   transition: width 0.3s ease;
   z-index: 10;
 }
 
-.left-panel:hover {
-  width: 75px;
-}
 
 .content-area {
   flex: 1;
