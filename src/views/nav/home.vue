@@ -1,6 +1,7 @@
 <template>
+  <headerheader />
   <div class="home-container">
-    <headerheader />
+    
     
     <div class="main-content">
       <!-- 轮播图部分 -->
