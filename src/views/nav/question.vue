@@ -1,18 +1,16 @@
 <template>
   <showtitle text="这里是题库页面" />
-  <navlinks />
+  <!-- <navlinks /> -->
   <main>
     <div>
       <!-- 导航栏组件 -->
-
+      <headerheader/>
       <!-- 题库组件 -->
-      <questiobSum />
-
+      <div style="min-height: 133vh;"><questiobSum /></div>
       <!-- 页尾组件 -->
-
+      <foot/>
     </div>
   </main>
- <foot />
 </template>
   
   
@@ -22,12 +20,14 @@ import showtitle from "@/components/test/showtitle.vue";
 import navlinks from "@/components/test/navlinks.vue";
 import questiobSum from "@/components/chy/questionSum.vue";
 import foot from "@/components/foot.vue";
+import headerheader from "@/components/headerheader.vue";
 </script>
 
 <style scoped>
-footer {
+/* footer {
   position: absolute;
   bottom: 0;
   width: 100%;
-}
+  min-width: 100vh;
+} */
 </style>
