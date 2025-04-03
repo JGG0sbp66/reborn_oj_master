@@ -78,134 +78,134 @@
       </div>
     </div>
 
-   <!-- 状态下拉框 -->
-  <div
-    class="dropdown-menu"
-    v-show="showStatusDropdown"
-  >
-    <div class="dropdown-arrow"></div>
+    <!-- 状态下拉框 -->
     <div
-      class="dropdown-content"
-      @click="closeAllDropdowns"
+      class="dropdown-menu"
+      v-show="showStatusDropdown"
     >
+      <div class="dropdown-arrow"></div>
       <div
-        class="dropdown-item"
-        @click="handleStatusSelect('未尝试')"
+        class="dropdown-content"
+        @click="closeAllDropdowns"
       >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 24 24"
-          class="status-icon"
+        <div
+          class="dropdown-item"
+          @click="handleStatusSelect('未尝试')"
         >
-          <path
-            d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10s10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8s8 3.59 8 8s-3.59 8-8 8zm-5-9h10v2H7z"
-            fill="currentColor"
-          ></path>
-        </svg>
-        <span>未尝试</span>
-      </div>
-      <div
-        class="dropdown-item"
-        @click="handleStatusSelect('已通过')"
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 24 24"
-          class="status-icon"
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            class="status-icon"
+          >
+            <path
+              d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10s10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8s8 3.59 8 8s-3.59 8-8 8zm-5-9h10v2H7z"
+              fill="currentColor"
+            ></path>
+          </svg>
+          <span>未尝试</span>
+        </div>
+        <div
+          class="dropdown-item"
+          @click="handleStatusSelect('已通过')"
         >
-          <path
-            d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10s10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8s8 3.59 8 8s-3.59 8-8 8zm4.59-12.42L10 14.17l-2.59-2.58L6 13l4 4l8-8z"
-            fill="currentColor"
-          ></path>
-        </svg>
-        <span>已通过</span>
-      </div>
-      <div
-        class="dropdown-item"
-        @click="handleStatusSelect('未通过')"
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 512 512"
-          class="status-icon"
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            class="status-icon"
+          >
+            <path
+              d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10s10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8s8 3.59 8 8s-3.59 8-8 8zm4.59-12.42L10 14.17l-2.59-2.58L6 13l4 4l8-8z"
+              fill="currentColor"
+            ></path>
+          </svg>
+          <span>已通过</span>
+        </div>
+        <div
+          class="dropdown-item"
+          @click="handleStatusSelect('未通过')"
         >
-          <path
-            d="M448 256c0-106-86-192-192-192S64 150 64 256s86 192 192 192s192-86 192-192z"
-            fill="none"
-            stroke="currentColor"
-            stroke-miterlimit="10"
-            stroke-width="32"
-          ></path>
-          <path
-            fill="none"
-            stroke="currentColor"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="32"
-            d="M320 320L192 192"
-          ></path>
-          <path
-            fill="none"
-            stroke="currentColor"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="32"
-            d="M192 320l128-128"
-          ></path>
-        </svg>
-        <span>未通过</span>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 512 512"
+            class="status-icon"
+          >
+            <path
+              d="M448 256c0-106-86-192-192-192S64 150 64 256s86 192 192 192s192-86 192-192z"
+              fill="none"
+              stroke="currentColor"
+              stroke-miterlimit="10"
+              stroke-width="32"
+            ></path>
+            <path
+              fill="none"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="32"
+              d="M320 320L192 192"
+            ></path>
+            <path
+              fill="none"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="32"
+              d="M192 320l128-128"
+            ></path>
+          </svg>
+          <span>未通过</span>
+        </div>
       </div>
     </div>
-  </div>
 
-  <!-- 标签下拉框 -->
-  <div
-    class="dropdown-menu tag-dropdown"
-    v-show="showTagDropdown"
-  >
-    <div class="dropdown-arrow"></div>
+    <!-- 标签下拉框 -->
     <div
-      class="dropdown-content"
-      @click="closeAllDropdowns"
+      class="dropdown-menu tag-dropdown"
+      v-show="showTagDropdown"
     >
+      <div class="dropdown-arrow"></div>
       <div
-        class="dropdown-item tag-item tag-beginner"
-        @click="handleTagSelect('入门')"
+        class="dropdown-content"
+        @click="closeAllDropdowns"
       >
-        <span>入门</span>
-      </div>
-      <div
-        class="dropdown-item tag-item tag-popular"
-        @click="handleTagSelect('普及')"
-      >
-        <span>普及</span>
-      </div>
-      <div
-        class="dropdown-item tag-item tag-advanced"
-        @click="handleTagSelect('提高')"
-      >
-        <span>提高</span>
-      </div>
-      <div
-        class="dropdown-item tag-item tag-provincial"
-        @click="handleTagSelect('省选')"
-      >
-        <span>省选</span>
-      </div>
-      <div
-        class="dropdown-item tag-item tag-noi"
-        @click="handleTagSelect('NOI')"
-      >
-        <span>NOI</span>
-      </div>
-      <div
-        class="dropdown-item tag-item tag-ctsc"
-        @click="handleTagSelect('CTSC')"
-      >
-        <span>CTSC</span>
+        <div
+          class="dropdown-item tag-item tag-beginner"
+          @click="handleTagSelect('入门')"
+        >
+          <span>入门</span>
+        </div>
+        <div
+          class="dropdown-item tag-item tag-popular"
+          @click="handleTagSelect('普及')"
+        >
+          <span>普及</span>
+        </div>
+        <div
+          class="dropdown-item tag-item tag-advanced"
+          @click="handleTagSelect('提高')"
+        >
+          <span>提高</span>
+        </div>
+        <div
+          class="dropdown-item tag-item tag-provincial"
+          @click="handleTagSelect('省选')"
+        >
+          <span>省选</span>
+        </div>
+        <div
+          class="dropdown-item tag-item tag-noi"
+          @click="handleTagSelect('NOI')"
+        >
+          <span>NOI</span>
+        </div>
+        <div
+          class="dropdown-item tag-item tag-ctsc"
+          @click="handleTagSelect('CTSC')"
+        >
+          <span>CTSC</span>
+        </div>
       </div>
     </div>
-  </div>
 
     <questionContent :questions="questionsData"></questionContent>
     <questionSwitchPage
@@ -440,7 +440,7 @@ export default {
 }
 
 .filter-button.active-filter::after {
-  content: '';
+  content: "";
   position: absolute;
   bottom: 0;
   left: 0;
@@ -496,7 +496,7 @@ export default {
 }
 
 .search-input:hover {
-  border-color: #cbd5e0;
+  border-color: #99a1a9;
   background-color: #fff;
 }
 
@@ -585,7 +585,7 @@ export default {
 }
 
 .tag-item::before {
-  content: '';
+  content: "";
   position: absolute;
   left: 0;
   top: 50%;

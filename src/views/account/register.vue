@@ -1,11 +1,11 @@
 <template>
   <headerheader />
-  <RegisterForm />
+  <div style="margin-bottom: 20px;"><RegisterForm /></div>
   <foot />
 </template>
 
 <script setup lang="ts">
-import RegisterForm from "@/components/RegisterForm.vue";
+import RegisterForm from "@/components/JGG/RegisterForm.vue";
 import headerheader from "@/components/headerheader.vue";
 import foot from "@/components/foot.vue";
 </script>

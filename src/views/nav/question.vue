@@ -1,18 +1,17 @@
 <template>
   <showtitle text="这里是题库页面" />
   <!-- <navlinks /> -->
-  <main>
-    <div>
-      <!-- 导航栏组件 -->
-      <headerheader/>
-      <!-- 题库组件 -->
-      <div style="min-height: 133vh;"><questiobSum /></div>
-      <!-- 页尾组件 -->
-      <foot/>
+  <div>
+    <!-- 导航栏组件 -->
+    <headerheader />
+    <!-- 题库组件 -->
+    <div class="content">
+      <questiobSum />
     </div>
-  </main>
+    <!-- 页尾组件 -->
+    <foot />
+  </div>
 </template>
-  
   
 <script setup lang="ts">
 import { ref, reactive } from "vue";
@@ -24,10 +23,8 @@ import headerheader from "@/components/headerheader.vue";
 </script>
 
 <style scoped>
-/* footer {
-  position: absolute;
-  bottom: 0;
-  width: 100%;
-  min-width: 100vh;
-} */
+.content {
+  min-height: calc(100vh - 150px); /* 确保内容区域高度减去 footer 的高度 */
+  padding-bottom: 30px; /* 给 footer 留出空间 */
+}
 </style>
