@@ -1,6 +1,7 @@
 <template>
+  <headerheader />
   <div class="home-container">
-    <headerheader />
+    
     
     <div class="main-content">
       <!-- 轮播图部分 -->
@@ -65,82 +66,43 @@
         <!-- 侧边栏 -->
         <div class="sidebar">
           <!-- 欢迎部分 -->
-          <div class="welcome-section sidebar-section" :class="{ appear: true }">
-            <h3 class="sidebar-title"><i class="welcome-icon"></i> 欢迎来到 OJ Master</h3>
-            <div class="welcome-content">
-              <p>开始你的编程之旅，提升算法能力！</p>
-              <div class="welcome-stats">
-                <div class="stat-item">
-                  <div class="stat-value">24,680</div>
-                  <div class="stat-label">题目总数</div>
-                </div>
-                <div class="stat-item">
-                  <div class="stat-value">1,243</div>
-                  <div class="stat-label">活跃用户</div>
-                </div>
-                <div class="stat-item">
-                  <div class="stat-value">89</div>
-                  <div class="stat-label">近期比赛</div>
-                </div>
-              </div>
-            </div>
+          <div class="sidebar-section">
+            <WelcomeStats 
+              :statsData="statsData" 
+              message="开始你的编程之旅，提升算法能力！" 
+            />
           </div>
 
           <!-- 推荐题库 -->
-          <div class="sidebar-section" :class="{ appear: true }">
-            <h3 class="sidebar-title">推荐题库</h3>
-            <div class="tag-list">
-              <a href="#" class="sidebar-tag">LibreOJ</a>
-              <a href="#" class="sidebar-tag">Vijos</a>
-              <a href="#" class="sidebar-tag">Luogu</a>
-              <a href="#" class="sidebar-tag">CodeForces</a>
-              <a href="#" class="sidebar-tag">AtCoder</a>
-            </div>
+          <div class="sidebar-section">
+            <RecommendedSites 
+              title="推荐题库"
+              :sites="recommendedSites"
+            />
           </div>
 
           <!-- 最新题目 -->
-          <div class="sidebar-section" :class="{ appear: true }">
-            <h3 class="sidebar-title"><i class="problem-icon"></i> 最新题目</h3>
-            <div class="problem-list">
-              <div class="problem-row" v-for="(problem, index) in latestProblems" :key="index">
-                <a href="#" class="problem-title">{{ problem.title }}</a>
-                <span class="problem-tag" :class="problem.difficulty">{{ problem.level }}</span>
-              </div>
-            </div>
+          <div class="sidebar-section">
+            <LatestProblems 
+              title="最新题目"
+              :problems="latestProblems"
+            />
           </div>
 
           <!-- 开源项目 -->
-          <div class="sidebar-section" :class="{ appear: true }">
-            <h3 class="sidebar-title">开源项目</h3>
-            <div class="link-list">
-              <a href="#" class="sidebar-link">
-                <span class="link-title">CYaRon 测试数据生成器</span>
-                <span class="link-desc">自动生成高质量的测试数据</span>
-              </a>
-              <a href="#" class="sidebar-link">
-                <span class="link-title">Markdown+Palettes</span>
-                <span class="link-desc">增强的Markdown编辑器</span>
-              </a>
-            </div>
+          <div class="sidebar-section">
+            <ProjectLinks 
+              title="开源项目"
+              :projects="openSourceProjects"
+            />
           </div>
 
           <!-- 在线服务 -->
-          <div class="sidebar-section" :class="{ appear: true }">
-            <h3 class="sidebar-title">在线服务</h3>
-            <div class="link-list">
-              <a href="#" class="sidebar-link">
-                <span class="link-title">深入浅出算法设计竞赛</span>
-              </a>
-              <a href="#" class="sidebar-link">
-                <span class="link-title">算法竞赛学习</span>
-              </a>
-              <a href="#" class="sidebar-link">
-                <span class="link-title">学校模拟训练辅助工具</span>
-              </a>
-              <a href="#" class="sidebar-link">
-                <span class="link-title">协办企业院校在线编程比赛</span>
-              </a>
-            </div>
+          <div class="sidebar-section">
+            <ServiceLinks 
+              title="在线服务"
+              :services="onlineServices"
+            />
           </div>
         </div>
       </div>
@@ -153,6 +115,11 @@ import { ref, computed, reactive, onMounted, onBeforeUnmount } from "vue";
 import headerheader from "@/components/headerheader.vue";
 import ActivityHeatmap from "@/components/ActivityHeatmap.vue";
 import CompetitionCard from "@/components/yao/CompetitionCard.vue";
+import WelcomeStats from "@/components/yao/WelcomeStats.vue";
+import RecommendedSites from "@/components/yao/RecommendedSites.vue";
+import LatestProblems from "@/components/yao/LatestProblems.vue";
+import ProjectLinks from "@/components/yao/ProjectLinks.vue";
+import ServiceLinks from "@/components/yao/ServiceLinks.vue";
 import { Trophy } from '@element-plus/icons-vue';
 
 // 轮播图数据
@@ -249,8 +216,75 @@ const latestProblems = [
   { title: "图论算法与最短路径", level: "竞赛", difficulty: "expert" }
 ];
 
+// 统计数据
+const statsData = [
+  { value: 24680, label: '题目总数' },
+  { value: 1243, label: '活跃用户' },
+  { value: 89, label: '近期比赛' }
+];
+
+// 推荐题库数据
+const recommendedSites = [
+  { name: 'LibreOJ', url: '#' },
+  { name: 'Vijos', url: '#' },
+  { name: 'Luogu', url: '#' },
+  { name: 'CodeForces', url: '#' },
+  { name: 'AtCoder', url: '#' }
+];
+
+// 开源项目数据
+const openSourceProjects = [
+  { 
+    title: 'CYaRon 测试数据生成器', 
+    description: '自动生成高质量的测试数据',
+    url: '#'
+  },
+  { 
+    title: 'Markdown+Palettes', 
+    description: '增强的Markdown编辑器',
+    url: '#'
+  }
+];
+
+// 在线服务数据
+const onlineServices = [
+  { title: '深入浅出算法设计竞赛', url: '#' },
+  { title: '算法竞赛学习', url: '#' },
+  { title: '学校模拟训练辅助工具', url: '#' },
+  { title: '协办企业院校在线编程比赛', url: '#' }
+];
+
+// 添加隐藏滚动条的全局样式
+const addGlobalStyle = () => {
+  const style = document.createElement('style');
+  style.setAttribute('id', 'no-scrollbar-style');
+  style.textContent = `
+    html, body {
+      overflow-x: hidden;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+    
+    html::-webkit-scrollbar, body::-webkit-scrollbar {
+      display: none;
+    }
+  `;
+  document.head.appendChild(style);
+};
+
+// 删除全局样式
+const removeGlobalStyle = () => {
+  const style = document.getElementById('no-scrollbar-style');
+  if (style) {
+    document.head.removeChild(style);
+  }
+};
+
 onMounted(() => {
   startSlideshow();
+  
+  // 添加隐藏滚动条的全局样式
+  addGlobalStyle();
   
   // 添加页面滚动动画 - 优化动画参数
   const observerOptions = {
@@ -287,21 +321,36 @@ onBeforeUnmount(() => {
   stopSlideshow();
   // 移除平滑滚动设置
   document.documentElement.style.scrollBehavior = '';
+  // 移除隐藏滚动条的全局样式
+  removeGlobalStyle();
 });
 </script>
 
 <style scoped>
+/* 全局滚动条样式，在组件级别设置global属性 */
+:global(html), :global(body) {
+  overflow-x: hidden;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+:global(html::-webkit-scrollbar), :global(body::-webkit-scrollbar) {
+  display: none;
+}
+
 .home-container {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
   background-color: #f7f9fc;
+  overflow-x: hidden; /* 隐藏水平滚动条 */
 }
 
 .main-content {
   margin-top: 64px;
   padding: 0px 0 40px;
   animation: fadeIn 0.5s ease-out;
+  overflow: hidden; /* 隐藏所有溢出 */
 }
 
 @keyframes fadeIn {
@@ -617,91 +666,6 @@ onBeforeUnmount(() => {
   line-height: 1.5;
 }
 
-.welcome-stats {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 16px;
-  background: linear-gradient(to right, rgba(66, 185, 131, 0.05), rgba(0, 196, 255, 0.05));
-  padding: 12px;
-  border-radius: 8px;
-}
-
-.stat-item {
-  text-align: center;
-}
-
-.stat-value {
-  font-size: 18px;
-  font-weight: 600;
-  color: #42b983;
-  text-shadow: 0 1px 2px rgba(66, 185, 131, 0.1);
-}
-
-.stat-label {
-  font-size: 12px;
-  color: #888;
-  margin-top: 4px;
-}
-
-.tag-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.sidebar-tag {
-  padding: 6px 14px;
-  background-color: #f0f0f0;
-  border-radius: 20px;
-  color: #666;
-  text-decoration: none;
-  font-size: 13px;
-  transition: all 0.2s ease;
-  border: 1px solid transparent;
-}
-
-.sidebar-tag:hover {
-  background-color: #e0e0e0;
-  color: #42b983;
-  transform: translateY(-2px);
-  border-color: rgba(66, 185, 131, 0.1);
-}
-
-.link-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.sidebar-link {
-  color: #666;
-  text-decoration: none;
-  font-size: 14px;
-  transition: all 0.2s ease;
-  display: flex;
-  flex-direction: column;
-  padding: 8px 10px;
-  border-radius: 6px;
-  border-left: 2px solid transparent;
-}
-
-.sidebar-link:hover {
-  color: #42b983;
-  background-color: #f5f5f5;
-  border-left-color: #42b983;
-  padding-left: 12px;
-}
-
-.link-title {
-  font-weight: 500;
-}
-
-.link-desc {
-  font-size: 12px;
-  color: #888;
-  margin-top: 4px;
-}
-
 .problem-list {
   display: flex;
   flex-direction: column;
@@ -805,5 +769,151 @@ onBeforeUnmount(() => {
     width: 100%;
     margin-top: 30px;
   }
+}
+
+/* 侧边栏标题样式 */
+.sidebar-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 16px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.problem-icon::before {
+  content: '📝';
+}
+
+/* 链接列表样式 */
+.link-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sidebar-link {
+  color: #666;
+  text-decoration: none;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border-left: 2px solid transparent;
+}
+
+.sidebar-link:hover {
+  color: #42b983;
+  background-color: #f5f5f5;
+  border-left-color: #42b983;
+  padding-left: 12px;
+}
+
+.link-title {
+  font-weight: 500;
+}
+
+.link-desc {
+  font-size: 12px;
+  color: #888;
+  margin-top: 4px;
+}
+
+/* 侧边栏部分 */
+.sidebar-section {
+  margin-bottom: 20px;
+  transition: all 0.3s ease;
+}
+
+.sidebar-section.appear {
+  animation: fadeUp 0.5s ease forwards;
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 问题列表样式 */
+.problem-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.problem-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid #f0f0f0;
+  transition: all 0.2s ease;
+}
+
+.problem-row:hover {
+  background-color: rgba(66, 185, 131, 0.03);
+  padding-left: 5px;
+}
+
+.problem-row:last-child {
+  border-bottom: none;
+}
+
+.problem-title {
+  color: #333;
+  text-decoration: none;
+  font-size: 14px;
+  transition: color 0.2s ease;
+  font-weight: 500;
+}
+
+.problem-title:hover {
+  color: #42b983;
+}
+
+.problem-tag {
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.problem-tag:hover {
+  transform: scale(1.05);
+}
+
+.problem-tag.entry {
+  background-color: #e6f7f0;
+  color: #42b983;
+}
+
+.problem-tag.easy {
+  background-color: #fff8e6;
+  color: #ffaa00;
+}
+
+.problem-tag.medium {
+  background-color: #e6f1ff;
+  color: #3399ff;
+}
+
+.problem-tag.hard {
+  background-color: #ffe6e6;
+  color: #ff6666;
+}
+
+.problem-tag.expert {
+  background-color: #f2e6ff;
+  color: #9966cc;
 }
 </style>

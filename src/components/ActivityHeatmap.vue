@@ -2,30 +2,32 @@
   <div class="heatmap-container">
     <div class="heatmap-header">
       <div class="title-wrapper">
-        <h3 class="heatmap-title">{{ selectedYear }}年 - {{ total }} 题已完成</h3>
-        <div class="year-selector">
-          <button 
-            class="year-btn prev-year" 
-            @click="changeYear(-1)"
-            :disabled="selectedYear <= minYear"
-            :title="selectedYear <= minYear ? '无更早数据' : '查看上一年'"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="15 18 9 12 15 6"></polyline>
-            </svg>
-          </button>
-          <div class="year-display">{{ selectedYear }}</div>
-          <button 
-            class="year-btn next-year" 
-            @click="changeYear(1)"
-            :disabled="selectedYear >= maxYear"
-            :title="selectedYear >= maxYear ? '当前年份' : '查看下一年'"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="9 18 15 12 9 6"></polyline>
-            </svg>
-          </button>
-        </div>
+        <h3 class="heatmap-title">
+          <div class="year-selector">
+            <button 
+              class="year-btn prev-year" 
+              @click="changeYear(-1)"
+              :disabled="selectedYear <= minYear"
+              :title="selectedYear <= minYear ? '无更早数据' : '查看上一年'"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="15 18 9 12 15 6"></polyline>
+              </svg>
+            </button>
+            <div class="year-display">{{ selectedYear }}</div>
+            <button 
+              class="year-btn next-year" 
+              @click="changeYear(1)"
+              :disabled="selectedYear >= maxYear"
+              :title="selectedYear >= maxYear ? '当前年份' : '查看下一年'"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="9 18 15 12 9 6"></polyline>
+              </svg>
+            </button>
+          </div>
+          年 - <span class="total-count">{{ displayTotal }}</span> 题已完成
+        </h3>
       </div>
       <div class="heatmap-legend">
         <span>较少</span>
@@ -117,6 +119,11 @@ const changeYear = (delta: number) => {
   const newYear = selectedYear.value + delta;
   if (newYear >= minYear && newYear <= maxYear) {
     selectedYear.value = newYear;
+    // 切换年份时重置并开始新的动画
+    displayTotal.value = 0;
+    setTimeout(() => {
+      animateTotal();
+    }, 100);
   }
 };
 
@@ -364,14 +371,52 @@ const total = computed(() => {
   return sum;
 });
 
+// 添加数字递增动画效果
+const displayTotal = ref(0);
+
+// 动态调整动画速度，确保总是在适当的时间内完成
+const animateTotal = () => {
+  // 重置为0
+  displayTotal.value = 0;
+  
+  // 如果total为0，无需动画
+  if (total.value === 0) return;
+  
+  // 计算每次增加的值，使动画持续约1秒
+  const duration = 1000; // 总时长，毫秒
+  const steps = 25; // 动画步数
+  const increment = Math.max(1, Math.ceil(total.value / steps));
+  const interval = duration / steps;
+  
+  const animation = () => {
+    // 增加数值但不超过总数
+    displayTotal.value = Math.min(displayTotal.value + increment, total.value);
+    
+    // 如果还未达到目标，继续动画
+    if (displayTotal.value < total.value) {
+      setTimeout(animation, interval);
+    }
+  };
+  
+  // 启动动画
+  setTimeout(animation, 100); // 稍微延迟开始，让其他元素先渲染
+};
+
 // 监听年份变化，重新生成日历数据
 watch(selectedYear, (newYear) => {
   generateCalendarGrid(newYear);
 });
 
-// 组件挂载时生成数据
+// 组件挂载时执行
 onMounted(() => {
+  // 获取tooltip元素引用
+  tooltip.value = document.querySelector('.custom-tooltip') as HTMLElement;
+  
+  // 生成初始日历数据
   generateCalendarGrid(selectedYear.value);
+  
+  // 启动数字增长动画
+  setTimeout(animateTotal, 300);
 });
 </script>
 
@@ -383,31 +428,54 @@ onMounted(() => {
   margin-bottom: 24px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   color: #333333;
-  border: 1px solid #eaeaea;
-  position: relative;
+  position: sticky;
+  top: 80px; /* 顶部固定位置，留出导航栏的空间 */
+  z-index: 10;
 }
 
 .heatmap-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 12px;
 }
 
 .title-wrapper {
   display: flex;
   align-items: center;
-  gap: 12px;
-  text-decoration: none;
+  justify-content: space-between;
+  width: 100%;
 }
 
 .heatmap-title {
-  font-size: 16px;
-  font-weight: 600;
   margin: 0;
-  color: #333333;
-  text-decoration: none;
-  border-bottom: none;
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.total-count {
+  display: inline-block;
+  font-weight: 700;
+  color: #42b983;
+  min-width: 2.5em; /* 保持数字宽度稳定，防止闪烁 */
+  text-align: center;
+  position: relative;
+  transition: color 0.3s ease;
+}
+
+.total-count::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #42b983, transparent);
+  display: none; /* 隐藏下划线 */
 }
 
 .year-selector {
@@ -416,11 +484,11 @@ onMounted(() => {
   background-color: #f8f9fa;
   border-radius: 8px;
   padding: 3px;
-  margin-left: 12px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
   text-decoration: none;
   position: relative;
   border: none;
+  margin-right: 2px;
 }
 
 .year-selector::before,

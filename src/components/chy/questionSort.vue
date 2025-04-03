@@ -4,222 +4,298 @@
     @click.self="closeAllDropdowns"
   >
     <div class="headerBox">
-      <span
-        class="headerSpan1"
-        tabindex="0"
-        :style="statusButtonStyle"
-        @mouseover="hoverStatus = true"
-        @mouseout="hoverStatus = false"
-        @click="toggleStatusDropdown"
-      >作答状况</span>
-      <svg
-        class="hS1"
-        xmlns="http://www.w3.org/2000/svg"
-        xmlns:xlink="http://www.w3.org/1999/xlink"
-        viewBox="0 0 24 24"
-        style="width: 16px; height: 16px; position: relative; left: -25px; top: 3px; color: #767c82;margin-left: -20px;transform: rotate(180deg);"
-      >
-        <path
-          d="M6 15l6-6l6 6"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-        ></path>
-      </svg>
-      <span
-        class="headerSpan2"
-        tabindex="0"
-        :style="tagButtonStyle"
-        @mouseover="hoverTag = true"
-        @mouseout="hoverTag = false"
-        @click="toggleTagDropdown"
-      >标签</span>
-      <svg
-        class="hS2"
-        xmlns="http://www.w3.org/2000/svg"
-        xmlns:xlink="http://www.w3.org/1999/xlink"
-        viewBox="0 0 24 24"
-        style="width: 16px; height: 16px; position: relative; left: -25px; top: 3px; color: #767c82;margin-left: -20px;transform: rotate(180deg);"
-      >
-        <path
-          d="M6 15l6-6l6 6"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-        ></path>
-      </svg>
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        xmlns:xlink="http://www.w3.org/1999/xlink"
-        viewBox="0 0 1024 1024"
-        style="width: 16px; height: 16px; margin-left: -20px; position: relative; left: 28px; top: 3px; color: #767c82;"
-      >
-        <path
-          d="M909.6 854.5L649.9 594.8C690.2 542.7 712 479 712 412c0-80.2-31.3-155.4-87.9-212.1c-56.6-56.7-132-87.9-212.1-87.9s-155.5 31.3-212.1 87.9C143.2 256.5 112 331.8 112 412c0 80.1 31.3 155.5 87.9 212.1C256.5 680.8 331.8 712 412 712c67 0 130.6-21.8 182.7-62l259.7 259.6a8.2 8.2 0 0 0 11.6 0l43.6-43.5a8.2 8.2 0 0 0 0-11.6zM570.4 570.4C528 612.7 471.8 636 412 636s-116-23.3-158.4-65.6C211.3 528 188 471.8 188 412s23.3-116.1 65.6-158.4C296 211.3 352.2 188 412 188s116.1 23.2 158.4 65.6S636 352.2 636 412s-23.3 116.1-65.6 158.4z"
-          fill="currentColor"
-        ></path>
-      </svg>
-      <input
-        class="headerInput"
-        type="search"
-        placeholder="搜索题号、题目"
-      >
-    </div>
-    <div
-      class="selection"
-      v-show="showStatusDropdown"
-    >
-      <div style="width: 12px; height: 12px; background-color: white; position: absolute; left: 56px; top:-6px; transform: rotate(45deg); box-shadow: -1px -1px 1px rgba(0, 0, 0, 0.2); z-index: 0;">
-      </div>
-    </div>
-    <div
-      class="selection"
-      v-show="showStatusDropdown"
-    >
-      <div class="selectionB">
-        <div
-          class="selectionE"
-          id="1"
+      <!-- 状态筛选按钮 -->
+      <div class="filter-container">
+        <span
+          class="filter-button"
+          :class="{ 'active-filter': selectedStatus }"
+          tabindex="0"
+          @mouseover="hoverStatus = true"
+          @mouseout="hoverStatus = false"
+          @click="toggleStatusDropdown"
         >
+          {{ selectedStatus || '作答状况' }}
           <svg
-            xmlns="http://www.w3.org/2000/svg"
-            xmlns:xlink="http://www.w3.org/1999/xlink"
+            class="filter-arrow"
+            :class="{ rotated: showStatusDropdown }"
             viewBox="0 0 24 24"
-            style="width: 16px; height: 16px;  position:absolute; left: 15px; top: 15px;color: gray;"
           >
             <path
-              d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10s10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8s8 3.59 8 8s-3.59 8-8 8zm-5-9h10v2H7z"
-              fill="currentColor"
-            ></path>
-          </svg>
-          <span>未尝试</span>
-        </div>
-        <div
-          class="selectionE"
-          id="2"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            xmlns:xlink="http://www.w3.org/1999/xlink"
-            viewBox="0 0 24 24"
-            style="width: 16px; height: 16px;  position:absolute; left: 15px; top: 49px; color: green;"
-          >
-            <path
-              d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10s10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8s8 3.59 8 8s-3.59 8-8 8zm4.59-12.42L10 14.17l-2.59-2.58L6 13l4 4l8-8z"
-              fill="currentColor"
-            ></path>
-          </svg>
-          <span>已通过</span>
-        </div>
-        <div
-          class="selectionE"
-          id="3"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            xmlns:xlink="http://www.w3.org/1999/xlink"
-            viewBox="0 0 512 512"
-            style="width: 16px; height: 16px;  position:absolute; left: 15px; top: 83px; color: red;"
-          >
-            <path
-              d="M448 256c0-106-86-192-192-192S64 150 64 256s86 192 192 192s192-86 192-192z"
+              d="M6 15l6-6l6 6"
               fill="none"
               stroke="currentColor"
-              stroke-miterlimit="10"
-              stroke-width="32"
-            ></path>
-            <path
-              fill="none"
-              stroke="currentColor"
+              stroke-width="2"
               stroke-linecap="round"
               stroke-linejoin="round"
-              stroke-width="32"
-              d="M320 320L192 192"
-            ></path>
-            <path
-              fill="none"
-              stroke="currentColor"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="32"
-              d="M192 320l128-128"
             ></path>
           </svg>
-          <span>未通过</span>
-        </div>
-      </div>
-    </div>
-    <div
-      class="selection2"
-      v-show="showTagDropdown"
-    >
-      <div style="width: 12px; height: 12px; background-color: white; position: absolute; left: 56px; top:-6px; transform: rotate(45deg); box-shadow: -1px -1px 1px rgba(0, 0, 0, 0.2); z-index: 0;">
-      </div>
-    </div>
-    <div
-      class="selection2"
-      v-show="showTagDropdown"
-    >
-      <div class="selectionB">
-        <div class="selectionE selectionE-1">
-          <span>入门</span>
-        </div>
-        <div class="selectionE selectionE-2">
-          <span>普及</span>
-        </div>
-        <div class="selectionE selectionE-3">
-          <span>提高</span>
-        </div>
-        <div class="selectionE selectionE-4">
-          <span>省选</span>
-        </div>
-        <div class="selectionE selectionE-5">
-          <span>NOI</span>
-        </div>
-        <div class="selectionE selectionE-6">
-          <span>CTSC</span>
-        </div>
-      </div>
-    </div>
-  </main>
+        </span>
 
+        <!-- 标签筛选按钮 -->
+        <span
+          class="filter-button"
+          :class="{ 'active-filter': selectedTag }"
+          tabindex="0"
+          @mouseover="hoverTag = true"
+          @mouseout="hoverTag = false"
+          @click="toggleTagDropdown"
+        >
+          {{ selectedTag || '标签' }}
+          <svg
+            class="filter-arrow"
+            :class="{ rotated: showTagDropdown }"
+            viewBox="0 0 24 24"
+          >
+            <path
+              d="M6 15l6-6l6 6"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            ></path>
+          </svg>
+        </span>
+      </div>
+
+      <!-- 搜索框 -->
+      <div class="search-container">
+        <svg
+          class="search-icon"
+          viewBox="0 0 1024 1024"
+        >
+          <path
+            d="M909.6 854.5L649.9 594.8C690.2 542.7 712 479 712 412c0-80.2-31.3-155.4-87.9-212.1c-56.6-56.7-132-87.9-212.1-87.9s-155.5 31.3-212.1 87.9C143.2 256.5 112 331.8 112 412c0 80.1 31.3 155.5 87.9 212.1C256.5 680.8 331.8 712 412 712c67 0 130.6-21.8 182.7-62l259.7 259.6a8.2 8.2 0 0 0 11.6 0l43.6-43.5a8.2 8.2 0 0 0 0-11.6zM570.4 570.4C528 612.7 471.8 636 412 636s-116-23.3-158.4-65.6C211.3 528 188 471.8 188 412s23.3-116.1 65.6-158.4C296 211.3 352.2 188 412 188s116.1 23.2 158.4 65.6S636 352.2 636 412s-23.3 116.1-65.6 158.4z"
+            fill="currentColor"
+          ></path>
+        </svg>
+        <input
+          class="search-input"
+          type="search"
+          placeholder="搜索题号、题目..."
+          @input="handleSearch"
+        >
+      </div>
+    </div>
+
+   <!-- 状态下拉框 -->
+  <div
+    class="dropdown-menu"
+    v-show="showStatusDropdown"
+  >
+    <div class="dropdown-arrow"></div>
+    <div
+      class="dropdown-content"
+      @click="closeAllDropdowns"
+    >
+      <div
+        class="dropdown-item"
+        @click="handleStatusSelect('未尝试')"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          class="status-icon"
+        >
+          <path
+            d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10s10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8s8 3.59 8 8s-3.59 8-8 8zm-5-9h10v2H7z"
+            fill="currentColor"
+          ></path>
+        </svg>
+        <span>未尝试</span>
+      </div>
+      <div
+        class="dropdown-item"
+        @click="handleStatusSelect('已通过')"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          class="status-icon"
+        >
+          <path
+            d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10s10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8s8 3.59 8 8s-3.59 8-8 8zm4.59-12.42L10 14.17l-2.59-2.58L6 13l4 4l8-8z"
+            fill="currentColor"
+          ></path>
+        </svg>
+        <span>已通过</span>
+      </div>
+      <div
+        class="dropdown-item"
+        @click="handleStatusSelect('未通过')"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 512 512"
+          class="status-icon"
+        >
+          <path
+            d="M448 256c0-106-86-192-192-192S64 150 64 256s86 192 192 192s192-86 192-192z"
+            fill="none"
+            stroke="currentColor"
+            stroke-miterlimit="10"
+            stroke-width="32"
+          ></path>
+          <path
+            fill="none"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="32"
+            d="M320 320L192 192"
+          ></path>
+          <path
+            fill="none"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="32"
+            d="M192 320l128-128"
+          ></path>
+        </svg>
+        <span>未通过</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 标签下拉框 -->
+  <div
+    class="dropdown-menu tag-dropdown"
+    v-show="showTagDropdown"
+  >
+    <div class="dropdown-arrow"></div>
+    <div
+      class="dropdown-content"
+      @click="closeAllDropdowns"
+    >
+      <div
+        class="dropdown-item tag-item tag-beginner"
+        @click="handleTagSelect('入门')"
+      >
+        <span>入门</span>
+      </div>
+      <div
+        class="dropdown-item tag-item tag-popular"
+        @click="handleTagSelect('普及')"
+      >
+        <span>普及</span>
+      </div>
+      <div
+        class="dropdown-item tag-item tag-advanced"
+        @click="handleTagSelect('提高')"
+      >
+        <span>提高</span>
+      </div>
+      <div
+        class="dropdown-item tag-item tag-provincial"
+        @click="handleTagSelect('省选')"
+      >
+        <span>省选</span>
+      </div>
+      <div
+        class="dropdown-item tag-item tag-noi"
+        @click="handleTagSelect('NOI')"
+      >
+        <span>NOI</span>
+      </div>
+      <div
+        class="dropdown-item tag-item tag-ctsc"
+        @click="handleTagSelect('CTSC')"
+      >
+        <span>CTSC</span>
+      </div>
+    </div>
+  </div>
+
+    <questionContent :questions="questionsData"></questionContent>
+    <questionSwitchPage
+      ref="switchPage"
+      @page-change="handlePageChange"
+      :selectData="selected"
+    ></questionSwitchPage>
+  </main>
 </template>
 
 <script>
+import questionContent from "./questionContent.vue";
+import questionSwitchPage from "./questionSwitchPage.vue";
 export default {
   data() {
     return {
-      showStatusDropdown: false, // 控制"作答状况"下拉框显示
-      showTagDropdown: false, // 控制"标签"下拉框显示
-      hoverStatus: false, // 鼠标悬停"作答状况"
-      hoverTag: false, // 鼠标悬停"标签"
+      showStatusDropdown: false,
+      showTagDropdown: false,
+      hoverStatus: false,
+      hoverTag: false,
+      questionsData: [],
+      selected: {
+        category: "all",
+        topic: "all",
+        input: "",
+      },
+      selectedStatus: "",
+      selectedTag: "",
+      searchText: "",
     };
   },
+  components: {
+    questionContent,
+    questionSwitchPage,
+  },
+  mounted() {
+    document.addEventListener("click", this.handleGlobalClick);
+  },
+  beforeDestroy() {
+    document.removeEventListener("click", this.handleGlobalClick);
+  },
   methods: {
-    // 切换下拉箭头方向
-    toggleArrow(element, show) {
-      element.style.transform = show ? "rotate(0deg)" : "rotate(180deg)";
-      element.style.transition = "transform 0.5s ease";
+    handleGlobalClick(event) {
+      const keepOpenElements = [
+        ".selection",
+        ".selection2",
+        ".headerSpan1",
+        ".headerSpan2",
+        ".hS1",
+        ".hS2",
+      ];
+      const isClickInside = keepOpenElements.some((selector) =>
+        event.target.closest(selector)
+      );
+      if (!isClickInside) {
+        this.closeAllDropdowns();
+      }
     },
-    // 切换作答状况下拉框
-    toggleStatusDropdown() {
+    toggleArrow(element, show) {
+      if (element) {
+        element.style.transform = show ? "rotate(0deg)" : "rotate(180deg)";
+        element.style.transition = "transform 0.5s ease";
+      }
+    },
+    toggleStatusDropdown(event) {
+      event.stopPropagation();
+      // 关闭标签下拉框
+      if (this.showTagDropdown) {
+        this.showTagDropdown = false;
+        const tagArrow = document.querySelector(".hS2");
+        this.toggleArrow(tagArrow, false);
+      }
+      // 切换状态下拉框
       this.showStatusDropdown = !this.showStatusDropdown;
       const arrow = document.querySelector(".hS1");
       this.toggleArrow(arrow, this.showStatusDropdown);
     },
-    // 切换标签下拉框
-    toggleTagDropdown() {
-      console.log("标签下拉框被点击了");
+    toggleTagDropdown(event) {
+      event.stopPropagation();
+      // 关闭状态下拉框
+      if (this.showStatusDropdown) {
+        this.showStatusDropdown = false;
+        const statusArrow = document.querySelector(".hS1");
+        this.toggleArrow(statusArrow, false);
+      }
+      // 切换标签下拉框
       this.showTagDropdown = !this.showTagDropdown;
       const arrow = document.querySelector(".hS2");
       this.toggleArrow(arrow, this.showTagDropdown);
-      console.log(this.showTagDropdown);
     },
-    // 关闭所有下拉框
     closeAllDropdowns() {
       if (this.showStatusDropdown) {
         this.showStatusDropdown = false;
@@ -232,21 +308,65 @@ export default {
         this.toggleArrow(arrow, false);
       }
     },
+    handlePageChange(data) {
+      this.questionsData = data;
+    },
+    handleStatusSelect(status) {
+      this.selectedStatus = status;
+      this.showStatusDropdown = false;
+      const arrow = document.querySelector(".hS1");
+      this.toggleArrow(arrow, false);
+      // 更新selected对象
+      this.selected = {
+        ...this.selected,
+        category: status,
+      };
+    },
+    handleTagSelect(tag) {
+      this.selectedTag = tag;
+      this.showTagDropdown = false;
+      const arrow = document.querySelector(".hS2");
+      this.toggleArrow(arrow, false);
+      // 更新selected对象
+      this.selected = {
+        ...this.selected,
+        topic: tag,
+      };
+    },
+    handleSearch(event) {
+      this.searchText = event.target.value;
+      // 更新selected对象
+      this.selected = {
+        ...this.selected,
+        input: event.target.value,
+      };
+    },
   },
   computed: {
-    // 计算"作答状况"按钮样式
     statusButtonStyle() {
       return {
         backgroundColor: this.hoverStatus ? "#d1e8fc" : "#2E33380D",
         cursor: "pointer",
       };
     },
-    // 计算"标签"按钮样式
     tagButtonStyle() {
       return {
         backgroundColor: this.hoverTag ? "#d1e8fc" : "#2E33380D",
         cursor: "pointer",
       };
+    },
+  },
+  watch: {
+    selected: {
+      handler(newVal) {
+        // 当selected变化时，通过ref调用子组件方法或自动更新prop
+        if (this.$refs.switchPage) {
+          // 如果需要调用子组件特定方法：
+          this.$refs.switchPage.handleSelectDataChange(newVal);
+          // 或者直接依靠prop的自动更新（如果子组件有watch监听prop变化）
+        }
+      },
+      deep: true, // 深度监听
     },
   },
 };
@@ -262,145 +382,271 @@ export default {
 .Box {
   display: flex;
   flex-direction: column;
-  width: 1200px;
+  width: 80%;
   background-color: white;
   border: 1px solid gainsboro;
   border-radius: 15px;
   margin: 16px auto;
   padding: 16px;
   position: relative;
+  top: 30px;
 }
 
 .headerBox {
-  padding: 0 8px;
-  margin-bottom: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background-color: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  margin-bottom: 16px;
 }
 
-.headerSpan1 {
-  color: #767c82;
-  display: inline-block;
-  width: 126px;
-  height: 34px;
-  background-color: #2e33380d;
-  border: 0px;
-  padding: 0 14px;
-  margin-right: 10px;
+.filter-container {
+  display: flex;
+  gap: 12px;
+}
+
+.filter-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 36px;
+  padding: 0 16px;
+  background-color: #f5f7fa;
   border-radius: 8px;
-  line-height: 34px;
   font-size: 14px;
+  color: #4a5568;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+  position: relative;
+  user-select: none;
 }
 
-.headerSpan2 {
-  color: #767c82;
-  display: inline-block;
-  width: 100px;
-  height: 34px;
-  background-color: #2e33380d;
-  padding: 0 14px;
-  margin-right: 10px;
+.filter-button:hover {
+  background-color: #ebf0f5;
+  border-color: #d1dbe5;
+}
+
+.filter-button.active-filter {
+  background: linear-gradient(to right, #f0f7ff, #e6f7ff);
+  color: #1890ff;
+  border: 1px solid #91d5ff;
+  box-shadow: 0 2px 8px rgba(24, 144, 255, 0.15);
+  position: relative;
+  overflow: hidden;
+}
+
+.filter-button.active-filter::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(to right, #1890ff, #40a9ff);
+  transition: all 0.3s ease;
+}
+
+.filter-button.active-filter:hover::after {
+  height: 3px;
+}
+
+.filter-arrow {
+  width: 16px;
+  height: 16px;
+  margin-left: 8px;
+  transition: transform 0.2s ease;
+  color: currentColor;
+}
+
+.filter-arrow.rotated {
+  transform: rotate(180deg);
+}
+
+.search-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 280px;
+}
+
+.search-icon {
+  position: absolute;
+  left: 12px;
+  width: 16px;
+  height: 16px;
+  color: #a0aec0;
+  z-index: 1;
+}
+
+.search-input {
+  width: 100%;
+  height: 36px;
+  padding: 8px 12px 8px 36px;
+  border: 1px solid #e2e8f0;
   border-radius: 8px;
-  line-height: 34px;
   font-size: 14px;
-}
-
-.headerInput {
-  width: 230px;
-  height: 34px;
-  border: 0px;
-  background-color: #2e33380d;
-  margin-left: 4px;
-  border-radius: 8px;
-  padding-left: 30px;
-  color: #767c82;
+  color: #4a5568;
+  background-color: #f8fafc;
+  transition: all 0.2s ease;
   outline: none;
 }
 
-.headerInput:hover {
-  border: 1px solid green;
+.search-input:hover {
+  border-color: #cbd5e0;
+  background-color: #fff;
 }
 
-.headerInput:focus-within {
-  border: 2px solid green;
+.search-input:focus {
+  border-color: #4299e1;
+  box-shadow: 0 0 0 2px rgba(66, 153, 225, 0.2);
+  background-color: #fff;
 }
 
-.selection {
+/* 响应式调整 */
+@media (max-width: 768px) {
+  .headerBox {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .filter-container {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .search-container {
+    width: 100%;
+  }
+}
+
+/* 下拉菜单通用样式 */
+.dropdown-menu {
   position: absolute;
-  width: 126px;
-  height: 110px;
+  width: 160px;
   background-color: white;
-  text-align: center;
-  margin-top: 1px;
-  margin-left: 8px;
   border-radius: 8px;
-  box-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
-  z-index: 1;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 100;
   top: 60px;
+  margin-left: 8px;
 }
 
-.selection2 {
-  position: absolute;
-  width: 126px;
-  height: 220px;
-  background-color: white;
-  text-align: center;
-  margin-top: 1px;
-  margin-left: 8px;
-  border-radius: 8px;
-  box-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
-  z-index: 1;
-  top: 60px;
+.tag-dropdown {
   left: 140px;
 }
 
-.selectionB {
-  padding: 4px;
+.dropdown-arrow {
+  width: 12px;
+  height: 12px;
+  background-color: white;
+  position: absolute;
+  left: 16px;
+  top: -6px;
+  transform: rotate(45deg);
+  box-shadow: -1px -1px 1px rgba(0, 0, 0, 0.1);
 }
 
-.selectionE {
-  border-bottom: 1px solid #2e33380d;
+.dropdown-content {
+  padding: 8px 0;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  padding: 8px 16px;
   font-size: 14px;
-  line-height: 34px;
-}
-
-.selectionE:hover {
+  line-height: 20px;
+  color: #333;
   cursor: pointer;
-  background-color: #e7e7e7;
-  border-radius: 8px;
+  transition: all 0.2s ease;
 }
 
-.selectionE-1:hover {
-  background-color: rgb(254, 76, 97);
-  border-radius: 8px;
-  color: white;
+.dropdown-item:hover {
+  background-color: #f5f7fa;
 }
 
-.selectionE-2:hover {
-  background-color: rgb(243, 156, 17);
-  border-radius: 8px;
-  color: white;
+.status-icon {
+  width: 16px;
+  height: 16px;
+  margin-right: 8px;
+  flex-shrink: 0;
 }
 
-.selectionE-3:hover {
-  background-color: rgb(255, 193, 22);
-  border-radius: 8px;
-  color: white;
+/* 标签项特定样式 */
+.tag-item {
+  position: relative;
+  padding-left: 12px;
 }
 
-.selectionE-4:hover {
-  background-color: rgb(82, 196, 26);
-  border-radius: 8px;
-  color: white;
+.tag-item::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 4px;
+  height: 16px;
+  border-radius: 2px;
 }
 
-.selectionE-5:hover {
-  background-color: rgb(157, 61, 207);
-  border-radius: 8px;
-  color: white;
+.tag-beginner::before {
+  background-color: #fe4c61;
 }
 
-.selectionE-6:hover {
-  background-color: rgb(14, 29, 105);
-  border-radius: 8px;
-  color: white;
+.tag-popular::before {
+  background-color: #f39c11;
+}
+
+.tag-advanced::before {
+  background-color: #ffc116;
+}
+
+.tag-provincial::before {
+  background-color: #52c41a;
+}
+
+.tag-noi::before {
+  background-color: #9d3dcf;
+}
+
+.tag-ctsc::before {
+  background-color: #0e1d69;
+}
+
+/* 标签项悬停效果 */
+.tag-beginner:hover {
+  background-color: rgba(254, 76, 97, 0.1);
+  color: #fe4c61;
+}
+
+.tag-popular:hover {
+  background-color: rgba(243, 156, 17, 0.1);
+  color: #f39c11;
+}
+
+.tag-advanced:hover {
+  background-color: rgba(255, 193, 22, 0.1);
+  color: #ffc116;
+}
+
+.tag-provincial:hover {
+  background-color: rgba(82, 196, 26, 0.1);
+  color: #52c41a;
+}
+
+.tag-noi:hover {
+  background-color: rgba(157, 61, 207, 0.1);
+  color: #9d3dcf;
+}
+
+.tag-ctsc:hover {
+  background-color: rgba(14, 29, 105, 0.1);
+  color: #0e1d69;
 }
 </style>

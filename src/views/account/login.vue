@@ -2,7 +2,7 @@
   <!-- <showtitle text="这里是登陆页面" />
   <navlinks /> -->
   <headerheader />
-  <LoginForm />
+  <div style="margin-bottom: 20px;"><LoginForm /></div>
   <foot />
 </template>
 
@@ -11,7 +11,7 @@
 import { ref, reactive } from "vue"
 import showtitle from "@/components/test/showtitle.vue"
 import navlinks from "@/components/test/navlinks.vue";
-import LoginForm from "@/components/LoginForm.vue";
+import LoginForm from "@/components/JGG/LoginForm.vue";
 import headerheader from "@/components/headerheader.vue";
 import foot from "@/components/foot.vue";
 </script>
