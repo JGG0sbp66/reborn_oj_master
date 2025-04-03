@@ -26,11 +26,14 @@
 } */
 
 footer {
-    margin-top: auto;
+    position: relative; /* 固定在页面底部 */
+    bottom: 0;
+    left: 0;
     width: 100%;
-    height: 100px; /* 设置footer高度 */
+    height: 100px; /* 设置 footer 高度 */
     background-color: #1f2225;
     box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.1);
+    z-index: 10; /* 确保 footer 在最上层 */
 }
 
 .footer {
