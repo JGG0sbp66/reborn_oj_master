@@ -1,7 +1,7 @@
 <template>
   <!-- 当 tpage > 0 时才显示分页组件 -->
   <div
-    v-if="tpage > 0"
+    v-if="tpage > 1"
     class="pagination-container"
   >
     <div class="pagination">
@@ -125,12 +125,6 @@ export default {
     async fetchData(page) {
       // 从后端获取数据
       try {
-        // const formData = new FormData();
-        // formData.append("page", page);
-        // formData.append("category", this.selectData.category);
-        // formData.append("topic", this.selectData.topic);
-        // formData.append("input", this.selectData.input);
-
         const { data: response } = await axios({
           url: "http://localhost:5000/api/questions",
           method: "post",
@@ -147,6 +141,7 @@ export default {
           ? response.questions
           : []; // 确保数据是数组
         this.tpage = response.total_page;
+        console.log(this.tpage)
         this.allData = response.questions;
         // 触发事件通知父组件
         this.$emit("page-change", this.allData);
@@ -256,14 +251,16 @@ export default {
 
 .prev-btn,
 .next-btn {
-  background-color: #f0f7ff;
-  border-color: #d0e3ff;
+  background-color: #f0f9f5; 
+  border-color: #c8e6d5; 
+  color: #12804a; 
 }
 
 .prev-btn:hover:not(:disabled),
 .next-btn:hover:not(:disabled) {
-  background-color: #e1f0ff;
-  border-color: #a8d0ff;
+  background-color: #e0f3eb; 
+  border-color: #12804a; 
+  color: #12804a;
 }
 
 .ellipsis {
