@@ -13,44 +13,77 @@
       
       <!-- 将搜索和筛选部分移到单独的行 -->
       <div class="search-filter-container">
-        <div class="search-input">
-          <input type="text" placeholder="搜索竞赛..." v-model="searchQuery" />
-        </div>
-        
-        <div class="filter-dropdowns">
+        <div class="filter-container">
           <!-- 自定义状态下拉框 -->
-          <div class="custom-dropdown" ref="statusDropdown">
-            <div class="dropdown-toggle" @click="toggleStatusDropdown">
-              <span>{{ getStatusText }}</span>
-              <div class="dropdown-arrow">▼</div>
-            </div>
-            <div class="dropdown-menu" :class="{ 'show': statusDropdownOpen }">
-              <div class="dropdown-item" 
-                   v-for="option in statusOptions" 
-                   :key="option.value"
-                   @click="selectStatus(option.value)"
-                   :class="{ 'active': statusFilter === option.value }">
-                {{ option.label }}
-              </div>
-            </div>
+          <div class="filter-wrapper" ref="statusDropdownWrapper">
+            <span
+              class="filter-button"
+              :class="{ 'active-filter': statusFilter !== 'all' }"
+              tabindex="0"
+              @click="toggleStatusDropdown"
+            >
+              {{ getStatusText }}
+              <svg
+                class="filter-arrow"
+                :class="{ rotated: statusDropdownOpen }"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M6 15l6-6l6 6"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                ></path>
+              </svg>
+            </span>
           </div>
           
           <!-- 自定义类型下拉框 -->
-          <div class="custom-dropdown" ref="typeDropdown">
-            <div class="dropdown-toggle" @click="toggleTypeDropdown">
-              <span>{{ getTypeText }}</span>
-              <div class="dropdown-arrow">▼</div>
-            </div>
-            <div class="dropdown-menu" :class="{ 'show': typeDropdownOpen }">
-              <div class="dropdown-item" 
-                   v-for="option in typeOptions" 
-                   :key="option.value"
-                   @click="selectType(option.value)"
-                   :class="{ 'active': typeFilter === option.value }">
-                {{ option.label }}
-              </div>
-            </div>
+          <div class="filter-wrapper" ref="typeDropdownWrapper">
+            <span
+              class="filter-button"
+              :class="{ 'active-filter': typeFilter !== 'all' }"
+              tabindex="0"
+              @click="toggleTypeDropdown"
+            >
+              {{ getTypeText }}
+              <svg
+                class="filter-arrow"
+                :class="{ rotated: typeDropdownOpen }"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M6 15l6-6l6 6"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                ></path>
+              </svg>
+            </span>
           </div>
+        </div>
+        
+        <!-- 搜索框 -->
+        <div class="search-container">
+          <svg
+            class="search-icon"
+            viewBox="0 0 1024 1024"
+          >
+            <path
+              d="M909.6 854.5L649.9 594.8C690.2 542.7 712 479 712 412c0-80.2-31.3-155.4-87.9-212.1c-56.6-56.7-132-87.9-212.1-87.9s-155.5 31.3-212.1 87.9C143.2 256.5 112 331.8 112 412c0 80.1 31.3 155.5 87.9 212.1C256.5 680.8 331.8 712 412 712c67 0 130.6-21.8 182.7-62l259.7 259.6a8.2 8.2 0 0 0 11.6 0l43.6-43.5a8.2 8.2 0 0 0 0-11.6zM570.4 570.4C528 612.7 471.8 636 412 636s-116-23.3-158.4-65.6C211.3 528 188 471.8 188 412s23.3-116.1 65.6-158.4C296 211.3 352.2 188 412 188s116.1 23.2 158.4 65.6S636 352.2 636 412s-23.3 116.1-65.6 158.4z"
+              fill="currentColor"
+            ></path>
+          </svg>
+          <input 
+            class="search-input"
+            type="search"
+            placeholder="搜索竞赛..."
+            v-model="searchQuery"
+          >
         </div>
       </div>
       
@@ -137,6 +170,47 @@
     </div>
   </div>
   <foot class="page-footer" />
+  
+  <!-- 将下拉菜单放在页面最顶层 -->
+  <!-- 状态下拉菜单 -->
+  <div
+    class="dropdown-menu top-layer"
+    v-if="statusDropdownOpen"
+    :style="statusDropdownStyle"
+  >
+    <div class="dropdown-arrow"></div>
+    <div class="dropdown-content">
+      <div
+        class="dropdown-item"
+        v-for="option in statusOptions" 
+        :key="option.value"
+        @click="selectStatus(option.value)"
+        :class="{ 'active': statusFilter === option.value }"
+      >
+        <span>{{ option.label }}</span>
+      </div>
+    </div>
+  </div>
+  
+  <!-- 类型下拉菜单 -->
+  <div
+    class="dropdown-menu top-layer"
+    v-if="typeDropdownOpen"
+    :style="typeDropdownStyle"
+  >
+    <div class="dropdown-arrow"></div>
+    <div class="dropdown-content">
+      <div
+        class="dropdown-item"
+        v-for="option in typeOptions" 
+        :key="option.value"
+        @click="selectType(option.value)"
+        :class="{ 'active': typeFilter === option.value }"
+      >
+        <span>{{ option.label }}</span>
+      </div>
+    </div>
+  </div>
 </template>
 
 
@@ -155,8 +229,8 @@ const typeFilter = ref('all');
 // 下拉菜单状态
 const statusDropdownOpen = ref(false);
 const typeDropdownOpen = ref(false);
-const statusDropdown = ref<HTMLElement | null>(null);
-const typeDropdown = ref<HTMLElement | null>(null);
+const statusDropdownWrapper = ref<HTMLElement | null>(null);
+const typeDropdownWrapper = ref<HTMLElement | null>(null);
 
 // 下拉菜单选项
 const statusOptions = [
@@ -212,10 +286,19 @@ const selectType = (value: string) => {
 
 // 点击外部关闭下拉菜单
 const handleClickOutside = (event: MouseEvent) => {
-  if (statusDropdown.value && !statusDropdown.value.contains(event.target as Node)) {
+  // 检查点击目标是否是筛选按钮
+  const target = event.target as HTMLElement;
+  const isStatusButton = target.closest('.filter-button') && 
+                         target.textContent?.includes(getStatusText.value);
+  const isTypeButton = target.closest('.filter-button') && 
+                       target.textContent?.includes(getTypeText.value);
+  
+  // 如果点击的不是筛选按钮，且不在下拉菜单内，则关闭下拉菜单
+  if (!isStatusButton && !target.closest('.status-dropdown')) {
     statusDropdownOpen.value = false;
   }
-  if (typeDropdown.value && !typeDropdown.value.contains(event.target as Node)) {
+  
+  if (!isTypeButton && !target.closest('.type-dropdown')) {
     typeDropdownOpen.value = false;
   }
 };
@@ -379,6 +462,31 @@ onMounted(() => {
   // 实际项目中取消注释下面这行
   // fetchCompetitions();
 });
+
+// 计算下拉菜单位置样式
+const statusDropdownStyle = computed(() => {
+  if (!statusDropdownWrapper.value) return {};
+  
+  const rect = statusDropdownWrapper.value.getBoundingClientRect();
+  return {
+    position: 'fixed',
+    top: `${rect.bottom + window.scrollY + 8}px`,
+    left: `${rect.left}px`,
+    width: `${rect.width}px`
+  };
+});
+
+const typeDropdownStyle = computed(() => {
+  if (!typeDropdownWrapper.value) return {};
+  
+  const rect = typeDropdownWrapper.value.getBoundingClientRect();
+  return {
+    position: 'fixed',
+    top: `${rect.bottom + window.scrollY + 8}px`,
+    left: `${rect.left}px`,
+    width: `${rect.width}px`
+  };
+});
 </script>
 
 
@@ -438,162 +546,286 @@ onMounted(() => {
   margin-bottom: 24px;
   flex-wrap: wrap;
   gap: 16px;
-  background-color: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background-color: #fff;
   padding: 16px 20px;
   border-radius: 12px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
-  transition: all 0.4s ease;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+  border: 1px solid #e2e8f0;
+  animation: fadeInDown 0.6s ease-out;
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .search-filter-container:hover {
-  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 6px 16px rgba(66, 185, 131, 0.12);
+  transform: translateY(-2px);
 }
 
-.search-input {
-  position: relative;
-  width: 180px;
-  transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1);
-}
-
-.search-input:focus-within {
-  width: 300px;
-}
-
-.search-input input {
-  width: 100%;
-  padding: 8px 16px;
-  border-radius: 40px;
-  border: 1px solid transparent;
-  background-color: #f4f6f8;
-  font-size: 14px;
-  outline: none;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  color: #333;
-  overflow: hidden;
-  position: relative;
-  z-index: 1;
-}
-
-.search-input::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  border-radius: 40px;
-  background: linear-gradient(120deg, #e6e8ea, #f0f3f6);
-  z-index: 0;
-  transition: opacity 0.3s ease;
-  opacity: 1;
-}
-
-.search-input:hover::before {
-  background: linear-gradient(120deg, #e9f7f2, #e0f5eb);
-  opacity: 1;
-}
-
-.search-input:focus-within::before {
-  background: linear-gradient(120deg, #e0f5eb, #d6f2e6);
-  opacity: 1;
-}
-
-.search-input input:focus {
-  border-color: rgba(66, 185, 131, 0.6);
-  box-shadow: 0 0 0 2px rgba(66, 185, 131, 0.1);
-}
-
-/* 确保输入框覆盖在渐变层之上 */
-.search-input {
-  display: flex;
-  align-items: center;
-  border-radius: 40px;
-}
-
-.search-input input {
-  background-color: transparent;
-}
-
-.filter-dropdowns {
+.filter-container {
   display: flex;
   gap: 12px;
 }
 
-/* 自定义下拉框样式 */
-.custom-dropdown {
+.filter-wrapper {
   position: relative;
-  width: 160px;
-  user-select: none;
+  display: inline-block;
 }
 
-.dropdown-toggle {
-  display: flex;
-  justify-content: space-between;
+.filter-button {
+  display: inline-flex;
   align-items: center;
-  padding: 8px 14px;
-  background-color: #fff;
-  border: 1px solid #e0e7ee;
-  border-radius: 40px;
-  cursor: pointer;
-  transition: all 0.2s ease;
+  justify-content: center;
+  height: 38px;
+  padding: 0 18px;
+  background-color: #f5f7fa;
+  border-radius: 8px;
   font-size: 14px;
-  color: #333;
+  color: #4a5568;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+  border: 1px solid transparent;
+  position: relative;
+  user-select: none;
+  overflow: hidden;
+  z-index: 1;
 }
 
-.dropdown-toggle:hover {
+.filter-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, rgba(66, 185, 131, 0.1), transparent);
+  transition: left 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+  z-index: -1;
+}
+
+.filter-button:hover {
+  background-color: #ebf0f5;
+  border-color: #d1dbe5;
+  transform: translateY(-2px);
+}
+
+.filter-button:hover::before {
+  left: 100%;
+}
+
+.filter-button.active-filter {
+  background: linear-gradient(to right, #edf7f2, #e0f5eb);
+  color: #42b983;
+  border: 1px solid #a6e5c9;
+  box-shadow: 0 2px 8px rgba(66, 185, 131, 0.15);
+  position: relative;
+  overflow: hidden;
+}
+
+.filter-button.active-filter::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(to right, #42b983, #33c6aa);
+  transition: all 0.3s ease;
+}
+
+.filter-button.active-filter:hover::after {
+  height: 3px;
+}
+
+.filter-arrow {
+  width: 16px;
+  height: 16px;
+  margin-left: 8px;
+  transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+  color: currentColor;
+}
+
+.filter-arrow.rotated {
+  transform: rotate(180deg);
+}
+
+.search-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 280px;
+  transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.search-container:focus-within {
+  width: 350px;
+}
+
+.search-icon {
+  position: absolute;
+  left: 12px;
+  width: 16px;
+  height: 16px;
+  color: #a0aec0;
+  z-index: 1;
+  transition: all 0.3s ease;
+}
+
+.search-container:focus-within .search-icon {
+  color: #42b983;
+  transform: scale(1.1);
+}
+
+.search-input {
+  width: 100%;
+  height: 38px;
+  padding: 8px 12px 8px 36px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #4a5568;
+  background-color: #f8fafc;
+  transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+  outline: none;
+}
+
+.search-input:hover {
+  border-color: #99a1a9;
+  background-color: #fff;
+}
+
+.search-input:focus {
   border-color: #42b983;
+  box-shadow: 0 0 0 3px rgba(66, 185, 131, 0.2);
+  background-color: #fff;
+}
+
+/* 下拉菜单样式 */
+.dropdown-menu {
+  position: absolute;
+  width: 160px;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 6px 30px rgba(0, 0, 0, 0.2);
+  z-index: 1000; /* 提高z-index值到顶层 */
+  transform-origin: top center;
+  animation: dropdownFadeIn 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+@keyframes dropdownFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 .dropdown-arrow {
-  font-size: 10px;
-  color: #888;
-  margin-left: 6px;
-  transition: transform 0.2s ease;
-}
-
-.dropdown-menu {
+  width: 12px;
+  height: 12px;
+  background-color: white;
   position: absolute;
-  top: calc(100% + 5px);
-  left: 0;
-  width: 100%;
-  background-color: #fff;
-  border-radius: 8px;
-  border: 1px solid #e0e7ee;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
-  max-height: 0;
-  overflow: hidden;
-  opacity: 0;
-  z-index: 100;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  transform-origin: top center;
-  transform: translateY(-8px) scale(0.98);
+  left: 16px;
+  top: -6px;
+  transform: rotate(45deg);
+  box-shadow: -1px -1px 1px rgba(0, 0, 0, 0.1);
 }
 
-.dropdown-menu.show {
-  max-height: 200px;
-  opacity: 1;
-  transform: translateY(0) scale(1);
+.dropdown-content {
+  padding: 8px 0;
+  border-radius: 8px;
+  overflow: hidden;
 }
 
 .dropdown-item {
-  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  padding: 10px 16px;
+  font-size: 14px;
+  line-height: 20px;
+  color: #333;
   cursor: pointer;
   transition: all 0.2s ease;
-  font-size: 14px;
-  color: #555;
+  position: relative;
+  overflow: hidden;
+}
+
+.dropdown-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, rgba(66, 185, 131, 0.1), transparent);
+  transition: left 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+  z-index: -1;
 }
 
 .dropdown-item:hover {
-  background-color: #f5faf8;
+  background-color: #f5f7fa;
+  color: #42b983;
+  padding-left: 22px;
+}
+
+.dropdown-item:hover::before {
+  left: 100%;
 }
 
 .dropdown-item.active {
   background-color: #edf7f2;
   color: #42b983;
   font-weight: 500;
+}
+
+/* 移除旧的样式 */
+.search-input::before,
+.search-input:hover::before,
+.search-input:focus-within::before,
+.dropdown-toggle,
+.dropdown-toggle:hover,
+.dropdown-arrow,
+.dropdown-menu.show,
+.dropdown-item.active {
+  /* 这些选择器会被新样式覆盖，所以这里不需要添加具体样式 */
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+  .search-filter-container {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .filter-container {
+    width: 100%;
+    justify-content: space-between;
+  }
+  
+  .search-container {
+    width: 100%;
+  }
+  
+  .status-dropdown,
+  .type-dropdown {
+    position: fixed;
+    top: auto;
+    left: 50%;
+    transform: translateX(-50%);
+    margin-top: 8px;
+  }
 }
 
 .competition-list {
@@ -878,6 +1110,7 @@ onMounted(() => {
   margin-top: 20px;
   margin-bottom: 30px;
   gap: 12px;
+  position: relative;
 }
 
 .page-numbers {
@@ -1024,40 +1257,10 @@ onMounted(() => {
   cursor: not-allowed;
 }
 
-/* 添加一个连接元素 */
-.pagination::after {
-  content: '';
-  position: absolute;
-  bottom: -15px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 100px;
-  height: 3px;
-  background: linear-gradient(90deg, transparent, rgba(66, 185, 131, 0.3), transparent);
-  border-radius: 3px;
-}
-
-/* 响应式设计 */
-@media (max-width: 768px) {
-  .search-filter-container {
-    flex-direction: column;
-    align-items: stretch;
-  }
-  
-  .search-input {
-    width: 100%;
-  }
-  
-  .filter-dropdowns {
-    width: 100%;
-    justify-content: space-between;
-  }
-  
-  .custom-dropdown {
-    flex: 1;
-    min-width: 0;
-    width: auto;
-  }
+/* 顶层下拉菜单 */
+.dropdown-menu.top-layer {
+  position: fixed;
+  z-index: 9999;
 }
 </style>
 
