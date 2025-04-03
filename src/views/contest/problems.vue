@@ -10,7 +10,7 @@
       <div class="content-area">
         <div class="content-wrapper">
           <div class="left-main">
-            <competitionshow />
+            <competitionshow :raceinfoData="raceinfoData"/>
           </div>
           <div class="right-main">
             <competitioninformation />
@@ -22,7 +22,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from "vue"
+import { ref, reactive, onMounted } from "vue"
+import axios from "axios"
 import showtitle from "@/components/test/showtitle.vue"
 import navlinks from "@/components/test/navlinks.vue";
 import competition from "@/components/zq/competitionheader.vue";
@@ -30,6 +31,25 @@ import sidebarproblem from "@/components/zq/sidebar-problem.vue";
 import competitionshow from "@/components/zq/compotitionshow.vue";
 import competitioninformation from "@/components/zq/competitioninformation.vue";
 import Competitionheader from "@/components/zq/competitionheader.vue";
+
+const defaultUid = 1;
+const raceinfoData = ref(null); // 定义变量存储数据
+
+
+// 页面加载完成后执行
+onMounted(async () => {
+  try {
+    const { data } = await axios({
+      url: 'http://127.0.0.1:5000/api/raceinfo',
+      method: 'post',
+      data: { uid: defaultUid }
+    });
+    raceinfoData.value = data; // 将获取到的数据存入变量
+    console.log(raceinfoData.value); // 打印存储的数据
+  } catch (error) {
+    console.error('请求失败:', error);
+  }
+});
 
 </script>
 
