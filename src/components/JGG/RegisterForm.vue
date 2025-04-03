@@ -104,10 +104,7 @@ const handleSubmit = async () => {
             }
         })
 
-        if (!userData.success) {
-            alertboxRef.value?.show('注册失败，' + userData.message, 2);
-            return;
-        } else {
+        if (userData.success) {
             alertboxRef.value?.show('注册成功！', 0);
             // 注册成功后跳转到登录页面
             setTimeout(() => {
@@ -115,7 +112,11 @@ const handleSubmit = async () => {
             }, 1000);
         }
     } catch (error) {
-        alertboxRef.value?.show('发生未知错误，请联系管理员，错误原因：' + error, 2);
+        if ((error as any).response) {
+            alertboxRef.value?.show('注册失败，' + (error as any).response.data.message, 2);
+        } else {
+            alertboxRef.value?.show('发生未知错误，请联系管理员，错误原因：' + String(error), 2);
+        }
     } finally {
         isSubmitting.value = false;
     }
