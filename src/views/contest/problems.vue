@@ -10,7 +10,7 @@
       <div class="content-area">
         <div class="content-wrapper">
           <div class="left-main">
-            <competitionshow :raceinfoData="raceinfoData"/>
+            <competitionshow :raceinfoData="(raceinfoData as any)"/>
           </div>
           <div class="right-main">
             <competitioninformation />
@@ -30,10 +30,10 @@ import competition from "@/components/zq/competitionheader.vue";
 import sidebarproblem from "@/components/zq/sidebar-problem.vue";
 import competitionshow from "@/components/zq/compotitionshow.vue";
 import competitioninformation from "@/components/zq/competitioninformation.vue";
-import Competitionheader from "@/components/zq/competitionheader.vue";
+import competitionheader from "@/components/zq/competitionheader.vue";
 
 const defaultUid = 1;
-const raceinfoData = ref(null); // 定义变量存储数据
+const raceinfoData = ref({});
 
 
 // 页面加载完成后执行

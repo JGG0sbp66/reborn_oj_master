@@ -10,24 +10,19 @@
             </tr>
         </thead>
         <tbody class="problems-body">
-            
         </tbody>
     </table>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import axios from 'axios'
 
 const props = defineProps({
   raceinfoData: {
-    type: Object,
+    type: Array,
     required: true
   }
 });
-
-console.log(props.raceinfoData);
-
 
 </script>
 
