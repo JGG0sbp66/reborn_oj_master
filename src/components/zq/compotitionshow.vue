@@ -10,17 +10,7 @@
             </tr>
         </thead>
         <tbody class="problems-body">
-            <tr v-for="(problem, index) in props.raceinfoData" :key="index">
-                <td>
-                    <div :class="['status', problem.state]"></div>
-                </td>
-                <td>
-                    <a :href="'/problems/' + problem.u_id" class="problem-link"></a>
-                </td>
-                <td>{{ problem.first_blood || '无' }}</td>
-                <td>/</td>
-                <td>%</td>
-            </tr>
+            
         </tbody>
     </table>
 </template>
