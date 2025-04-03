@@ -26,7 +26,7 @@
               </svg>
             </button>
           </div>
-          年 - <span class="total-count">{{ displayTotal }}</span> 题已完成
+          年 - <span class="total-count" :class="{ 'animate-number': isAnimating }">{{ formattedDisplayTotal }}</span> 题已完成
         </h3>
       </div>
       <div class="heatmap-legend">
@@ -373,6 +373,12 @@ const total = computed(() => {
 
 // 添加数字递增动画效果
 const displayTotal = ref(0);
+const isAnimating = ref(false);
+
+// 格式化显示的数字，添加千位分隔符
+const formattedDisplayTotal = computed(() => {
+  return displayTotal.value.toLocaleString('zh-CN');
+});
 
 // 动态调整动画速度，确保总是在适当的时间内完成
 const animateTotal = () => {
@@ -382,24 +388,42 @@ const animateTotal = () => {
   // 如果total为0，无需动画
   if (total.value === 0) return;
   
-  // 计算每次增加的值，使动画持续约1秒
-  const duration = 1000; // 总时长，毫秒
-  const steps = 25; // 动画步数
-  const increment = Math.max(1, Math.ceil(total.value / steps));
-  const interval = duration / steps;
+  // 开始动画
+  isAnimating.value = true;
   
-  const animation = () => {
-    // 增加数值但不超过总数
-    displayTotal.value = Math.min(displayTotal.value + increment, total.value);
+  // 使用更平滑的动画
+  const duration = 1500; // 延长动画时间
+  const startTime = Date.now();
+  const startValue = 0;
+  const targetValue = total.value;
+  
+  // 缓动函数 - 三次贝塞尔
+  const easing = (t: number) => t < 0.5 ? 4 * t * t * t : (t - 1) * (2 * t - 2) * (2 * t - 2) + 1;
+  
+  const updateValue = () => {
+    const currentTime = Date.now();
+    const elapsed = currentTime - startTime;
     
-    // 如果还未达到目标，继续动画
-    if (displayTotal.value < total.value) {
-      setTimeout(animation, interval);
+    if (elapsed < duration) {
+      const progress = easing(elapsed / duration);
+      const currentValue = Math.floor(startValue + progress * (targetValue - startValue));
+      displayTotal.value = currentValue;
+      requestAnimationFrame(updateValue);
+    } else {
+      // 确保最终值精确
+      displayTotal.value = targetValue;
+      
+      // 动画结束
+      setTimeout(() => {
+        isAnimating.value = false;
+      }, 200);
     }
   };
   
   // 启动动画
-  setTimeout(animation, 100); // 稍微延迟开始，让其他元素先渲染
+  setTimeout(() => {
+    requestAnimationFrame(updateValue);
+  }, 100);
 };
 
 // 监听年份变化，重新生成日历数据
@@ -464,7 +488,29 @@ onMounted(() => {
   min-width: 2.5em; /* 保持数字宽度稳定，防止闪烁 */
   text-align: center;
   position: relative;
-  transition: color 0.3s ease;
+  transition: color 0.3s ease, transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.total-count.animate-number {
+  animation: countBlur 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes countBlur {
+  0% {
+    filter: blur(0px);
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    filter: blur(1.5px);
+    opacity: 0.9;
+    transform: scale(1.1);
+  }
+  100% {
+    filter: blur(0px);
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 .total-count::after {

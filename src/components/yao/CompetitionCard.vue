@@ -30,7 +30,13 @@
         <!-- 标签插槽 -->
         <slot name="tags">
           <div class="competition-tags">
-            <span v-for="(tag, i) in competition.tags" :key="i" class="tag" :class="tag.type">{{ tag.name }}</span>
+            <span 
+              v-for="(tag, i) in competition.tags" 
+              :key="i" 
+              class="tag" 
+              :class="getTagClass(tag.type)"
+              :style="getTagStyle(tag)"
+            >{{ tag.name }}</span>
           </div>
         </slot>
         <!-- 左侧区域额外内容插槽 -->
@@ -101,6 +107,49 @@ const timeInfoItems = computed(() => props.customTimeInfo || defaultTimeInfoItem
 // 获取时间值的函数
 const getTimeValue = (key: string) => {
   return props.competition[key] || '';
+};
+
+// 处理标签类型的函数
+const getTagClass = (type: string) => {
+  // 定义所有已知的标签类型
+  const validTypes = ['running', 'individual', 'oi', 'regional'];
+  
+  // 如果是已知类型，返回该类型名称作为类名
+  // 如果是未知类型，返回'unknown'类名，会使用默认样式
+  return validTypes.includes(type) ? type : 'unknown';
+};
+
+// 生成标签的动态样式 - 基于标签名称生成一致的颜色
+const getTagStyle = (tag: Tag) => {
+  // 如果是已知类型，不需要特殊样式
+  if (['running', 'individual', 'oi', 'regional'].includes(tag.type)) {
+    return {};
+  }
+  
+  // 基于标签名称生成哈希值作为颜色基础
+  const nameHash = tag.name.split('').reduce((acc, char) => {
+    return acc + char.charCodeAt(0);
+  }, 0);
+  
+  // 选择预定义的柔和颜色方案
+  const colorSchemes = [
+    { bg: '#E8F4F8', text: '#2980b9' }, // 蓝色系
+    { bg: '#F8F4E8', text: '#E67E22' }, // 橙色系
+    { bg: '#F4E8F8', text: '#8E44AD' }, // 紫色系
+    { bg: '#E8F8F4', text: '#27AE60' }, // 绿色系
+    { bg: '#F8E8E8', text: '#C0392B' }, // 红色系
+    { bg: '#F4F8E8', text: '#16A085' }  // 青绿色系
+  ];
+  
+  // 使用哈希值选择颜色方案，确保同名标签颜色一致
+  const colorIndex = nameHash % colorSchemes.length;
+  const colors = colorSchemes[colorIndex];
+  
+  return {
+    backgroundColor: colors.bg,
+    color: colors.text,
+    borderColor: colors.text + '33' // 添加透明度33 (20%)
+  };
 };
 
 // 计算动画样式，基于索引添加延迟
@@ -337,12 +386,15 @@ const animationStyle = computed(() => {
   transition: all 0.2s ease;
   display: inline-flex;
   align-items: center;
+  /* 移除默认样式，现在由动态样式控制 */
 }
 
 .tag:hover {
   transform: translateY(-1px);
   box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
 }
+
+/* 移除unknown类，现在使用动态样式 */
 
 .tag.running {
   background-color: #e6f7f0;

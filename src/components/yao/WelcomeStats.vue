@@ -1,12 +1,12 @@
 <template>
-  <div class="welcome-section" :class="{ appear }">
+  <div class="welcome-section" :class="{ appear: appear }">
     <h3 class="welcome-title"><i class="welcome-icon"></i> 欢迎来到 OJ Master</h3>
     <div class="welcome-content">
       <p>{{ message }}</p>
       <div class="welcome-stats">
         <div class="stat-item" v-for="(stat, index) in statsData" :key="index">
           <div class="stat-value">
-            <span class="count">{{ counts[index] }}</span>
+            <span class="count number-animate" :class="{ animate: animationTriggered[index] }">{{ formattedCounts[index] }}</span>
           </div>
           <div class="stat-label">{{ stat.label }}</div>
         </div>
@@ -16,7 +16,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, defineProps, watchEffect } from 'vue';
+import { ref, onMounted, defineProps, computed } from 'vue';
 
 interface StatItem {
   value: number;
@@ -44,25 +44,55 @@ const props = defineProps({
 
 // 为统计数字创建动画效果
 const counts = ref<number[]>(props.statsData.map(() => 0));
+const animationTriggered = ref<boolean[]>(props.statsData.map(() => false));
 
-// 动画函数 - 让数字从0增长到目标值
+// 格式化数字，添加千位分隔符
+const formattedCounts = computed(() => {
+  return counts.value.map((count: number) => {
+    return count.toLocaleString('zh-CN');
+  });
+});
+
+// 优化动画函数 - 使用更加平滑的过渡
 const animateNumbers = () => {
-  props.statsData.forEach((stat, index) => {
+  props.statsData.forEach((stat: StatItem, index: number) => {
     const targetValue = stat.value;
-    const duration = 1000; // 动画持续时间(毫秒)
-    const interval = 20; // 每次更新的间隔(毫秒)
-    const steps = duration / interval;
-    const increment = Math.ceil(targetValue / steps);
+    const duration = 1500; // 增加动画持续时间
+    const easing = (t: number) => t < 0.5 ? 4 * t * t * t : (t - 1) * (2 * t - 2) * (2 * t - 2) + 1; // 三次贝塞尔缓动函数
     
-    let currentValue = 0;
-    const counter = setInterval(() => {
-      currentValue = Math.min(currentValue + increment, targetValue);
-      counts.value[index] = currentValue;
+    const startTime = Date.now();
+    const startValue = 0;
+    
+    const updateValue = () => {
+      const currentTime = Date.now();
+      const elapsed = currentTime - startTime;
       
-      if (currentValue >= targetValue) {
-        clearInterval(counter);
+      if (elapsed < duration) {
+        const progress = easing(elapsed / duration);
+        const currentValue = Math.floor(startValue + progress * (targetValue - startValue));
+        
+        // 只有数值变化时才触发动画
+        if (counts.value[index] !== currentValue) {
+          counts.value[index] = currentValue;
+          animationTriggered.value[index] = true;
+          
+          // 重置动画状态，允许下一次触发
+          setTimeout(() => {
+            animationTriggered.value[index] = false;
+          }, 400);
+        }
+        
+        requestAnimationFrame(updateValue);
+      } else {
+        // 确保最终值精确
+        counts.value[index] = targetValue;
       }
-    }, interval);
+    };
+    
+    // 开始动画
+    setTimeout(() => {
+      requestAnimationFrame(updateValue);
+    }, props.animationDelay + index * 150); // 为每个数字添加不同的延迟
   });
 };
 
@@ -133,7 +163,7 @@ onMounted(() => {
 
 .count {
   display: inline-block;
-  transition: all 0.2s ease;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease;
 }
 
 .stat-label {

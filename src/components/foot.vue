@@ -33,6 +33,24 @@ footer {
     box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.1);
 }
 
+/* 优化页脚与内容之间的连接 */
+.page-footer {
+    margin-top: 0; /* 移除间距 */
+    position: relative;
+}
+
+/* 添加一个前置伪元素填充页脚上方空白并创造渐变过渡效果 */
+.page-footer::before {
+    content: '';
+    position: absolute;
+    top: -80px; /* 向上延伸更多 */
+    left: 0;
+    width: 100%;
+    height: 80px;
+    background: linear-gradient(to bottom, #f7f9fc, #1f2225); /* 创造渐变过渡 */
+    z-index: -1;
+}
+
 .footer {
     max-width: 100%; /* 确保宽度不超出视口 */
     height: 100%;

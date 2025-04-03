@@ -108,6 +108,7 @@
       </div>
     </div>
   </div>
+  <foot class="page-footer" />
 </template>
 
 <script setup lang="ts">
@@ -120,7 +121,9 @@ import RecommendedSites from "@/components/yao/RecommendedSites.vue";
 import LatestProblems from "@/components/yao/LatestProblems.vue";
 import ProjectLinks from "@/components/yao/ProjectLinks.vue";
 import ServiceLinks from "@/components/yao/ServiceLinks.vue";
+import foot from "@/components/foot.vue";
 import { Trophy } from '@element-plus/icons-vue';
+import axios from "axios";
 
 // 轮播图数据
 const bannerSlides = [
@@ -254,6 +257,33 @@ const onlineServices = [
   { title: '协办企业院校在线编程比赛', url: '#' }
 ];
 
+// 存储从服务器获取的竞赛数据
+const contestData = ref(null);
+
+// 页面加载完成后执行
+onMounted(async () => {
+  // 启动轮播图自动切换
+  startSlideshow();
+  
+  // 获取竞赛数据
+  try {
+    const { data } = await axios({
+      url: 'http://localhost/oj_master/php/competition_search.php',
+      method: 'post',
+      data: { page: 1 }
+    });
+    contestData.value = data; // 存入响应式变量
+    console.log(data);
+  } catch (error) {
+    console.error('请求失败:', error);
+  }
+});
+
+// 在组件销毁前清除定时器
+onBeforeUnmount(() => {
+  stopSlideshow();
+});
+
 // 添加隐藏滚动条的全局样式
 const addGlobalStyle = () => {
   const style = document.createElement('style');
@@ -338,6 +368,35 @@ onBeforeUnmount(() => {
   display: none;
 }
 
+/* 数字动画效果 */
+:deep(.number-animate) {
+  display: inline-block;
+  position: relative;
+  transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+:deep(.number-animate.animate) {
+  animation: numberBlur 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes numberBlur {
+  0% {
+    filter: blur(0px);
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    filter: blur(2px);
+    opacity: 0.8;
+    transform: scale(1.1);
+  }
+  100% {
+    filter: blur(0px);
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
 .home-container {
   display: flex;
   flex-direction: column;
@@ -348,7 +407,7 @@ onBeforeUnmount(() => {
 
 .main-content {
   margin-top: 64px;
-  padding: 0px 0 40px;
+  padding: 0px 0 0; /* 移除底部内边距 */
   animation: fadeIn 0.5s ease-out;
   overflow: hidden; /* 隐藏所有溢出 */
 }
