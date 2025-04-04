@@ -43,15 +43,15 @@
                     <h4 class="footer-heading">联系我们</h4>
                     <div class="contact-info">
                         <div class="contact-item">
-                            <span class="contact-icon">📧</span>
+                            <span class="contact-icon">💌</span>
                             <span>support@ojmastr.com</span>
                         </div>
                         <div class="contact-item">
-                            <span class="contact-icon">🌐</span>
+                            <span class="contact-icon">🔗</span>
                             <span>www.ojmastr.com</span>
                         </div>
                         <div class="social-links">
-                            <a href="#" class="social-link">
+                            <a href="https://github.com/JGG0sbp66/reborn_oj_master" target="_blank" class="social-link">
                                 <i class="social-icon github-icon"></i>
                                 <span>GitHub</span>
                             </a>
@@ -70,7 +70,7 @@
 
             <!-- 底部版权信息 -->
             <div class="footer-bottom">
-                <div class="copyright">© 2024 OJ Mastr All Rights Reserved</div>
+                <div class="copyright">© 2025 OJ Mastr All Rights Reserved</div>
                 <div class="footer-credits">
                     <span class="credit-item">所谓混学</span>
                     <span class="link-divider">·</span>
