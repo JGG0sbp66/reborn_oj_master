@@ -113,7 +113,7 @@ const handleMouseLeave = (event: MouseEvent) => {
 }
 
 .latest-problems:hover .problems-title::after {
-  width: 100%;
+  width: 100px;
 }
 
 .problem-icon::before {
