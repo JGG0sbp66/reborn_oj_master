@@ -46,3 +46,18 @@ const router = createRouter({
 
 // 导出路由
 export default router;
+
+// 路由守卫
+import { checkAuth } from '@/utils/auth';
+
+router.beforeEach(async (to) => {
+    if (to.meta.requiresAuth) {
+      const { authenticated } = await checkAuth();
+      if (!authenticated) {
+        return {
+          path: '/login',
+          query: { redirect: to.fullPath }
+        };
+      }
+    }
+  });
