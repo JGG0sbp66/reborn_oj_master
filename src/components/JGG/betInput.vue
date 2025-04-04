@@ -1,12 +1,17 @@
 <template>
     <div class="validated-input-container">
-        <div class="input-wrapper" :class="{
-            'has-error': showError,
-            'focus': isFocused,
-            'error-exit': isErrorExiting
-        }">
+        <div class="input-wrapper" :class="{ 'has-error': showError, 'focus': isFocused }">
             <slot name="icon"></slot>
-            <input v-model="inputValue" @blur="handleBlur" @focus="handleFocus" :type="type" :placeholder="placeholder">
+            <input v-model="inputValue" @blur="handleBlur" @focus="handleFocus" :type="showPassword ? 'text' : type"
+                :placeholder="placeholder">
+            <!-- 美化后的密码切换按钮 -->
+            <button v-if="type === 'password'" class="password-toggle" @click.prevent="togglePasswordVisibility"
+                :aria-label="showPassword ? '隐藏密码' : '显示密码'">
+                <transition name="fade" mode="out-in">
+                    <EyeIcon v-if="showPassword" key="visible" />
+                    <EyeSlashIcon v-else key="hidden" />
+                </transition>
+            </button>
         </div>
         <div class="error-message" :class="{ 'error-exit': isErrorExiting }">
             {{ errorMessage }}
@@ -16,15 +21,16 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
+import { EyeIcon, EyeSlashIcon } from '@heroicons/vue/24/outline'
 
 const props = defineProps({
     modelValue: String,
     type: {
         type: String,
-        default: 'text'
+        default: 'text',
+        validator: (value: string) => ['text', 'password', 'email', 'number'].includes(value)
     },
     placeholder: String,
-    // 传入正则表达式和错误信息
     rules: {
         type: Array as () => {
             pattern: RegExp;
@@ -48,10 +54,15 @@ const inputValue = computed({
 const isFocused = ref(false)
 const isDirty = ref(false)
 const errorMessage = ref('')
+const showPassword = ref(false) // 控制密码是否显示
 
 const showError = computed(() => {
     return !!errorMessage.value && (isDirty.value || props.immediateValidate)
 })
+
+const togglePasswordVisibility = () => {
+    showPassword.value = !showPassword.value
+}
 
 const handleBlur = () => {
     isFocused.value = false
@@ -59,7 +70,6 @@ const handleBlur = () => {
     validate()
 }
 
-// 值变化时实时验证（可选）
 watch(inputValue, () => {
     if (isDirty.value || props.immediateValidate) {
         validate()
@@ -93,7 +103,7 @@ const validate = (): boolean => {
             setTimeout(() => {
                 errorMessage.value = ''
                 isErrorExiting.value = false
-            }, 300) // 匹配动画时长
+            }, 300)
         } else {
             errorMessage.value = ''
         }
@@ -102,13 +112,56 @@ const validate = (): boolean => {
     return isValid
 }
 
-// 暴露方法
 defineExpose({
     validate
 })
 </script>
 
 <style scoped>
+/* 隐藏所有浏览器的默认密码图标 */
+input[type="password"]::-webkit-password-toggle-button,
+input[type="password"]::-ms-reveal {
+    display: none;
+}
+
+/* 美化自定义切换按钮 */
+.password-toggle {
+    position: absolute;
+    right: 8px;
+    background: none;
+    border: none;
+    padding: 4px;
+    cursor: pointer;
+    color: #666;
+    transition: all 0.3s;
+    border-radius: 50%;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.password-toggle:hover {
+    background: rgba(0, 0, 0, 0.05);
+    color: #18a058;
+}
+
+.password-toggle:active {
+    transform: scale(0.9);
+}
+
+/* 图标过渡动画 */
+.fade-enter-active,
+.fade-leave-active {
+    transition: opacity 0.2s;
+}
+
+.fade-enter,
+.fade-leave-to {
+    opacity: 0;
+}
+
 .validated-input-container input {
     border: none;
     outline: none;
@@ -127,6 +180,7 @@ defineExpose({
     transition:
         border-color 0.3s ease-out,
         box-shadow 0.3s ease-out;
+    position: relative;
 }
 
 .input-wrapper.has-error {
@@ -161,5 +215,13 @@ defineExpose({
 .error-message.error-exit {
     opacity: 0 !important;
     transform: translateY(-5px) !important;
+}
+
+.password-toggle {
+    cursor: pointer;
+    margin-right: 8px;
+    display: flex;
+    align-items: center;
+    color: #666;
 }
 </style>

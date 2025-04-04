@@ -20,8 +20,9 @@ import { checkAuth } from '@/utils/auth';
 
 const verifyUser = async () => {
   const { authenticated, user } = await checkAuth();
+  console.log('用户认证状态:', authenticated);
   if (authenticated) {
-    console.log('当前用户:', user?.role);
+    console.log('用户信息:', user);
   } else {
     console.log('用户未登录或验证失败');
   }
