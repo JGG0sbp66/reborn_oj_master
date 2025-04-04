@@ -17,7 +17,7 @@
                 </betInput>
 
                 <!-- 密码输入 -->
-                <betInput ref="passwordInput" v-model="form.password" placeholder="请输入密码" :rules="passwordRules">
+                <betInput ref="passwordInput" v-model="form.password" placeholder="请输入密码" type="password" :rules="passwordRules">
                     <template #icon>
                         <svg style="height: 18px;width: 18px;margin-left: 10px;" xmlns="http://www.w3.org/2000/svg"
                             xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 1024 1024">
