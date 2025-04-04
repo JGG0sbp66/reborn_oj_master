@@ -10,7 +10,7 @@
       <div class="content-area">
         <div class="content-wrapper">
           <div class="left-main">
-            <competitionshow :raceinfoData="(raceinfoData as any)"/>
+            <competitionshow :raceinfoData="raceinfoData"/>
           </div>
           <div class="right-main">
             <competitioninformation />

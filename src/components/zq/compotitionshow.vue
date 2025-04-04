@@ -10,20 +10,22 @@
             </tr>
         </thead>
         <tbody class="problems-body">
+
         </tbody>
     </table>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { computed } from 'vue';
 
 const props = defineProps({
-  raceinfoData: {
-    type: Array,
-    required: true
-  }
+    raceinfoData: {
+        type: Object,
+        required: true
+    }
 });
-
+console.log('当前比赛数据:', props.raceinfoData);
 </script>
 
 <style scoped>
