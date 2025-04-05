@@ -1,19 +1,17 @@
 <template>
-    <div class="left-main">
-        <table class="problems-list">
-            <thead class="problems-head">
-                <tr>
-                    <th style="width: 120px;">排名</th>
-                    <th style="width: 200px;">选手</th>
-                    <th style="width: 120px;">解题数</th>
-                    <th style="width: 120px;">总用时</th>
-                </tr>
-            </thead>
-            <tbody class="problems-body">
+    <table class="problems-list">
+        <thead class="problems-head">
+            <tr>
+                <th style="width: 120px;">排名</th>
+                <th style="width: 200px;">选手</th>
+                <th style="width: 120px;">解题数</th>
+                <th style="width: 120px;">总用时</th>
+            </tr>
+        </thead>
+        <tbody class="problems-body">
 
-            </tbody>
-        </table>
-    </div>
+        </tbody>
+    </table>
 </template>
 <script lang="ts" setup>
 

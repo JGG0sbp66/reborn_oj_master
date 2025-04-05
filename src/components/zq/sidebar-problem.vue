@@ -94,6 +94,11 @@
     margin-top: 2px;
 }
 
+.sidebar-item.active .item-icon {
+    background-color: #ecfdf5;
+    color: #10b981;
+}
+
 .sidebar-item.active .item-text {
     color: #10b981;
 }

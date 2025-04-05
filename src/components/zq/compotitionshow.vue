@@ -1,24 +1,31 @@
 <template>
-    <div class="left-main">
-        <table class="problems-list">
-            <thead class="problems-head">
-                <tr>
-                    <th style="width: 100px;">状态</th>
-                    <th style="width: 225px;text-align: left;">题目</th>
-                    <th style="width: 250px;">一血</th>
-                    <th style="width: 120px;text-align: left;">提交/解决</th>
-                    <th style="width: 120px;text-align: left;">通过率</th>
-                </tr>
-            </thead>
-            <tbody class="problems-body">
+    <table class="problems-list">
+        <thead class="problems-head">
+            <tr>
+                <th style="width: 100px;">状态</th>
+                <th style="width: 225px;text-align: left;">题目</th>
+                <th style="width: 250px;">一血</th>
+                <th style="width: 120px;text-align: left;">提交/解决</th>
+                <th style="width: 120px;text-align: left;">通过率</th>
+            </tr>
+        </thead>
+        <tbody class="problems-body">
 
-            </tbody>
-        </table>
-    </div>
+        </tbody>
+    </table>
 </template>
 
-<script lang="ts" setup>
+<script setup lang="ts">
+import { ref, onMounted } from 'vue'
+import { computed } from 'vue';
 
+const props = defineProps({
+    raceinfoData: {
+        type: Object,
+        required: true
+    }
+});
+console.log('当前比赛数据:', props.raceinfoData);
 </script>
 
 <style scoped>
@@ -63,5 +70,45 @@
     font-weight: normal;
     margin-top: 10px;
     margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+.status {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.status-accepted {
+    background-color: #ecfdf5;
+    color: #10b981;
+}
+
+.status-wrong {
+    background-color: #fef2f2;
+    color: #ef4444;
+}
+
+.status-pending {
+    background-color: #f3f4f6;
+    color: #6b7280;
+}
+
+.status-default {
+    background-color: #f3f4f6;
+    color: #6b7280;
+}
+
+.problem-link {
+    color: #1f2937;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.problem-link:hover {
+    color: #10b981;
 }
 </style>
