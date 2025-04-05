@@ -1,12 +1,12 @@
 <template>
-  <showtitle text="这里是题库页面" />
+  <!-- <showtitle text="这里是题库页面" /> -->
   <!-- <navlinks /> -->
   <div>
     <!-- 导航栏组件 -->
     <headerheader />
     <!-- 题库组件 -->
     <div class="content">
-      <questiobSum />
+      <questiobSum></questiobSum>
     </div>
     <!-- 页尾组件 -->
     <foot />
@@ -24,7 +24,8 @@ import headerheader from "@/components/headerheader.vue";
 
 <style scoped>
 .content {
-  min-height: calc(100vh - 150px); /* 确保内容区域高度减去 footer 的高度 */
+  min-height: calc(100vh - 100px); /* 确保内容区域高度减去 footer 的高度 */
   padding-bottom: 30px; /* 给 footer 留出空间 */
+  padding-top: 50px; /* 给 headerheader 留出空间 */
 }
 </style>

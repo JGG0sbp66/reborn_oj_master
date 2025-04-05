@@ -2,14 +2,13 @@
   <header class="header">
     <div class="header-content">
       <!-- 网站标题 -->
-      <a
-        href="/"
+      <router-link
+        to="/nav/home"
         class="logo"
-        @click="refreshPage"
       >
         <span class="logo-text">OJ Master</span>
         <span class="logo-highlight"></span>
-      </a>
+      </router-link>
 
       <!-- 修正后的主导航菜单 -->
       <nav class="main-nav">
