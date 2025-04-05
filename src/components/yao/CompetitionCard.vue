@@ -45,7 +45,7 @@
       <!-- 右侧动作区域插槽 -->
       <slot name="action">
         <div class="action-section">
-          <router-link :to="actionLink" class="router-link-no-underline">
+          <router-link :to="actionLink" class="router-link-no-underline" target="_blank">
             <slot name="button">
               <button class="lets-go-btn">
                 <span>{{ actionText }}</span>
