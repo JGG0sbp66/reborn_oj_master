@@ -1,280 +1,265 @@
-# 竞赛卡片组件 (CompetitionCard) 使用指南
+# 竞赛卡片组件使用说明
+
+竞赛卡片组件提供了在OJ平台上展示竞赛信息的标准化方式，支持本地数据展示和从服务器获取数据。本文档将介绍如何使用这些组件。
+
+## 目录
+
+1. [组件介绍](#组件介绍)
+2. [基本用法](#基本用法)
+3. [从数据库加载数据](#从数据库加载数据)
+4. [自定义样式](#自定义样式)
+5. [API参考](#api参考)
+
+## 组件介绍
+
+竞赛卡片系统包含两个主要组件：
+
+- **CompetitionCard.vue**: 单个竞赛卡片组件，用于显示一个竞赛的详细信息
+- **CompetitionCardLoader.vue**: 竞赛卡片列表加载器，可从服务器获取多个竞赛数据并显示
 
 ## 基本用法
 
+### 使用本地数据的单卡片
+
 ```vue
 <template>
-  <CompetitionCard :competition="competitionData" />
+  <CompetitionCard
+    :competition="localCompetition"
+    :appear="true"
+    :index="0"
+  />
 </template>
 
 <script setup>
+import { ref } from 'vue';
 import CompetitionCard from '@/components/yao/CompetitionCard.vue';
 
-const competitionData = {
-  title: '全国大学生程序设计竞赛',
-  logos: ['ICPC', 'ACM'],
-  startTime: '2023-10-01 09:00',
-  endTime: '2023-10-01 14:00',
-  duration: '5小时',
+const localCompetition = {
+  title: "全国高校编程马拉松",
+  logos: ["ACM", "ICPC"],
+  startTime: "2024-05-10 09:00:00",
+  endTime: "2024-05-10 15:00:00",
+  duration: "6小时",
   tags: [
-    { name: '进行中', type: 'running' },
-    { name: '个人赛', type: 'individual' }
+    { name: "未开始", type: "running" },
+    { name: "个人赛", type: "individual" },
+    { name: "OI赛制", type: "oi" }
   ]
 };
 </script>
 ```
 
-## 自定义内容
-
-通过使用插槽可以自定义卡片的各个部分：
+### 显示多个竞赛卡片
 
 ```vue
 <template>
-  <CompetitionCard 
-    :competition="competitionData"
-    action-link="/special-contest"
-    action-text="立即报名"
-    :appear="true"
-    :index="0"
-    header-class="special-header"
-  >
-    <!-- 自定义标题 -->
-    <template #title>
-      <div class="custom-title">
-        <i class="icon-trophy"></i>
-        {{ competitionData.title }}
-      </div>
-    </template>
-    
-    <!-- 自定义标签 -->
-    <template #tags>
-      <div class="custom-tags">
-        <el-tag v-for="tag in competitionData.tags" :key="tag.name" 
-                :type="tag.type === 'running' ? 'success' : 'info'">
-          {{ tag.name }}
-        </el-tag>
-      </div>
-    </template>
-    
-    <!-- 自定义按钮 -->
-    <template #button>
-      <el-button type="primary" size="large" icon="el-icon-right">
-        开始比赛
-      </el-button>
-    </template>
-    
-    <!-- 添加脚注 -->
-    <template #footer>
-      <div class="card-footer">
-        <p>主办方：{{ competitionData.organizer }}</p>
-        <p>报名截止：{{ competitionData.deadline }}</p>
-      </div>
-    </template>
-  </CompetitionCard>
+  <div class="competition-list">
+    <CompetitionCard
+      v-for="(item, index) in competitions"
+      :key="index"
+      :competition="item"
+      :appear="true"
+      :index="index"
+    />
+  </div>
 </template>
+
+<script setup>
+import { ref } from 'vue';
+import CompetitionCard from '@/components/yao/CompetitionCard.vue';
+
+const competitions = [
+  {
+    title: "全国高校编程马拉松",
+    logos: ["ACM", "ICPC"],
+    startTime: "2024-05-10 09:00:00",
+    endTime: "2024-05-10 15:00:00",
+    duration: "6小时",
+    tags: [
+      { name: "未开始", type: "running" },
+      { name: "个人赛", type: "individual" }
+    ]
+  },
+  {
+    title: "第五届青少年编程大赛",
+    logos: ["CCF"],
+    startTime: "2024-06-15 08:00:00",
+    endTime: "2024-06-15 12:00:00",
+    duration: "4小时",
+    tags: [
+      { name: "未开始", type: "running" },
+      { name: "团队赛", type: "team" }
+    ]
+  }
+];
+</script>
 ```
 
-## 自定义时间信息
+## 从数据库加载数据
+
+### 使用CompetitionCardLoader组件加载列表
 
 ```vue
 <template>
-  <CompetitionCard 
-    :competition="competitionData"
-    :custom-time-info="customTimeInfo"
+  <CompetitionCardLoader
+    apiUrl="http://localhost:5000/api/competitions"
+    :limit="5"
+    actionText="参加比赛"
+    :filterOptions="{ status: 'upcoming' }"
+  />
+</template>
+
+<script setup>
+import CompetitionCardLoader from '@/components/yao/CompetitionCardLoader.vue';
+</script>
+```
+
+### 使用CompetitionCard加载单个竞赛
+
+```vue
+<template>
+  <CompetitionCard
+    :competitionId="123"
+    :useRemoteData="true"
+    actionText="查看详情"
   />
 </template>
 
 <script setup>
 import CompetitionCard from '@/components/yao/CompetitionCard.vue';
-
-const competitionData = {
-  title: '算法挑战赛',
-  logos: ['ALGO'],
-  startTime: '2023-11-15 10:00',
-  endTime: '2023-11-15 16:00',
-  duration: '6小时',
-  registrationDeadline: '2023-11-10 23:59',
-  participantsCount: '256人',
-  tags: [
-    { name: '即将开始', type: 'running' },
-    { name: '团队赛', type: 'individual' }
-  ]
-};
-
-// 自定义时间信息字段
-const customTimeInfo = [
-  { label: '比赛开始', key: 'startTime' },
-  { label: '比赛结束', key: 'endTime' },
-  { label: '报名截止', key: 'registrationDeadline' },
-  { label: '参赛人数', key: 'participantsCount' }
-];
 </script>
 ```
 
-## 完全自定义布局
+## 自定义样式
+
+竞赛卡片支持通过属性自定义样式和行为：
 
 ```vue
 <template>
-  <CompetitionCard :competition="competitionData">
-    <!-- 完全自定义内容区域 -->
-    <template #time-info>
-      <div class="custom-info-section">
-        <div class="countdown">
-          <div class="countdown-title">距离开始还有</div>
-          <div class="countdown-timer">{{ countdownTime }}</div>
-        </div>
-        
-        <el-progress :percentage="registrationProgress" />
-        
-        <div class="stats">
-          <div class="stat-item">
-            <div class="stat-value">{{ competitionData.participantsCount }}</div>
-            <div class="stat-label">已报名</div>
-          </div>
-          <div class="stat-item">
-            <div class="stat-value">{{ competitionData.maxParticipants }}</div>
-            <div class="stat-label">名额总数</div>
-          </div>
-        </div>
-      </div>
-    </template>
-    
-    <!-- 添加额外的头部内容 -->
-    <template #header-extra>
-      <div class="competition-description">
-        {{ competitionData.description }}
-      </div>
-    </template>
-  </CompetitionCard>
+  <CompetitionCard
+    :competition="competition"
+    headerClass="custom-header"
+    actionText="开始挑战"
+    actionLink="/contest/problems/123"
+    :customTimeInfo="customTimeFormat"
+  />
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref } from 'vue';
 import CompetitionCard from '@/components/yao/CompetitionCard.vue';
 
-const competitionData = {
-  // ... 基本数据
-  description: '这是一个高难度的算法挑战赛，专为有经验的参赛者设计。',
-  participantsCount: 180,
-  maxParticipants: 200
-};
+const competition = {/* 竞赛数据 */};
 
-// 计算报名进度
-const registrationProgress = computed(() => {
-  return (competitionData.participantsCount / competitionData.maxParticipants) * 100;
-});
-
-// 倒计时逻辑
-const countdownTime = ref('00:00:00');
-let timer = null;
-
-const updateCountdown = () => {
-  const now = new Date();
-  const startTime = new Date(competitionData.startTime);
-  const diff = startTime - now;
-  
-  if (diff <= 0) {
-    countdownTime.value = '已开始';
-    clearInterval(timer);
-    return;
-  }
-  
-  const hours = Math.floor(diff / (1000 * 60 * 60));
-  const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-  const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-  
-  countdownTime.value = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-};
-
-onMounted(() => {
-  updateCountdown();
-  timer = setInterval(updateCountdown, 1000);
-});
-
-onUnmounted(() => {
-  clearInterval(timer);
-});
+const customTimeFormat = [
+  { label: '开赛', key: 'startTime' },
+  { label: '结束', key: 'endTime' },
+  { label: '时长', key: 'duration' }
+];
 </script>
 
-<style scoped>
-.custom-info-section {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-}
-
-.countdown {
-  text-align: center;
-}
-
-.countdown-title {
-  font-size: 14px;
-  color: #666;
-  margin-bottom: 5px;
-}
-
-.countdown-timer {
-  font-size: 24px;
-  font-weight: bold;
-  color: #42b983;
-}
-
-.stats {
-  display: flex;
-  justify-content: space-around;
-  margin-top: 10px;
-}
-
-.stat-item {
-  text-align: center;
-}
-
-.stat-value {
-  font-size: 18px;
-  font-weight: bold;
-  color: #333;
-}
-
-.stat-label {
-  font-size: 12px;
-  color: #666;
-}
-
-.competition-description {
-  margin-top: 15px;
-  padding-top: 15px;
-  border-top: 1px dashed #eee;
-  font-size: 14px;
-  color: #666;
-  line-height: 1.5;
+<style>
+.custom-header {
+  background: linear-gradient(to right, #3494e6, #ec6ead);
+  color: white;
 }
 </style>
 ```
 
-## 可用的插槽
+## API参考
 
-组件提供以下插槽用于自定义内容：
+### CompetitionCard 属性
 
-| 插槽名 | 描述 |
-|--------|------|
-| `title` | 自定义卡片标题 |
-| `logos` | 自定义Logo区域 |
-| `header-extra` | 标题下方的额外内容 |
-| `time-info` | 自定义时间信息区域 |
-| `tags` | 自定义标签区域 |
-| `left-extra` | 左侧区域底部的额外内容 |
-| `action` | 整个右侧动作区域 |
-| `button` | 仅自定义按钮部分 |
-| `footer` | 卡片底部额外内容 |
+| 属性 | 类型 | 默认值 | 说明 |
+|------|------|------|------|
+| competition | Object | - | 竞赛对象数据 |
+| actionLink | String | '/contest/problems' | 卡片按钮链接 |
+| actionText | String | "Let's go" | 卡片按钮文本 |
+| appear | Boolean | false | 是否应用出现动画 |
+| index | Number | - | 在列表中的索引，用于计算动画延迟 |
+| headerClass | String | - | 卡片头部的自定义样式类 |
+| customTimeInfo | Array | - | 自定义时间信息显示格式 |
+| competitionId | Number | - | 从服务器获取数据时的竞赛ID |
+| useRemoteData | Boolean | false | 是否使用远程数据 |
 
-## 可配置的Props
+### CompetitionCardLoader 属性
 
-| Prop名 | 类型 | 默认值 | 描述 |
-|--------|------|--------|------|
-| `competition` | `Object` | 必填 | 竞赛数据对象 |
-| `actionLink` | `String` | `/contest/problems` | 按钮链接地址 |
-| `actionText` | `String` | `Let's go` | 按钮文本 |
-| `appear` | `Boolean` | `false` | 是否启用出现动画 |
-| `index` | `Number` | - | 用于计算动画延迟的索引 |
-| `headerClass` | `String` | - | 应用于标题区域的额外CSS类 |
-| `customTimeInfo` | `Array` | - | 自定义时间信息配置 | 
+| 属性 | 类型 | 默认值 | 说明 |
+|------|------|------|------|
+| apiUrl | String | 'http://localhost:5000/api/competitions' | API端点URL |
+| limit | Number | 10 | 要获取的竞赛数量 |
+| actionText | String | "Let's go" | 卡片按钮文本 |
+| customActionLink | String/Function | - | 自定义按钮链接或生成链接的函数 |
+| filterOptions | Object | {} | 发送到API的过滤条件 |
+
+### 竞赛数据格式
+
+```javascript
+{
+  id: 123,                          // 竞赛ID (可选)
+  title: "竞赛标题",                // 标题
+  logos: ["Logo1", "Logo2"],        // 标志文本数组
+  startTime: "2024-05-10 09:00:00", // 开始时间
+  endTime: "2024-05-10 15:00:00",   // 结束时间
+  duration: "6小时",                // 比赛时长
+  tags: [                           // 标签数组
+    { 
+      name: "标签名称",            // 标签显示名称
+      type: "标签类型"             // 标签类型，影响样式
+    }
+  ]
+}
+```
+
+### 后端API接口格式
+
+1. 获取竞赛列表接口 (POST /api/competitions)
+
+   **请求参数:**
+   ```javascript
+   {
+     "limit": 10,           // 获取数量
+     "page": 1,             // 页码
+     "status": "upcoming",  // 状态过滤
+     // 其他过滤参数...
+   }
+   ```
+
+   **响应格式:**
+   ```javascript
+   {
+     "success": true,
+     "competitions": [
+       // 竞赛对象数组
+     ],
+     "total": 100,        // 总数
+     "totalPages": 10     // 总页数
+   }
+   ```
+
+2. 获取单个竞赛接口 (POST /api/competition)
+
+   **请求参数:**
+   ```javascript
+   {
+     "id": 123            // 竞赛ID
+   }
+   ```
+
+   **响应格式:**
+   ```javascript
+   {
+     "success": true,
+     "competition": {
+       // 竞赛对象
+     }
+   }
+   ```
+
+## 示例场景
+
+1. 首页显示最新竞赛
+2. 竞赛页展示所有竞赛并支持筛选
+3. 用户个人中心显示已参与的竞赛
+
+通过灵活组合这些组件，可以实现各种竞赛展示需求。 

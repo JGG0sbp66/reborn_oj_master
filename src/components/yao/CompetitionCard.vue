@@ -4,12 +4,12 @@
       <div class="title-line">
         <!-- 标题插槽 -->
         <slot name="title">
-          <div class="competition-title">{{ competition.title }}</div>
+          <div class="competition-title" v-if="mergedCompetition">{{ mergedCompetition.title }}</div>
         </slot>
         <!-- Logo插槽 -->
         <slot name="logos">
-          <div class="competition-logos">
-            <div class="logo-placeholder" v-for="(logo, i) in competition.logos" :key="i">{{ logo }}</div>
+          <div class="competition-logos" v-if="mergedCompetition">
+            <div class="logo-placeholder" v-for="(logo, i) in mergedCompetition.logos" :key="i">{{ logo }}</div>
           </div>
         </slot>
       </div>
@@ -29,9 +29,9 @@
         </slot>
         <!-- 标签插槽 -->
         <slot name="tags">
-          <div class="competition-tags">
+          <div class="competition-tags" v-if="mergedCompetition">
             <span 
-              v-for="(tag, i) in competition.tags" 
+              v-for="(tag, i) in mergedCompetition.tags" 
               :key="i" 
               class="tag" 
               :class="getTagClass(tag.type)"
@@ -45,7 +45,7 @@
       <!-- 右侧动作区域插槽 -->
       <slot name="action">
         <div class="action-section">
-          <router-link :to="actionLink" class="router-link-no-underline">
+          <router-link :to="actionLink" class="router-link-no-underline" target="_blank">
             <slot name="button">
               <button class="lets-go-btn">
                 <span>{{ actionText }}</span>
@@ -62,7 +62,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, defineProps, onMounted, computed } from 'vue';
+import { ref, defineProps, onMounted, computed, watch } from 'vue';
+import axios from 'axios';
 
 // 定义竞赛对象类型
 interface Tag {
@@ -82,18 +83,31 @@ interface Competition {
 
 // 组件属性
 const props = defineProps<{
-  competition: Competition;
+  competition?: Competition;
   actionLink?: string;
   actionText?: string;
   appear?: boolean;
   index?: number;
   headerClass?: string;
   customTimeInfo?: Array<{label: string, key: string}>;
+  competitionId?: number; // 新增：接收竞赛ID属性
+  useRemoteData?: boolean; // 新增：是否使用远程数据
 }>();
 
 // 提供默认值
 const actionLink = props.actionLink || '/contest/problems';
 const actionText = props.actionText || "Let's go";
+
+// 存储从服务器获取的竞赛数据
+const competitionData = ref<Competition | null>(null);
+
+// 合并的竞赛数据(本地props或远程获取)
+const mergedCompetition = computed(() => {
+  if (props.useRemoteData && competitionData.value) {
+    return competitionData.value;
+  }
+  return props.competition;
+});
 
 // 时间信息项目配置
 const defaultTimeInfoItems = [
@@ -106,7 +120,8 @@ const timeInfoItems = computed(() => props.customTimeInfo || defaultTimeInfoItem
 
 // 获取时间值的函数
 const getTimeValue = (key: string) => {
-  return props.competition[key] || '';
+  if (!mergedCompetition.value) return '';
+  return mergedCompetition.value[key] || '';
 };
 
 // 处理标签类型的函数
@@ -160,6 +175,40 @@ const animationStyle = computed(() => {
     };
   }
   return {};
+});
+
+// 获取单个竞赛数据的函数
+const fetchCompetitionData = async () => {
+  if (!props.competitionId || !props.useRemoteData) return;
+  
+  try {
+    const { data } = await axios({
+      url: 'http://localhost:5000/api/competition',
+      method: 'post',
+      data: { 
+        id: props.competitionId 
+      }
+    });
+    
+    competitionData.value = data.competition;
+    console.log('获取到竞赛数据:', data.competition);
+  } catch (error) {
+    console.error('获取竞赛数据失败:', error);
+  }
+};
+
+// 监听竞赛ID变化，重新获取数据
+watch(() => props.competitionId, (newId) => {
+  if (newId && props.useRemoteData) {
+    fetchCompetitionData();
+  }
+});
+
+// 组件挂载时，如果提供了竞赛ID，则获取数据
+onMounted(() => {
+  if (props.competitionId && props.useRemoteData) {
+    fetchCompetitionData();
+  }
 });
 </script>
 

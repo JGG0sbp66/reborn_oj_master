@@ -90,7 +90,7 @@
       <div class="competition-list">
         <!-- 竞赛卡片 -->
         <div 
-          v-for="(competition, index) in filteredCompetitions" 
+          v-for="(competition, index) in paginatedCompetitions" 
           :key="index"
           class="competition-card"
           :class="{ 'ended': competition.status === 'ended' }"
@@ -131,6 +131,7 @@
                   :key="i"
                   class="competition-tag"
                   :class="tag.type"
+                  :style="getTagStyle(tag)"
                 >
                   {{ tag.name }}
                 </span>
@@ -215,11 +216,27 @@
 
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted, onBeforeUnmount } from "vue"
+import { ref, reactive, computed, onMounted, onBeforeUnmount, watch } from "vue"
 import showtitle from "@/components/test/showtitle.vue"
 import headerheader from "@/components/headerheader.vue";
 import foot from "@/components/foot.vue";
 import axios from "axios";
+
+// 定义类型
+interface Tag {
+  name: string;
+  type: string;
+}
+
+interface Competition {
+  title: string;
+  logos: string[];
+  startTime: string;
+  endTime: string;
+  duration: string;
+  status: string;
+  tags: Tag[];
+}
 
 // 搜索和筛选
 const searchQuery = ref('');
@@ -314,67 +331,51 @@ onBeforeUnmount(() => {
 
 // 分页
 const currentPage = ref(1);
-const pageSize = ref(5);
-const totalPages = ref(4);
+const pageSize = ref(4);
 
 // 竞赛数据
-const competitionData = ref([
-  {
-    title: "全国高校编程马拉松",
-    logos: ["ACM", "ICPC", "CCF"],
-    startTime: "2024-04-10 09:00:00",
-    endTime: "2024-04-10 13:00:00",
-    duration: "04 小时 00 分 00 秒",
-    status: "upcoming",
-    tags: [
-      { name: "未开始", type: "running" },
-      { name: "个人赛", type: "individual" },
-      { name: "OI赛制", type: "oi" }
-    ]
-  },
-  {
-    title: "第五届全国青少年编程大赛",
-    logos: ["ACM", "ICPC", "CCF"],
-    startTime: "2024-08-16 08:00:00",
-    endTime: "2024-08-16 12:00:00",
-    duration: "04 小时 00 分 00 秒",
-    status: "upcoming",
-    tags: [
-      { name: "未开始", type: "running" },
-      { name: "个人赛", type: "individual" },
-      { name: "OI赛制", type: "oi" },
-      { name: "官方比赛", type: "regional" }
-    ]
-  },
-  {
-    title: "第六届多校新生程序设计邀请赛",
-    logos: ["ACM", "ICPC", "CCF"],
-    startTime: "2024-12-21 12:00:00",
-    endTime: "2024-12-21 16:00:00",
-    duration: "04 小时 00 分 00 秒",
-    status: "ended",
-    tags: [
-      { name: "已结束", type: "ended" },
-      { name: "个人赛", type: "individual" },
-      { name: "OI赛制", type: "oi" },
-      { name: "官方比赛", type: "regional" }
-    ]
-  },
-  {
-    title: "2024年春季程序设计挑战赛",
-    logos: ["ACM", "ICPC", "CCF"],
-    startTime: "2024-03-15 10:00:00",
-    endTime: "2024-03-15 15:00:00",
-    duration: "05 小时 00 分 00 秒",
-    status: "ended",
-    tags: [
-      { name: "已结束", type: "ended" },
-      { name: "团队赛", type: "team" },
-      { name: "ACM赛制", type: "acm" },
-      { name: "官方比赛", type: "regional" }
-    ]
+const competitionData = ref<Competition[]>([]);
+
+const fetchCompetitions = async () => {
+  try {
+    const response = await axios({
+      url: 'http://127.0.0.1:5000/api/race-list',
+      method: 'get',
+      data: {}
+    });
+    
+    // 检查数据结构并提取竞赛信息
+    const data = response.data;
+    
+    if (data && data.race_info && Array.isArray(data.race_info)) {
+      // 将获取到的竞赛数据赋值给competitionData
+      competitionData.value = data.race_info.map((race: any) => {
+        // 转换API返回的数据格式为组件需要的格式
+        return {
+          title: race.title,
+          logos: race.logos || [],
+          startTime: race.startTime,
+          endTime: race.endTime,
+          duration: race.duration,
+          status: race.status,
+          tags: race.tags || []
+        };
+      });
+      
+      console.log('获取到竞赛数据:', competitionData.value);
+    } else {
+      console.warn('获取到的竞赛数据格式不正确:', data);
+    }
+  } catch (error) {
+    console.error('获取竞赛数据失败:', error);
   }
-]);
+};
+
+// 组件挂载后获取数据
+onMounted(() => {
+  // 调用获取竞赛数据的方法
+  fetchCompetitions();
+});
 
 // 获取竞赛状态对应的类名
 const getStatusClass = (status: string) => {
@@ -390,33 +391,82 @@ const getStatusClass = (status: string) => {
   }
 };
 
+// 为标签生成动态样式
+const getTagStyle = (tag: Tag) => {
+  // 如果是已知类型，不需要特殊样式
+  if (['running', 'ended', 'individual', 'team', 'oi', 'acm', 'regional'].includes(tag.type)) {
+    return {};
+  }
+  
+  // 基于标签名称生成哈希值作为颜色基础
+  const nameHash = tag.name.split('').reduce((acc: number, char: string) => {
+    return acc + char.charCodeAt(0);
+  }, 0);
+  
+  // 选择预定义的柔和颜色方案
+  const colorSchemes = [
+    { bg: '#E8F4F8', text: '#2980b9' }, // 蓝色系
+    { bg: '#F8F4E8', text: '#E67E22' }, // 橙色系
+    { bg: '#F4E8F8', text: '#8E44AD' }, // 紫色系
+    { bg: '#E8F8F4', text: '#27AE60' }, // 绿色系
+    { bg: '#F8E8E8', text: '#C0392B' }, // 红色系
+    { bg: '#F4F8E8', text: '#16A085' }  // 青绿色系
+  ];
+  
+  // 使用哈希值选择颜色方案，确保同名标签颜色一致
+  const colorIndex = nameHash % colorSchemes.length;
+  const colors = colorSchemes[colorIndex];
+  
+  return {
+    backgroundColor: colors.bg,
+    color: colors.text,
+    borderColor: colors.text + '33' // 添加透明度33 (20%)
+  };
+};
+
 // 过滤后的竞赛列表
 const filteredCompetitions = computed(() => {
   let results = competitionData.value;
   
-  // 搜索过滤
+  // 按状态筛选
+  if (statusFilter.value !== 'all') {
+    results = results.filter((comp: Competition) => comp.status === statusFilter.value);
+  }
+  
+  // 按类型筛选
+  if (typeFilter.value !== 'all') {
+    results = results.filter((comp: Competition) => 
+      comp.tags.some((tag: Tag) => tag.type === typeFilter.value)
+    );
+  }
+  
+  // 按关键字搜索
   if (searchQuery.value) {
     const query = searchQuery.value.toLowerCase();
-    results = results.filter(comp => 
-      comp.title.toLowerCase().includes(query)
-    );
-  }
-  
-  // 状态过滤
-  if (statusFilter.value !== 'all') {
-    results = results.filter(comp => 
-      comp.status === statusFilter.value
-    );
-  }
-  
-  // 类型过滤
-  if (typeFilter.value !== 'all') {
-    results = results.filter(comp => 
-      comp.tags.some(tag => tag.type === typeFilter.value)
+    results = results.filter((comp: Competition) => 
+      comp.title.toLowerCase().includes(query) || 
+      comp.tags.some((tag: Tag) => tag.name.toLowerCase().includes(query))
     );
   }
   
   return results;
+});
+
+// 计算总页数
+const totalPages = computed(() => {
+  return Math.ceil(filteredCompetitions.value.length / pageSize.value);
+});
+
+// 当前页面显示的竞赛列表
+const paginatedCompetitions = computed(() => {
+  const startIndex = (currentPage.value - 1) * pageSize.value;
+  const endIndex = startIndex + pageSize.value;
+  return filteredCompetitions.value.slice(startIndex, endIndex);
+});
+
+// 如果过滤条件变化，重置到第一页
+watch([searchQuery, statusFilter, typeFilter], () => {
+  currentPage.value = 1;
 });
 
 // 分页控制方法
@@ -435,33 +485,6 @@ const nextPage = () => {
 const goToPage = (page: number) => {
   currentPage.value = page;
 };
-
-// 从服务器获取竞赛数据
-const fetchCompetitions = async () => {
-  try {
-    // 这里应该替换为实际的API端点
-    const response = await axios.get('http://localhost:5000/api/competitions', {
-      params: {
-        page: currentPage.value,
-        limit: pageSize.value
-      }
-    });
-    
-    // 假设服务器返回了结构化数据，包括总页数和当前页的竞赛
-    // competitionData.value = response.data.competitions;
-    // totalPages.value = response.data.totalPages;
-    
-    // 由于现在是模拟数据，这里不做实际赋值
-  } catch (error) {
-    console.error('获取竞赛数据失败:', error);
-  }
-};
-
-// 组件挂载后获取数据
-onMounted(() => {
-  // 实际项目中取消注释下面这行
-  // fetchCompetitions();
-});
 
 // 计算下拉菜单位置样式
 const statusDropdownStyle = computed(() => {
