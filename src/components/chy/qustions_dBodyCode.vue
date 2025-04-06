@@ -1,84 +1,126 @@
 <template>
   <div class="code">
     <div class="headerBox">
-      <span
-        class="headerSpan1"
+      <div
+        class="language-selector"
         tabindex="0"
         @click="toggleLanguageSelection"
         @blur="closeLanguageSelection"
       >
-        {{ selectedLanguage }}
-      </span>
-      <svg
-        class="hS1"
-        xmlns="http://www.w3.org/2000/svg"
-        xmlns:xlink="http://www.w3.org/1999/xlink"
-        viewBox="0 0 24 24"
-        style="width: 16px; height: 16px; position: relative; left: -25px; top: 3px; color: #767c82;margin-left: -20px;transform: rotate(180deg);"
-      >
-        <path
-          d="M6 15l6-6l6 6"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-        ></path>
-      </svg>
-    </div>
-    <div
-      class="selection"
-      v-show="showLanguageSelection"
-    >
-      <div style="width: 12px; height: 12px; background-color: white; position: absolute; left: 80px; top:-6px; transform: rotate(45deg); box-shadow: -1px -1px 1px rgba(0, 0, 0, 0.2); z-index: 0;">
+        <span class="selected-language">{{ selectedLanguage }}</span>
+        <svg
+          class="dropdown-icon"
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          :class="{ 'rotate-icon': showLanguageSelection }"
+        >
+          <path
+            d="M6 9l6 6 6-6"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+        </svg>
       </div>
-    </div>
-    <div
-      class="selection"
-      v-show="showLanguageSelection"
-    >
-      <div class="selectionB">
-        <div
-          class="selectionE"
-          @click="selectLanguage('C')"
-        >
-          <div>C</div>
-        </div>
-        <div
-          class="selectionE"
-          :class="{ yeah: selectedLanguage === 'C++' }"
-          @click="selectLanguage('C++')"
-        >
-          <div>C++</div>
-          <div v-if="selectedLanguage === 'C++'">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              xmlns:xlink="http://www.w3.org/1999/xlink"
-              viewBox="0 0 24 24"
-              style="width: 20px;height: 20px; position: relative; top: 5px;"
-            >
-              <path
-                d="M5 12l5 5L20 7"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              ></path>
-            </svg>
+      <div
+        class="selection"
+        v-show="showLanguageSelection"
+      >
+        <div class="selectionB">
+          <div
+            class="selectionE"
+            :class="{ yeah: selectedLanguage === 'C' }"
+            @click="selectLanguage('C')"
+          >
+            <div>C</div>
+            <div v-if="selectedLanguage === 'C'">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                style="width: 20px;height: 20px; position: relative; top: 2px;"
+              >
+                <path
+                  d="M5 12l5 5L20 7"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+            </div>
           </div>
-        </div>
-        <div
-          class="selectionE"
-          @click="selectLanguage('Java')"
-        >
-          <div>Java</div>
-        </div>
-        <div
-          class="selectionE"
-          @click="selectLanguage('Python')"
-        >
-          <div>Python</div>
+          <div
+            class="selectionE"
+            :class="{ yeah: selectedLanguage === 'C++' }"
+            @click="selectLanguage('C++')"
+          >
+            <div>C++</div>
+            <div v-if="selectedLanguage === 'C++'">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                style="width: 20px;height: 20px; position: relative; top: 2px;"
+              >
+                <path
+                  d="M5 12l5 5L20 7"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+            </div>
+          </div>
+          <div
+            class="selectionE"
+            :class="{ yeah: selectedLanguage === 'Java' }"
+            @click="selectLanguage('Java')"
+          >
+            <div>Java</div>
+            <div v-if="selectedLanguage === 'Java'">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                style="width: 20px;height: 20px; position: relative; top: 2px;"
+              >
+                <path
+                  d="M5 12l5 5L20 7"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+            </div>
+          </div>
+          <div
+            class="selectionE"
+            :class="{ yeah: selectedLanguage === 'Python' }"
+            @click="selectLanguage('Python')"
+          >
+            <div>Python</div>
+            <div v-if="selectedLanguage === 'Python'">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                style="width: 20px;height: 20px; position: relative; top: 2px;"
+              >
+                <path
+                  d="M5 12l5 5L20 7"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -90,12 +132,21 @@
           :key="index"
         >
           <span class="lineNumber">{{ index + 1 }}</span>
-          <input
-            type="text"
-            v-model="codeLines[index]"
-            @keyup.enter="addNewLine(index)"
-            @keyup.delete="removeLineIfEmpty(index)"
-          />
+          <div class="code-input-wrapper">
+            <input
+              type="text"
+              v-model="codeLines[index]"
+              @keydown="handleKeyDown($event, index)"
+              @keyup.enter="addNewLine(index)"
+              @keyup.delete="removeLineIfEmpty(index)"
+              :ref="'input_' + index"
+              @input="handleInput(index)"
+            />
+            <pre
+              class="highlighted-code"
+              v-html="highlightedLines[index]"
+            ></pre>
+          </div>
         </div>
       </div>
     </div>
@@ -103,7 +154,10 @@
   </div>
 </template>
   
-  <script>
+<script>
+import hljs from "highlight.js";
+import "highlight.js/styles/github-dark.css";
+
 export default {
   name: "CodeComponent",
   data() {
@@ -111,6 +165,10 @@ export default {
       selectedLanguage: "C++",
       showLanguageSelection: false,
       codeLines: [""],
+      isEnterKeyDown: false,
+      isBackspaceKeyDown: false,
+      enterKeyInterval: null,
+      backspaceKeyInterval: null,
       stateOptions: [
         {
           status: `<svg xmlns="http://www.w3.org/2000/svg"
@@ -155,7 +213,19 @@ export default {
           color: "#9932CC",
         },
       ],
+      highlightedLines: [""], // 存储高亮后的代码行
     };
+  },
+  watch: {
+    selectedLanguage(newLang) {
+      this.highlightAllLines();
+    },
+    codeLines: {
+      deep: true,
+      handler() {
+        this.highlightAllLines();
+      },
+    },
   },
   methods: {
     toggleLanguageSelection() {
@@ -163,23 +233,131 @@ export default {
     },
     closeLanguageSelection() {
       setTimeout(() => {
-        this.showLanguageSelection = false;
+        // 检查鼠标是否在下拉框上
+        const isHovering = this.$el.querySelector(".selection:hover");
+        if (!isHovering) {
+          this.showLanguageSelection = false;
+        }
       }, 200);
     },
     selectLanguage(language) {
       this.selectedLanguage = language;
       this.showLanguageSelection = false;
     },
+
     addNewLine(index) {
-      if (index === this.codeLines.length - 1) {
-        this.codeLines.push("");
+      const inputElement = this.$refs[`input_${index}`][0];
+      const cursorPosition = inputElement.selectionStart;
+      const currentLine = this.codeLines[index];
+
+      // 如果光标在行末或者行是空的
+      if (cursorPosition === currentLine.length || currentLine.trim() === "") {
+        this.insertNewLineAfter(index);
+
+        // 设置长按标志
+        if (!this.enterKeyInterval) {
+          this.enterKeyInterval = setInterval(() => {
+            const lastIndex = this.codeLines.length - 1;
+            this.insertNewLineAfter(lastIndex);
+          }, 100); // 每100ms添加一行
+        }
+      } else {
+        this.splitLineAtCursor(index, cursorPosition);
       }
     },
+
+    // 在指定行后插入新行
+    insertNewLineAfter(index) {
+      this.codeLines.splice(index + 1, 0, "");
+      this.$nextTick(() => {
+        const newIndex = index + 1;
+        const inputRef = this.$refs[`input_${newIndex}`];
+        if (inputRef && inputRef[0]) {
+          inputRef[0].focus();
+        }
+      });
+    },
+
+    // 在光标位置分割当前行
+    splitLineAtCursor(index, cursorPosition) {
+      const currentLine = this.codeLines[index];
+      const beforeCursor = currentLine.substring(0, cursorPosition);
+      const afterCursor = currentLine.substring(cursorPosition);
+
+      this.codeLines[index] = beforeCursor;
+      this.codeLines.splice(index + 1, 0, afterCursor);
+
+      this.$nextTick(() => {
+        const newIndex = index + 1;
+        const inputRef = this.$refs[`input_${newIndex}`];
+        if (inputRef && inputRef[0]) {
+          inputRef[0].focus();
+          // 将光标设置在新行的开头
+          inputRef[0].setSelectionRange(0, 0);
+        }
+      });
+    },
+
     removeLineIfEmpty(index) {
       if (this.codeLines[index] === "" && index > 0) {
         this.codeLines.splice(index, 1);
+        // 等待Vue完成DOM更新后聚焦上一行
+        this.$nextTick(() => {
+          const prevIndex = index - 1;
+          const inputRef = this.$refs[`input_${prevIndex}`];
+          if (inputRef && inputRef[0]) {
+            inputRef[0].focus();
+
+            // 如果上一行也是空的，设置长按删除
+            if (
+              this.codeLines[prevIndex] === "" &&
+              !this.backspaceKeyInterval
+            ) {
+              this.backspaceKeyInterval = setInterval(() => {
+                if (prevIndex > 0 && this.codeLines[prevIndex] === "") {
+                  this.codeLines.splice(prevIndex, 1);
+                  this.$nextTick(() => {
+                    const newPrevIndex = prevIndex - 1;
+                    const newInputRef = this.$refs[`input_${newPrevIndex}`];
+                    if (newInputRef && newInputRef[0]) {
+                      newInputRef[0].focus();
+                    }
+                  });
+                } else {
+                  clearInterval(this.backspaceKeyInterval);
+                  this.backspaceKeyInterval = null;
+                }
+              }, 100); // 每100ms删除一行
+            }
+          }
+        });
+      } else if (this.codeLines[index] === "" && index === 0) {
+        // 已经是第一行且为空，不做任何操作
+        return;
       }
     },
+    // 添加keydown和keyup事件处理
+    handleKeyDown(event, index) {
+      if (event.key === "Enter") {
+        event.preventDefault(); // 阻止默认的换行行为
+        this.isEnterKeyDown = true;
+        this.addNewLine(index);
+      } else if (event.key === "Backspace") {
+        this.isBackspaceKeyDown = true;
+        this.removeLineIfEmpty(index);
+      }
+    },
+
+    handleKeyUp(event) {
+      if (event.key === "Enter") {
+        this.isEnterKeyDown = false;
+        clearInterval(this.enterKeyInterval);
+      } else if (event.key === "Backspace") {
+        this.isBackspaceKeyDown = false;
+        clearInterval(this.backspaceKeyInterval);
+      }
+    },
+
     getRunTime() {
       const time = Math.floor(Math.random() * 100) + 1;
       return `
@@ -234,10 +412,10 @@ export default {
         message: "提交成功,等待测评",
       });
 
-
-      // Generate random submission data
+      // 随机选择一个状态
       const randomState =
         this.stateOptions[Math.floor(Math.random() * this.stateOptions.length)];
+
       const submission = {
         status: randomState.status,
         language: this.selectedLanguage,
@@ -246,143 +424,416 @@ export default {
         submitTime: this.getSubmitTime(),
       };
 
-      // 修复这里：使用 submission 而不是未定义的 submissionData
-      this.$emit('submit-code', submission);
+      this.$emit("submit-code", submission);
+
+      // 清空代码输入
+      this.codeLines = [""];
     },
+    getLanguageMode() {
+      // 将选中的语言映射到 highlight.js 的语言模式
+      const langMap = {
+        C: "c",
+        "C++": "cpp",
+        Java: "java",
+        Python: "python",
+      };
+      return langMap[this.selectedLanguage] || "plaintext";
+    },
+    highlightLine(line) {
+      try {
+        const result = hljs.highlight(line, {
+          language: this.getLanguageMode(),
+          ignoreIllegals: true,
+        });
+        return result.value || line;
+      } catch (e) {
+        return line;
+      }
+    },
+    highlightAllLines() {
+      this.highlightedLines = this.codeLines.map((line) =>
+        this.highlightLine(line)
+      );
+    },
+    handleInput(index) {
+      this.$nextTick(() => {
+        this.highlightedLines[index] = this.highlightLine(
+          this.codeLines[index]
+        );
+      });
+    },
+  },
+  mounted() {
+    this.highlightAllLines();
+    document.addEventListener("keyup", this.handleKeyUp);
+  },
+  beforeDestroy() {
+    clearInterval(this.enterKeyInterval);
+    clearInterval(this.backspaceKeyInterval);
+    this.enterKeyInterval = null;
+    this.backspaceKeyInterval = null;
+    document.removeEventListener("keyup", this.handleKeyUp);
   },
 };
 </script>
   
-  <style scoped>
+<style scoped>
+* {
+  box-sizing: border-box;
+}
 .code {
-  width: 50%;
+  width: 100%;
+  height: 100%;
   background-color: white;
   border-radius: 8px;
-  box-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .headerBox {
-  padding: 10px;
+  padding: 12px 16px;
+  border-bottom: 1px solid #f0f0f0;
+  display: flex;
+  align-items: center;
+  background-color: #f9f9f9;
+  position: relative;
 }
 
-.headerSpan1 {
-  display: inline-block;
-  width: 180px;
-  height: 34px;
-  border: 1px solid lightgray;
-  padding: 0 14px;
-  margin: 10px;
-  border-radius: 8px;
-  line-height: 34px;
+.language-selector {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 150px;
+  height: 36px;
+  padding: 0 12px;
+  border: 1px solid #dcdfe6;
+  border-radius: 4px;
+  background-color: white;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  user-select: none;
+}
+
+.language-selector:hover {
+  border-color: #c0c4cc;
+}
+
+.language-selector:focus {
+  outline: none;
+  border-color: #18a058;
+  box-shadow: 0 0 0 2px rgba(24, 160, 88, 0.2);
+}
+
+.selected-language {
   font-size: 14px;
+  color: #606266;
 }
 
-.headerSpan1:hover {
-  border: 1px solid green;
+.dropdown-icon {
+  width: 16px;
+  height: 16px;
+  color: #c0c4cc;
+  transition: transform 0.3s ease;
 }
 
-.headerSpan1:focus-within {
-  border: 2px solid green;
+.rotate-icon {
+  transform: rotate(180deg);
+}
+
+.hS1 {
+  color: #767c82;
+  transition: transform 0.2s ease;
+}
+
+.headerSpan1:hover .hS1 {
+  color: #18a058;
+}
+
+.showLanguageSelection .hS1 {
+  transform: rotate(0deg);
 }
 
 .selection {
   position: absolute;
-  background-color: white;
+  top: calc(70% + 8px);
+  left: 3px;
   width: 180px;
-  height: 147px;
-  margin-top: -1px;
+  background-color: white;
+  margin-top: 8px;
   margin-left: 10px;
   border-radius: 8px;
-  box-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
-  z-index: 1;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 10;
+  transform-origin: top;
+  animation: fadeIn 0.15s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.selection::before {
+  content: "";
+  position: absolute;
+  top: -6px;
+  left: 20px;
+  width: 12px;
+  height: 12px;
+  background-color: white;
+  transform: rotate(45deg);
+  box-shadow: -1px -1px 2px rgba(0, 0, 0, 0.1);
+  z-index: -1;
 }
 
 .selectionB {
-  padding: 4px;
+  padding: 8px 0;
 }
 
 .selectionE {
-  border-bottom: 1px solid #2e33380d;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 16px;
   font-size: 14px;
-  line-height: 34px;
-  padding-left: 8px;
+  color: #333;
+  transition: all 0.2s ease;
 }
 
 .selectionE:hover {
+  background-color: #f5f5f5;
   cursor: pointer;
-  background-color: #e7e7e7;
-  border-radius: 8px;
+}
+
+.selectionE.yeah {
+  color: #18a058;
+  font-weight: 500;
+  background-color: #f0f9eb;
 }
 
 .codeBody {
-  background-color: #1f2225;
-  min-height: 770px;
-}
-
-.lineNumber {
-  display: inline-block;
-  width: 54px;
-  height: 22px;
-  color: #c6c6c6;
-  text-align: end;
-  padding-right: 5px;
-  padding-top: 1px;
-  border-right: 2px solid #282828;
-  border-bottom: 2px solid #282828;
-  font-size: 14px;
+  background-color: #f6f8fa; /* 改为浅色背景 */
+  flex-grow: 1;
+  overflow: hidden;
+  position: relative;
+  height: 770px;
+  border-radius: 0 0 8px 8px;
+  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.1); /* 更柔和的阴影 */
+  overflow-x: hidden;
 }
 
 .Aline {
-  height: 770px;
+  height: 100%; /* 继承父容器高度 */
+  overflow-y: auto; /* 垂直滚动 */
   overflow-x: hidden;
-  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #d1d5da #f6f8fa; /* 浅色滚动条 */
+  /* 添加以下样式以改善滚动条外观 */
+  scrollbar-gutter: stable;
+  padding-right: 4px; /* 为滚动条留出空间 */
+  background: #ffffff; /* 纯白背景 */
 }
 
 .Aline::-webkit-scrollbar {
-  display: none;
+  width: 10px;
 }
 
+.Aline::-webkit-scrollbar-track {
+  background: #f6f8fa;
+  border-radius: 5px;
+}
+
+.Aline::-webkit-scrollbar-thumb {
+  background-color: #d1d5da;
+  border-radius: 5px;
+  border: 2px solid #f6f8fa;
+}
+
+.Aline::-webkit-scrollbar-thumb:hover {
+  background-color: #666;
+}
+/* 添加行高亮效果 */
+.AlineDiv:hover {
+  background-color: rgba(3, 102, 214, 0.05); /* 浅蓝色悬停背景 */
+}
+
+/* 当前行高亮 */
+.AlineDiv:focus-within {
+  background-color: rgba(3, 102, 214, 0.08);
+}
 .AlineDiv {
   display: flex;
+  min-height: 22px;
+  /* 添加悬停效果 */
+  transition: background-color 0.2s ease;
+}
+
+.lineNumber {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 54px;
+  min-width: 54px;
+  height: 22px;
+  color: #959da5;
+  font-size: 13px;
+  font-family: monospace;
+  user-select: none;
+  background-color: #f6f8fa; /* 行号背景与编辑器背景区分 */
+  position: sticky;
+  left: 0;
+  /* 添加边框效果 */
+  border-right: 1px solid #e1e4e8; /* 更细的边框 */
 }
 
 .Aline input {
-  width: 100%;
+  flex-grow: 1;
   outline: none;
-  background: none;
-  border-right: 2px solid #282828;
-  border-bottom: 2px solid #282828;
+  border: none;
+  background: transparent;
   caret-color: #c6c6c6;
-  color: #c6c6c6;
+  color: #e0e0e0;
+  font-family: monospace;
+  font-size: 14px;
+  padding: 0 8px;
+  line-height: 22px;
 }
 
-.yeah {
-  color: green;
-  display: flex;
-  justify-content: space-between;
+.code-input-wrapper {
+  position: relative;
+  flex-grow: 1;
+  /* 添加动画效果 */
+  transition: all 0.2s ease;
+}
+
+.code-input-wrapper input {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: transparent;
+  color: transparent;
+  caret-color: #0366d6;
+  z-index: 2;
+  padding: 0 12px;
+  font-family: "Fira Code", "Consolas", monospace;
+  font-size: 14px;
+  line-height: 22px;
+  /* 添加光标动画 */
+  animation: blink 1s step-end infinite;
+}
+
+@keyframes blink {
+  from,
+  to {
+    border-right-color: transparent;
+  }
+  50% {
+    border-right-color: #569cd6;
+  }
+}
+
+.highlighted-code {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0 12px;
+  font-family: "Fira Code", "Consolas", monospace;
+  font-size: 14px;
+  line-height: 22px;
+  white-space: pre;
+  overflow: hidden;
+  z-index: 1;
+  pointer-events: none;
+  background-color: transparent;
+  /* 增强文本渲染 */
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* 为不同语言添加特定的高亮样式 */
+/* 更新高亮颜色以适应浅色背景 */
+.highlighted-code .hljs-keyword {
+  color: #d73a49; /* 红色关键字 */
+}
+
+.highlighted-code .hljs-built_in {
+  color: #6f42c1; /* 紫色内置函数 */
+}
+
+.highlighted-code .hljs-string {
+  color: #032f62; /* 深蓝色字符串 */
+}
+
+.highlighted-code .hljs-number {
+  color: #005cc5; /* 蓝色数字 */
+}
+
+.highlighted-code .hljs-comment {
+  color: #6a737d; /* 灰色注释 */
+}
+
+.highlighted-code .hljs-function {
+  color: #6f42c1; /* 紫色函数名 */
+}
+
+.highlighted-code .hljs-params {
+  color: #24292e; /* 黑色参数 */
+}
+
+.highlighted-code .hljs-title {
+  color: #22863a; /* 绿色标题 */
+}
+
+.highlighted-code .hljs-meta {
+  color: #735c0f; /* 棕色元数据 */
+}
+
+.highlighted-code .hljs-literal {
+  color: #d73a49; /* 红色字面量 */
 }
 
 .codefooter {
   display: flex;
-  justify-content: end;
-  padding: 8px;
+  justify-content: flex-end;
+  padding: 12px 16px;
+  border-top: 1px solid #f0f0f0;
+  background-color: #f9f9f9;
 }
 
 .codefooter button {
   width: 80px;
   height: 34px;
   font-size: 14px;
-  background-color: #18a058;
-  border: 0px;
-  border-radius: 8px;
+  font-weight: 500;
+  background: linear-gradient(90deg, #42b983, #00c4ff);
+  border: none;
+  border-radius: 6px;
   color: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
 .codefooter button:hover {
-  cursor: pointer;
+  transform: translateY(-2px);
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.5);
 }
 
 .codefooter button:active {
-  background-color: #128444;
+  box-shadow: 0 4px 12px rgba(66, 185, 131, 0.3);
+  transform: translateY(0px);
 }
 </style>

@@ -16,7 +16,7 @@
             v-for="(question, index) in questions"
             :key="index"
             class="question-row"
-            @click="goToQuestionDetail(question.u_id)"
+            @click="goToQuestionDetail(question.uid)"
           >
             <td class="status-cell">
               <span :class="'state-' + question.state">{{ question.state }}</span>
@@ -77,7 +77,9 @@ export default {
   },
   methods: {
     goToQuestionDetail(id) {
+      this.$store.dispatch('setCurrentQuestionId', id)
       this.$router.push({ name: 'questions_detail', params: { id } });
+      console.log(id);
     }
   }
 };

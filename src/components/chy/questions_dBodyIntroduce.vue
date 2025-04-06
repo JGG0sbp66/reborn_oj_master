@@ -78,7 +78,7 @@
         v-show="activeTab === 'description'"
       >
         <div class="bodyDescribe1">
-          <h2>1000.Hello World!</h2>
+          <h2>{{this.questionDetail?.title}}</h2>
           <div class="bodyDescribe1Second">
             <div class="bodyDescribeSpan">
               <svg
@@ -93,7 +93,7 @@
                   ></path>
                 </g>
               </svg>
-              <span>时间限制:1000ms</span>
+              <span>时间限制:{{this.questionDetail?.tle}}ms</span>
             </div>
             <div class="bodyDescribeSpan">
               <svg
@@ -106,15 +106,15 @@
                   fill="currentColor"
                 ></path>
               </svg>
-              <span>空间限制:32MB</span>
+              <span>空间限制:{{this.questionDetail?.mle}}MB</span>
             </div>
           </div>
           <h3>题目描述</h3>
-          <p>本题要求编写程序，输出一个短句"Hello World!"。</p>
+          <p>{{this.questionDetail?.description}}</p>
           <h3>输入格式</h3>
-          <p>本题目没有输入。</p>
+          <p>{{this.questionDetail?.pattern_text}}</p>
           <h3>输出格式</h3>
-          <p>在一行中输出短句"Hello World!"。</p>
+          <p>{{this.questionDetail?.print_text}}</p>
           <h3>测试样例1</h3>
           <div class="Testinput">
             <div class="TestinputB">
@@ -138,7 +138,7 @@
             <div
               class="Testinputc"
               style="padding: 5px 16px 12px; font-size: 14px; font-weight: 300;"
-            >没有输入</div>
+            >{{this.questionDetail?.test_input}}</div>
           </div>
           <div class="Testout">
             <div class="TestinputB">
@@ -162,7 +162,7 @@
             <div
               class="Testinputc"
               style="padding: 5px 16px 12px; font-size: 14px; font-weight: 300;"
-            >Hello World!</div>
+            >{{this.questionDetail?.test_print}}</div>
           </div>
         </div>
       </div>
@@ -201,21 +201,73 @@
 </template>
   
 <script>
+// 1. 在顶部引入 axios
+import axios from "axios";
+
 export default {
   name: "DescribeComponent",
-  props: ["submissions"],
+  props: ["submissions", "activeTab"],
   data() {
     return {
-      activeTab: "description",
-      submissions: [],
+      id: "",
+      questionDetail: null,
+      isLoading: false,
+      error: null,
     };
+  },
+  created() {
+    this.questionId =
+      this.$route.params.id ||
+      this.$store.getters.currentQuestionId ||
+      localStorage.getItem("currentQuestionId");
+
+    if (this.questionId) {
+      // 同步到所有存储位置
+      this.$store.commit("setCurrentQuestionId", this.questionId);
+      localStorage.setItem("currentQuestionId", this.questionId);
+      this.fetchQuestionDetail();
+    }
   },
   methods: {
     switchTab(tab) {
-      this.activeTab = tab;
+      this.$emit("switch-tab", tab);
     },
-    addSubmission(submission) {
-      this.submissions.unshift(submission);
+    async fetchQuestionDetail() {
+      this.isLoading = true;
+      this.error = null;
+      try {
+        const questionId = localStorage.getItem("currentQuestionId");
+        console.log("Fetching question detail for ID:", questionId);
+        localStorage.setItem("currentQuestionId", questionId);
+
+        const { data: response } = await axios({
+          url: "http://localhost:5000/api/question-detail",
+          method: "post",
+          data: {
+            uid: questionId,
+          },
+        });
+
+        console.log("Fetched question detail:", response); // 调试日志
+
+        this.questionDetail = response.question_detail;
+        console.log(this.questionDetail.mle);
+      } catch (error) {
+        this.error = "获取题目详情失败，请稍后重试";
+        console.error("Failed to fetch data:", error);
+      } finally {
+        this.isLoading = false;
+      }
+    },
+  },
+  watch: {
+    "$route.params.id"(newId) {
+      if (newId) {
+        this.questionId = newId;
+        this.$store.commit("setCurrentQuestionId", newId);
+        localStorage.setItem("currentQuestionId", newId);
+        this.fetchQuestionDetail();
+      }
     },
   },
 };
@@ -223,9 +275,9 @@ export default {
 
 <style scoped>
 .describe-container {
-  width: 50%;
-  max-width: 75%;
-  margin: 0 5px;
+  width: 100%;
+  height: 100%;
+  margin: 0px;
 }
 
 .describe {
@@ -319,22 +371,34 @@ export default {
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  height: 100%; /* 确保父容器有明确高度 */
 }
 
 .bodyDescribe1 {
   padding: 0 16px;
   flex: 1;
+  overflow-y: auto; /* 只保留垂直滚动 */
+  overflow-x: hidden; /* 隐藏水平滚动 */
   scrollbar-width: thin;
   scrollbar-color: #cbd5e1 transparent;
+  max-height: calc(100vh - 10px); /* 根据实际情况调整 */
 }
 
 .bodyDescribe1::-webkit-scrollbar {
   width: 6px;
 }
 
+.bodyDescribe1::-webkit-scrollbar-track {
+  background: transparent;
+}
+
 .bodyDescribe1::-webkit-scrollbar-thumb {
   background-color: #cbd5e1;
   border-radius: 3px;
+}
+
+.bodyDescribe1::-webkit-scrollbar-thumb:hover {
+  background-color: #94a3b8;
 }
 
 .bodyDescribe1Second {
