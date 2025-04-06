@@ -8,7 +8,7 @@
       <div class="content-area">
         <div class="content-wrapper">
           <div class="left-main">
-            <competitionshow/>
+            <competitionshow :raceInfo="raceInfo"/>
           </div>
           <div class="right-main">
             <competitioninformation />
@@ -20,18 +20,30 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from "vue"
-import axios from "axios"
-import showtitle from "@/components/test/showtitle.vue"
-import navlinks from "@/components/test/navlinks.vue";
-import competition from "@/components/zq/competitionheader.vue";
+import { ref, reactive, onMounted } from "vue";
+import axios from "axios";
+import competitionheader from "@/components/zq/competitionheader.vue";
 import sidebarproblem from "@/components/zq/sidebar-problem.vue";
 import competitionshow from "@/components/zq/compotitionshow.vue";
 import competitioninformation from "@/components/zq/competitioninformation.vue";
-import competitionheader from "@/components/zq/competitionheader.vue";
 
+const raceInfo = reactive({}); // 定义一个响应式对象来存储比赛信息
 
+const get_race_info = async () => {
+  const { data: userData } = await axios({
+    url: "http://localhost:5000/api/race-info",
+    method: "post",
+    data: { uid: 1 },
+  });
+  return userData;
+};
 
+const fetchData = async () => {
+  const race_info_data = await get_race_info();
+  raceInfo.value = race_info_data; // 将获取到的数据存储到响应式变量中
+};
+
+onMounted(fetchData); // 在组件挂载时调用 fetchData 函数
 </script>
 
 <style scoped>

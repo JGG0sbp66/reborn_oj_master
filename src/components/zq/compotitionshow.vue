@@ -87,6 +87,12 @@ import { ref, onMounted } from 'vue';
 import { Document, Edit, Trophy, DataLine, TrendCharts, User } from '@element-plus/icons-vue';
 import axios from 'axios';
 
+const props = defineProps({
+  raceInfo: Object, // 定义一个名为 raceInfo 的 prop，类型为 Object
+});
+
+console.log('props:', props.raceInfo);
+
 // const link = document.querySelector('a') as HTMLAnchorElement | null;
 
 // if (link) {
