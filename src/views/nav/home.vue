@@ -54,7 +54,7 @@
           <!-- 竞赛列表 -->
           <div class="competition-list">
             <CompetitionCard
-              v-for="(item, index) in competitions"
+              v-for="(item, index) in competitions.slice(0, 4)"
               :key="index"
               :competition="item"
               :appear="true"
@@ -182,7 +182,7 @@ const stopSlideshow = () => {
 };
 
 // 竞赛数据
-const competitions = [
+const competitions = ref([
   {
     title: "全国高校编程马拉松",
     logos: ["ACM", "ICPC", "CCF"],
@@ -194,21 +194,8 @@ const competitions = [
       { name: "个人赛", type: "individual" },
       { name: "OI赛制", type: "oi" }
     ]
-  },
-  {
-    title: "第五届全国青少年编程大赛",
-    logos: ["ACM", "ICPC", "CCF"],
-    startTime: "2024-08-16 08:00:00",
-    endTime: "2024-08-16 12:00:00",
-    duration: "04 小时 00 分 00 秒",
-    tags: [
-      { name: "未开始", type: "running" },
-      { name: "个人赛", type: "individual" },
-      { name: "OI赛制", type: "oi" },
-      { name: "官方比赛", type: "regional" }
-    ]
   }
-];
+]);
 
 // 最新题目
 const latestProblems = [
@@ -260,23 +247,49 @@ const onlineServices = [
 // 存储从服务器获取的竞赛数据
 const contestData = ref(null);
 
+// 从服务器获取竞赛数据
+const fetchCompetitions = async () => {
+  try {
+    const response = await axios({
+      url: 'http://127.0.0.1:5000/api/race-list',
+      method: 'get',
+      data: {}
+    });
+    
+    // 检查数据结构并提取竞赛信息
+    const data = response.data;
+    
+    if (data && data.race_info && Array.isArray(data.race_info)) {
+      // 将获取到的竞赛数据赋值给competitions
+      competitions.value = data.race_info.map(race => {
+        // 转换API返回的数据格式为组件需要的格式
+        return {
+          title: race.title,
+          logos: race.logos || [],
+          startTime: race.startTime,
+          endTime: race.endTime,
+          duration: race.duration,
+          status: race.status,
+          tags: race.tags || []
+        };
+      });
+      
+      console.log('首页获取到竞赛数据:', competitions.value.slice(0, 4));
+    } else {
+      console.warn('获取到的竞赛数据格式不正确:', data);
+    }
+  } catch (error) {
+    console.error('获取竞赛数据失败:', error);
+  }
+};
+
 // 页面加载完成后执行
 onMounted(async () => {
   // 启动轮播图自动切换
   startSlideshow();
   
   // 获取竞赛数据
-  try {
-    const { data } = await axios({
-      url: 'http://localhost/oj_master/php/competition_search.php',
-      method: 'post',
-      data: { page: 1 }
-    });
-    contestData.value = data; // 存入响应式变量
-    console.log(data);
-  } catch (error) {
-    console.error('请求失败:', error);
-  }
+  fetchCompetitions();
 });
 
 // 在组件销毁前清除定时器
