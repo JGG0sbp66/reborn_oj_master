@@ -1,13 +1,27 @@
 <template>
   <main class="questions">
     <!-- 题目详情页面介绍 -->
-    <questions_dBodyIntroduce></questions_dBodyIntroduce>
+    <div
+      class="left-panel"
+      :style="{ width: leftWidth + 'px' }"
+    >
+      <questions_dBodyIntroduce
+        :submissions="submissions"
+        :activeTab="activeTab"
+        @switch-tab="switchTab"
+      ></questions_dBodyIntroduce>
+    </div>
+
+    <!-- 分隔条 -->
+    <questions_detailResizeBar @start-drag="initDrag"></questions_detailResizeBar>
 
     <!-- 题目详情页编码区 -->
-    <qustions_dBodyCode
-      @show-alert="handleCodeAlert"
-      @submit-code="handleCodeSubmit"
-    ></qustions_dBodyCode>
+    <div class="right-panel">
+      <qustions_dBodyCode
+        @show-alert="handleCodeAlert"
+        @submit-code="handleCodeSubmit"
+      ></qustions_dBodyCode>
+    </div>
 
     <!-- 提示框组件 -->
     <questions_detailCue
@@ -23,11 +37,13 @@
 import questions_dBodyIntroduce from "./questions_dBodyIntroduce.vue";
 import qustions_dBodyCode from "./qustions_dBodyCode.vue";
 import questions_detailCue from "./questions_detailCue.vue";
+import questions_detailResizeBar from "./questions_detailResizeBar.vue";
 export default {
   components: {
     questions_dBodyIntroduce,
     qustions_dBodyCode,
     questions_detailCue,
+    questions_detailResizeBar,
   },
   data() {
     return {
@@ -36,9 +52,47 @@ export default {
       alertMessage: "",
       alertType: "",
       activeTab: "description",
+      leftWidth: 800, // 初始左侧宽度
+      isDragging: false,
+      startX: 0,
+      startWidth: 0,
     };
   },
+  mounted() {
+    window.addEventListener("mousemove", this.handleDrag);
+    window.addEventListener("mouseup", this.stopDrag);
+  },
+  beforeDestroy() {
+    window.removeEventListener("mousemove", this.handleDrag);
+    window.removeEventListener("mouseup", this.stopDrag);
+  },
   methods: {
+    initDrag(e) {
+      this.isDragging = true;
+      this.startX = e.clientX;
+      this.startWidth = this.leftWidth;
+      document.body.style.cursor = "col-resize";
+      document.body.style.userSelect = "none";
+    },
+    handleDrag(e) {
+      if (!this.isDragging) return;
+
+      const dx = e.clientX - this.startX;
+      const newWidth = this.startWidth + dx;
+
+      // 限制最小和最大宽度
+      const minWidth = 300;
+      const maxWidth = 1500;
+
+      this.leftWidth = Math.max(minWidth, Math.min(maxWidth, newWidth));
+    },
+    stopDrag() {
+      if (!this.isDragging) return;
+
+      this.isDragging = false;
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+    },
     switchTab(tab) {
       this.activeTab = tab;
     },
@@ -52,6 +106,9 @@ export default {
 
       // 显示成功提示
       this.showAlertMessage("success", "提交成功,等待测评");
+
+      // 切换到提交记录标签页
+      this.activeTab = "submissions";
     },
     showAlertMessage(type, message) {
       this.alertType = type;
@@ -75,5 +132,20 @@ export default {
   padding: 8px;
   margin: 10px 0px;
   min-height: 892px;
+  position: relative;
+  height: calc(100vh - 20px); /* 确保有明确高度 */
+}
+.left-panel {
+  flex: 0 0 auto;
+  overflow: hidden;
+  transition: width 0.1s ease;
+  height: 100%; /* 添加高度 */
+}
+
+.right-panel {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  height: 100%; /* 添加高度 */
 }
 </style>
