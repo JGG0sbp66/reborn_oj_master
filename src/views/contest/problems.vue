@@ -1,8 +1,6 @@
 <template>
-  <competitionheader />
-  <showtitle text="这里是比赛题目页面" class="page-title" />
-  <navlinks />
   <main>
+    <competitionheader />
     <div class="main-content">
       <div class="left-panel">
         <sidebarproblem />
@@ -10,7 +8,7 @@
       <div class="content-area">
         <div class="content-wrapper">
           <div class="left-main">
-            <competitionshow :raceinfoData="raceinfoData"/>
+            <competitionshow/>
           </div>
           <div class="right-main">
             <competitioninformation />
@@ -32,24 +30,7 @@ import competitionshow from "@/components/zq/compotitionshow.vue";
 import competitioninformation from "@/components/zq/competitioninformation.vue";
 import competitionheader from "@/components/zq/competitionheader.vue";
 
-const defaultUid = 1;
-const raceinfoData = ref({});
 
-
-// 页面加载完成后执行
-onMounted(async () => {
-  try {
-    const { data } = await axios({
-      url: 'http://127.0.0.1:5000/api/raceinfo',
-      method: 'post',
-      data: { uid: defaultUid }
-    });
-    raceinfoData.value = data; // 将获取到的数据存入变量
-    console.log(raceinfoData.value); // 打印存储的数据
-  } catch (error) {
-    console.error('请求失败:', error);
-  }
-});
 
 </script>
 
@@ -60,33 +41,8 @@ onMounted(async () => {
   background-color: #f8fafc;
   animation: fadeIn 0.6s ease-out;
   position: relative;
+  top: 70px;
   overflow: hidden;
-}
-
-.main-content::before {
-  content: '';
-  position: absolute;
-  top: -50px;
-  right: -50px;
-  width: 200px;
-  height: 200px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(59, 130, 246, 0.1) 100%);
-  filter: blur(40px);
-  z-index: 0;
-}
-
-.main-content::after {
-  content: '';
-  position: absolute;
-  bottom: -50px;
-  left: -50px;
-  width: 200px;
-  height: 200px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(16, 185, 129, 0.1) 100%);
-  filter: blur(40px);
-  z-index: 0;
 }
 
 .page-title {
@@ -186,44 +142,6 @@ onMounted(async () => {
   transform: scaleX(1);
 }
 
-.right-main {
-  flex: 1;
-  max-width: 328px;
-  background-color: #fff;
-  font-size: 14px;
-  border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
-  padding: 24px;
-  animation: fadeInUp 0.6s ease-out 0.1s;
-  animation-fill-mode: both;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-  position: relative;
-  overflow: hidden;
-  backdrop-filter: blur(10px);
-  background: rgba(255, 255, 255, 0.95);
-}
-
-.right-main:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.08);
-}
-
-.right-main::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 3px;
-  background: linear-gradient(90deg, #3b82f6, #10b981);
-  transform: scaleX(0);
-  transform-origin: right;
-  transition: transform 0.4s ease;
-}
-
-.right-main:hover::after {
-  transform: scaleX(1);
-}
 
 /* 动画定义 */
 @keyframes fadeIn {

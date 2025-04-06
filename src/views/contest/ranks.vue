@@ -1,7 +1,5 @@
 <template>
   <competitionheader />
-  <showtitle text="这里是排行榜页面" class="page-title" />
-  <navlinks />
   <main>
     <div class="main-content">
       <div class="left-panel">
@@ -34,34 +32,10 @@ import rank from "@/components/zq/rank.vue";
   background-color: #f8fafc;
   animation: fadeIn 0.6s ease-out;
   position: relative;
+  top: 70px;
   overflow: hidden;
 }
 
-.main-content::before {
-  content: '';
-  position: absolute;
-  top: -50px;
-  right: -50px;
-  width: 200px;
-  height: 200px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(59, 130, 246, 0.1) 100%);
-  filter: blur(40px);
-  z-index: 0;
-}
-
-.main-content::after {
-  content: '';
-  position: absolute;
-  bottom: -50px;
-  left: -50px;
-  width: 200px;
-  height: 200px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(16, 185, 129, 0.1) 100%);
-  filter: blur(40px);
-  z-index: 0;
-}
 
 .page-title {
   animation: slideInDown 0.5s ease-out;
