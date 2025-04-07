@@ -124,11 +124,34 @@ const getRandomColor = () => {
 // 验证用户状态
 const verifyUserState = async () => {
   try {
+    // 先检查localStorage中是否有登录状态
+    const isLoggedInFromStorage = localStorage.getItem('isLoggedIn') === 'true';
+    const usernameFromStorage = localStorage.getItem('username');
+    const userRoleFromStorage = localStorage.getItem('userRole');
+    
+    // 如果localStorage中有数据，先使用这些数据更新UI
+    if (isLoggedInFromStorage && usernameFromStorage) {
+      isAuthenticated.value = true;
+      username.value = usernameFromStorage;
+      userRole.value = userRoleFromStorage || '普通用户';
+    }
+    
+    // 然后再通过API获取最新状态
     const { authenticated, user } = await checkAuth();
     isAuthenticated.value = authenticated;
     if (authenticated && user) {
       username.value = user.uid ? String(user.uid) : '用户'; // 确保转为字符串
       userRole.value = user.role || '普通用户';
+      
+      // 更新localStorage
+      localStorage.setItem('isLoggedIn', 'true');
+      localStorage.setItem('username', user.uid);
+      localStorage.setItem('userRole', user.role);
+    } else {
+      // 如果API返回未认证，清除localStorage
+      localStorage.removeItem('isLoggedIn');
+      localStorage.removeItem('username');
+      localStorage.removeItem('userRole');
     }
   } catch (error) {
     console.error('验证用户状态错误:', error);
@@ -155,6 +178,12 @@ const logout = async () => {
     await axios.post('http://localhost:5000/api/logout');
     isAuthenticated.value = false;
     showUserMenu.value = false;
+    
+    // 清除localStorage中的登录信息
+    localStorage.removeItem('isLoggedIn');
+    localStorage.removeItem('username');
+    localStorage.removeItem('userRole');
+    
     router.push('/nav/home');
   } catch (error) {
     console.error('退出登录失败:', error);
