@@ -107,7 +107,7 @@ const showUserMenu = ref(false);
 
 // 从用户名生成缩写
 const userInitials = computed(() => {
-  if (!username.value) return '?';
+  if (!username.value || typeof username.value !== 'string') return '?';
   return username.value.substring(0, 2).toUpperCase();
 });
 
@@ -140,7 +140,7 @@ const verifyUserState = async () => {
     const { authenticated, user } = await checkAuth();
     isAuthenticated.value = authenticated;
     if (authenticated && user) {
-      username.value = user.uid || '用户';
+      username.value = user.uid ? String(user.uid) : '用户'; // 确保转为字符串
       userRole.value = user.role || '普通用户';
       
       // 更新localStorage

@@ -2,7 +2,6 @@
     <div class="sidebar-container">
         <div class="sidebar-items">
             <div id="problems-btn" class="sidebar-item active">
-                <a href="problems">
                     <div class="item-icon problem-icon">
                         <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <path d="M8 6H16M8 10H16M8 14H12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -10,17 +9,16 @@
                         </svg>
                     </div>
                     <div class="item-text">题目</div>
-                </a>
             </div>
             <div id="ranks-btn" class="sidebar-item">
-                <a href="ranks">
+                <router-link to="/contest/ranks">
                     <div class="item-icon rank-icon">
                         <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <path d="M6 20V10M12 20V4M18 20V14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                         </svg>
                     </div>
                     <div class="item-text">排名</div>
-                </a>
+                </router-link>
             </div>
         </div>
     </div>
