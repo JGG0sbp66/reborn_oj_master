@@ -1,56 +1,83 @@
 <template>
   <div class="table-container">
-    <table class="question-table">
-      <thead>
-        <tr>
-          <th class="status-column">答题状态</th>
-          <th class="title-column">题目名称</th>
-          <th class="tag-column">题目标签</th>
-          <th class="stats-column">提交/解决数</th>
-          <th class="rate-column">通过率</th>
-        </tr>
-      </thead>
-      <tbody>
-        <template v-if="questions.length > 0">
-          <tr
-            v-for="(question, index) in questions"
-            :key="index"
-            class="question-row"
-            @click="goToQuestionDetail(question.uid)"
-          >
-            <td class="status-cell">
-              <span :class="'state-' + question.state">{{ question.state }}</span>
-            </td>
-            <td class="title-cell">
-              <span class="title-text">{{ question.title }}</span>
-              <span class="hover-effect"></span>
-            </td>
-            <td class="tag-cell">
-              <div
-                class="difficulty-tag"
-                :class="difficultyClasses[question.topic]"
-              >
-                {{ question.topic }}
-              </div>
-            </td>
-            <td class="stats-cell">{{ question.submit_num }}/{{ question.solve_num }}</td>
-            <td class="rate-cell">{{ question.pass_rate }}%</td>
+    <template v-if="loading">
+      <!-- 加载状态 -->
+      <div class="loading-container">
+        <svg
+          class="loading-spinner"
+          viewBox="0 0 50 50"
+        >
+          <circle
+            class="path"
+            cx="25"
+            cy="25"
+            r="20"
+            fill="none"
+            stroke-width="5"
+          ></circle>
+        </svg>
+        <span>正在加载题目...</span>
+      </div>
+    </template>
+    <template v-else>
+      <table class="question-table">
+        <thead>
+          <tr>
+            <th class="status-column">答题状态</th>
+            <th class="title-column">题目名称</th>
+            <th class="tag-column">题目标签</th>
+            <th class="stats-column">提交/解决数</th>
+            <th class="rate-column">通过率</th>
           </tr>
-        </template>
-        <template v-else>
-          <tr class="empty-row">
-            <td colspan="5">
-              <div class="empty-message">
-                <svg class="empty-icon" viewBox="0 0 24 24">
-                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" fill="currentColor"/>
-                </svg>
-                <span>没有找到符合筛选条件的题目</span>
-              </div>
-            </td>
-          </tr>
-        </template>
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          <template v-if="questions.length > 0">
+            <tr
+              v-for="(question, index) in questions"
+              :key="index"
+              class="question-row"
+              @click="goToQuestionDetail(question.uid)"
+            >
+              <td class="status-cell">
+                <span :class="'state-' + question.state">{{ question.state }}</span>
+              </td>
+              <td class="title-cell">
+                <span class="title-text">{{ question.title }}</span>
+                <span class="hover-effect"></span>
+              </td>
+              <td class="tag-cell">
+                <div
+                  class="difficulty-tag"
+                  :class="difficultyClasses[question.topic]"
+                >
+                  {{ question.topic }}
+                </div>
+              </td>
+              <td class="stats-cell">{{ question.submit_num }}/{{ question.solve_num }}</td>
+              <td class="rate-cell">{{ question.pass_rate }}%</td>
+            </tr>
+          </template>
+          <template v-else>
+            <tr class="empty-row">
+              <td colspan="5">
+                <div class="empty-message">
+                  <svg
+                    class="empty-icon"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"
+                      fill="currentColor"
+                    />
+                  </svg>
+                  <span>没有找到符合筛选条件的题目</span>
+                </div>
+              </td>
+            </tr>
+          </template>
+        </tbody>
+      </table>
+    </template>
   </div>
 </template>
 
@@ -60,11 +87,12 @@ export default {
     questions: {
       type: Array,
       required: true,
-      default: () => []
-    }
+      default: () => [],
+    },
   },
   data() {
     return {
+      loading: true,
       difficultyClasses: {
         入门: "easy",
         普及: "popularize",
@@ -75,17 +103,70 @@ export default {
       },
     };
   },
+  watch: {
+    questions: {
+      immediate: true,
+      handler(newVal) {
+        if (newVal && newVal.length > 0) {
+          this.loading = false;
+        }
+      },
+    },
+  },
   methods: {
     goToQuestionDetail(id) {
-      this.$store.dispatch('setCurrentQuestionId', id)
-      this.$router.push({ name: 'questions_detail', params: { id } });
+      this.$store.dispatch("setCurrentQuestionId", id);
+      this.$router.push({ name: "questions_detail", params: { id } });
       console.log(id);
-    }
-  }
+    },
+  },
 };
 </script>
 
 <style scoped>
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  color: #666;
+}
+
+.loading-spinner {
+  width: 50px;
+  height: 50px;
+  animation: rotate 2s linear infinite;
+  margin-bottom: 16px;
+}
+
+.loading-spinner .path {
+  stroke: #1890ff;
+  stroke-linecap: round;
+  animation: dash 1.5s ease-in-out infinite;
+}
+
+@keyframes rotate {
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes dash {
+  0% {
+    stroke-dasharray: 1, 150;
+    stroke-dashoffset: 0;
+  }
+  50% {
+    stroke-dasharray: 90, 150;
+    stroke-dashoffset: -35;
+  }
+  100% {
+    stroke-dasharray: 90, 150;
+    stroke-dashoffset: -124;
+  }
+}
+
 .table-container {
   width: 100%;
   overflow-x: auto;
@@ -137,7 +218,7 @@ export default {
 .question-row:hover {
   transform: translateY(-2px);
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
-  background-color: #f1f5f9; 
+  background-color: #f1f5f9;
   z-index: 1;
 }
 
@@ -192,7 +273,6 @@ export default {
   color: #6c757d;
 }
 
-
 .difficulty-tag {
   display: inline-block;
   padding: 6px 12px;
@@ -244,7 +324,8 @@ export default {
   width: 15%;
 }
 
-.stats-column, .rate-column {
+.stats-column,
+.rate-column {
   width: 12.5%;
   text-align: center;
 }
@@ -275,7 +356,7 @@ export default {
   .question-table {
     min-width: 600px;
   }
-  
+
   .table-container {
     border-radius: 0;
     box-shadow: none;
