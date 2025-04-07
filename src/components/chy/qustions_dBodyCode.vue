@@ -137,8 +137,7 @@
               type="text"
               v-model="codeLines[index]"
               @keydown="handleKeyDown($event, index)"
-              @keyup.enter="addNewLine(index)"
-              @keyup.delete="removeLineIfEmpty(index)"
+              @keyup="handleKeyUp($event)"
               :ref="'input_' + index"
               @input="handleInput(index)"
             />
@@ -169,6 +168,7 @@ export default {
       isBackspaceKeyDown: false,
       enterKeyInterval: null,
       backspaceKeyInterval: null,
+      currentFocusIndex: 0,
       stateOptions: [
         {
           status: `<svg xmlns="http://www.w3.org/2000/svg"
@@ -250,17 +250,8 @@ export default {
       const cursorPosition = inputElement.selectionStart;
       const currentLine = this.codeLines[index];
 
-      // 如果光标在行末或者行是空的
       if (cursorPosition === currentLine.length || currentLine.trim() === "") {
         this.insertNewLineAfter(index);
-
-        // 设置长按标志
-        if (!this.enterKeyInterval) {
-          this.enterKeyInterval = setInterval(() => {
-            const lastIndex = this.codeLines.length - 1;
-            this.insertNewLineAfter(lastIndex);
-          }, 100); // 每100ms添加一行
-        }
       } else {
         this.splitLineAtCursor(index, cursorPosition);
       }
@@ -301,50 +292,48 @@ export default {
     removeLineIfEmpty(index) {
       if (this.codeLines[index] === "" && index > 0) {
         this.codeLines.splice(index, 1);
-        // 等待Vue完成DOM更新后聚焦上一行
         this.$nextTick(() => {
           const prevIndex = index - 1;
+          this.currentFocusIndex = prevIndex; // 更新当前焦点索引
           const inputRef = this.$refs[`input_${prevIndex}`];
           if (inputRef && inputRef[0]) {
             inputRef[0].focus();
-
-            // 如果上一行也是空的，设置长按删除
-            if (
-              this.codeLines[prevIndex] === "" &&
-              !this.backspaceKeyInterval
-            ) {
-              this.backspaceKeyInterval = setInterval(() => {
-                if (prevIndex > 0 && this.codeLines[prevIndex] === "") {
-                  this.codeLines.splice(prevIndex, 1);
-                  this.$nextTick(() => {
-                    const newPrevIndex = prevIndex - 1;
-                    const newInputRef = this.$refs[`input_${newPrevIndex}`];
-                    if (newInputRef && newInputRef[0]) {
-                      newInputRef[0].focus();
-                    }
-                  });
-                } else {
-                  clearInterval(this.backspaceKeyInterval);
-                  this.backspaceKeyInterval = null;
-                }
-              }, 100); // 每100ms删除一行
-            }
           }
         });
-      } else if (this.codeLines[index] === "" && index === 0) {
-        // 已经是第一行且为空，不做任何操作
-        return;
       }
     },
+
     // 添加keydown和keyup事件处理
     handleKeyDown(event, index) {
       if (event.key === "Enter") {
         event.preventDefault(); // 阻止默认的换行行为
-        this.isEnterKeyDown = true;
-        this.addNewLine(index);
+        if (!this.isEnterKeyDown) {
+          this.isEnterKeyDown = true;
+          this.addNewLine(index);
+          this.enterKeyInterval = setInterval(() => {
+            const lastIndex = this.codeLines.length - 1;
+            this.insertNewLineAfter(lastIndex);
+          }, 100);
+        }
       } else if (event.key === "Backspace") {
-        this.isBackspaceKeyDown = true;
-        this.removeLineIfEmpty(index);
+        if (!this.isBackspaceKeyDown) {
+          this.isBackspaceKeyDown = true;
+          this.removeLineIfEmpty(index);
+
+          // 启动长按删除定时器
+          this.backspaceKeyInterval = setInterval(() => {
+            const currentIndex = this.codeLines.findIndex(
+              (line, i) => i === this.currentFocusIndex
+            );
+            if (currentIndex > 0 && this.codeLines[currentIndex] === "") {
+              this.removeLineIfEmpty(currentIndex);
+            } else {
+              clearInterval(this.backspaceKeyInterval);
+              this.backspaceKeyInterval = null;
+              this.isBackspaceKeyDown = false;
+            }
+          }, 100);
+        }
       }
     },
 
@@ -352,9 +341,11 @@ export default {
       if (event.key === "Enter") {
         this.isEnterKeyDown = false;
         clearInterval(this.enterKeyInterval);
+        this.enterKeyInterval = null;
       } else if (event.key === "Backspace") {
         this.isBackspaceKeyDown = false;
         clearInterval(this.backspaceKeyInterval);
+        this.backspaceKeyInterval = null;
       }
     },
 

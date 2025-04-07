@@ -103,6 +103,16 @@
             ></path>
           </svg>
           <span>未尝试</span>
+          <svg
+            v-if="selectedStatus === '未尝试'"
+            class="checkmark"
+            viewBox="0 0 24 24"
+          >
+            <path
+              fill="#1890ff"
+              d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"
+            ></path>
+          </svg>
         </div>
         <div
           class="dropdown-item"
@@ -119,6 +129,16 @@
             ></path>
           </svg>
           <span>已通过</span>
+          <svg
+            v-if="selectedStatus === '已通过'"
+            class="checkmark"
+            viewBox="0 0 24 24"
+          >
+            <path
+              fill="#52c41a"
+              d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"
+            ></path>
+          </svg>
         </div>
         <div
           class="dropdown-item"
@@ -154,6 +174,16 @@
             ></path>
           </svg>
           <span>未通过</span>
+          <svg
+            v-if="selectedStatus === '未通过'"
+            class="checkmark"
+            viewBox="0 0 24 24"
+          >
+            <path
+              fill="#fe4c61"
+              d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"
+            ></path>
+          </svg>
         </div>
       </div>
     </div>
@@ -173,36 +203,96 @@
           @click="handleTagSelect('入门')"
         >
           <span>入门</span>
+          <svg
+            v-if="selectedTag === '入门'"
+            class="checkmark"
+            viewBox="0 0 24 24"
+          >
+            <path
+              fill="#fe4c61"
+              d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"
+            ></path>
+          </svg>
         </div>
         <div
           class="dropdown-item tag-item tag-popular"
           @click="handleTagSelect('普及')"
         >
           <span>普及</span>
+          <svg
+            v-if="selectedTag === '普及'"
+            class="checkmark"
+            viewBox="0 0 24 24"
+          >
+            <path
+              fill="#f39c11"
+              d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"
+            ></path>
+          </svg>
         </div>
         <div
           class="dropdown-item tag-item tag-advanced"
           @click="handleTagSelect('提高')"
         >
           <span>提高</span>
+          <svg
+            v-if="selectedTag === '提高'"
+            class="checkmark"
+            viewBox="0 0 24 24"
+          >
+            <path
+              fill="#ffc116"
+              d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"
+            ></path>
+          </svg>
         </div>
         <div
           class="dropdown-item tag-item tag-provincial"
           @click="handleTagSelect('省选')"
         >
           <span>省选</span>
+          <svg
+            v-if="selectedTag === '省选'"
+            class="checkmark"
+            viewBox="0 0 24 24"
+          >
+            <path
+              fill="#52c41a"
+              d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"
+            ></path>
+          </svg>
         </div>
         <div
           class="dropdown-item tag-item tag-noi"
           @click="handleTagSelect('NOI')"
         >
           <span>NOI</span>
+          <svg
+            v-if="selectedTag === 'NOI'"
+            class="checkmark"
+            viewBox="0 0 24 24"
+          >
+            <path
+              fill="#9d3dcf"
+              d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"
+            ></path>
+          </svg>
         </div>
         <div
           class="dropdown-item tag-item tag-ctsc"
           @click="handleTagSelect('CTSC')"
         >
           <span>CTSC</span>
+          <svg
+            v-if="selectedTag === 'CTSC'"
+            class="checkmark"
+            viewBox="0 0 24 24"
+          >
+            <path
+              fill="#0e1d69"
+              d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"
+            ></path>
+          </svg>
         </div>
       </div>
     </div>
@@ -312,26 +402,42 @@ export default {
       this.questionsData = data;
     },
     handleStatusSelect(status) {
-      this.selectedStatus = status;
+      // 如果点击的是已选中的状态，则取消选择
+      if (this.selectedStatus === status) {
+        this.selectedStatus = "";
+        this.selected = {
+          ...this.selected,
+          category: "",
+        };
+      } else {
+        this.selectedStatus = status;
+        this.selected = {
+          ...this.selected,
+          category: status,
+        };
+      }
       this.showStatusDropdown = false;
       const arrow = document.querySelector(".hS1");
       this.toggleArrow(arrow, false);
-      // 更新selected对象
-      this.selected = {
-        ...this.selected,
-        category: status,
-      };
     },
     handleTagSelect(tag) {
-      this.selectedTag = tag;
+      // 如果点击的是已选中的标签，则取消选择
+      if (this.selectedTag === tag) {
+        this.selectedTag = "";
+        this.selected = {
+          ...this.selected,
+          topic: "",
+        };
+      } else {
+        this.selectedTag = tag;
+        this.selected = {
+          ...this.selected,
+          topic: tag,
+        };
+      }
       this.showTagDropdown = false;
       const arrow = document.querySelector(".hS2");
       this.toggleArrow(arrow, false);
-      // 更新selected对象
-      this.selected = {
-        ...this.selected,
-        topic: tag,
-      };
     },
     handleSearch(event) {
       this.searchText = event.target.value;
@@ -526,12 +632,12 @@ export default {
 /* 下拉菜单通用样式 */
 .dropdown-menu {
   position: absolute;
-  width: 160px;
+  width: 140px;
   background-color: white;
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   z-index: 100;
-  top: 60px;
+  top: 73px;
   margin-left: 8px;
 }
 
@@ -593,6 +699,25 @@ export default {
   width: 4px;
   height: 16px;
   border-radius: 2px;
+}
+
+.checkmark {
+  width: 16px;
+  height: 16px;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  font-size: 14px;
+  line-height: 20px;
+  color: #333;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
 .tag-beginner::before {
