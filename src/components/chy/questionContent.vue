@@ -54,7 +54,7 @@
                 </div>
               </td>
               <td class="stats-cell">{{ question.submit_num }}/{{ question.solve_num }}</td>
-              <td class="rate-cell">{{ question.pass_rate }}%</td>
+              <td class="rate-cell">{{ calculateRate(question.submit_num, question.solve_num) }}</td>
             </tr>
           </template>
           <template v-else>
@@ -119,6 +119,12 @@ export default {
       this.$router.push({ name: "questions_detail", params: { id } });
       console.log(id);
     },
+    calculateRate(submitNum, solveNum) {
+    if (submitNum === 0) {
+      return `${(0).toFixed(2)}%`;
+    }
+    return `${((solveNum / submitNum) * 100).toFixed(2)}%`;
+  },
   },
 };
 </script>
