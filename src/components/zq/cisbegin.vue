@@ -5,8 +5,8 @@
                 <el-icon><Timer /></el-icon>
             </div>
             <div class="status-content">
-                <div class="status-title">{{ competitionStatus.title }}</div>
-                <div class="status-subtitle">{{ competitionStatus.subtitle }}</div>
+                <div class="status-title">{{  }}</div>
+                <div class="status-subtitle"></div>
             </div>
         </div>
     </div>
@@ -16,129 +16,84 @@
 import { ref, computed, onMounted } from 'vue';
 import type { ComputedRef } from 'vue';
 import { Timer } from '@element-plus/icons-vue';
-import axios from 'axios';
 
-interface RaceInfo {
-    title: string;
-    start_time: string;
-    end_time: string;
-    tags: any[];
-    problems: any[];
-    user_status: string[];
-    user_num: number;
-}
-
-interface CompetitionStatus {
-    status: 'not-started' | 'in-progress' | 'ended' | 'signup';
-    title: string;
-    subtitle: string;
-}
-
-const defaultUid = 1;
-
-const raceinfoData = ref<RaceInfo>({
-    title: '',
-    start_time: '',
-    end_time: '',
-    tags: [],
-    problems: [],
-    user_status: [],
-    user_num: 0
+const props = defineProps({
+  raceInfo: Object,
 });
 
-// 格式化日期时间
-const formatDateTime = (dateStr: string): string => {
-    const date = new Date(dateStr);
-    return date.toLocaleString('zh-CN', {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit'
-    });
-};
 
-// 计算比赛状态
-const competitionStatus = computed(() => {
-    // 检查是否有tags数据
-    if (!raceinfoData.value.tags || raceinfoData.value.tags.length === 0) {
-        return {
-            status: 'not-started',
-            title: '加载中',
-            subtitle: '正在获取比赛信息...'
-        };
-    }
 
-    // 获取第一个tag的name
-    const firstTagName = raceinfoData.value.tags[0].name;
+// // 格式化日期时间
+// const formatDateTime = (dateStr: string): string => {
+//     const date = new Date(dateStr);
+//     return date.toLocaleString('zh-CN', {
+//         year: 'numeric',
+//         month: '2-digit',
+//         day: '2-digit',
+//         hour: '2-digit',
+//         minute: '2-digit'
+//     });
+// };
 
-    // 根据tag name判断状态
-    if (firstTagName === '未开始') {
-        return {
-            status: 'not-started',
-            title: '比赛未开始',
-            subtitle: `将于 ${formatDateTime(raceinfoData.value.start_time)} 开始`
-        };
-    } 
-    else if (firstTagName === '报名中') {
-        return {
-            status: 'signup',
-            title: '比赛报名中',
-            subtitle: `将于 ${formatDateTime(raceinfoData.value.end_time)} 结束`
-        };
-    }
-    else if (firstTagName === '进行中') {
-        return {
-            status: 'in-progress',
-            title: '比赛进行中',
-            subtitle: `将于 ${formatDateTime(raceinfoData.value.end_time)} 结束`
-        };
-    } else if (firstTagName === '已结束') {
-        return {
-            status: 'ended',
-            title: '比赛已结束',
-            subtitle: `于 ${formatDateTime(raceinfoData.value.end_time)} 结束`
-        };
-    } else {
-        // 默认状态
-        return {
-            status: 'not-started',
-            title: '状态未知',
-            subtitle: '请刷新页面重试'
-        };
-    }
-});
+// // 计算比赛状态
+// const competitionStatus = computed(() => {
+//     // 检查是否有tags数据
+//     if (!raceinfoData.value.tags || raceinfoData.value.tags.length === 0) {
+//         return {
+//             status: 'not-started',
+//             title: '加载中',
+//             subtitle: '正在获取比赛信息...'
+//         };
+//     }
 
-// 根据状态设置样式类
-const competitionStatusClass = computed(() => ({
-    'status-not-started': competitionStatus.value.status === 'not-started',
-    'status-in-progress': competitionStatus.value.status === 'in-progress',
-    'status-ended': competitionStatus.value.status === 'ended',
-    'status-signup': competitionStatus.value.status === 'signup'
-}));
+//     // 获取第一个tag的name
+//     const firstTagName = raceinfoData.value.tags[0].name;
 
-onMounted(async () => {
-    try {
-        const response = await axios({
-            url: 'http://127.0.0.1:5000/api/race-info',
-            method: 'post',
-            data: { uid: defaultUid }
-        });
+//     // 根据tag name判断状态
+//     if (firstTagName === '未开始') {
+//         return {
+//             status: 'not-started',
+//             title: '比赛未开始',
+//             subtitle: `将于 ${formatDateTime(raceinfoData.value.start_time)} 开始`
+//         };
+//     } 
+//     else if (firstTagName === '报名中') {
+//         return {
+//             status: 'signup',
+//             title: '比赛报名中',
+//             subtitle: `将于 ${formatDateTime(raceinfoData.value.end_time)} 结束`
+//         };
+//     }
+//     else if (firstTagName === '进行中') {
+//         return {
+//             status: 'in-progress',
+//             title: '比赛进行中',
+//             subtitle: `将于 ${formatDateTime(raceinfoData.value.end_time)} 结束`
+//         };
+//     } else if (firstTagName === '已结束') {
+//         return {
+//             status: 'ended',
+//             title: '比赛已结束',
+//             subtitle: `于 ${formatDateTime(raceinfoData.value.end_time)} 结束`
+//         };
+//     } else {
+//         // 默认状态
+//         return {
+//             status: 'not-started',
+//             title: '状态未知',
+//             subtitle: '请刷新页面重试'
+//         };
+//     }
+// });
 
-        const raceInfo = response.data.race_info;
-        raceinfoData.value = {
-            title: raceInfo.title,
-            start_time: raceInfo.start_time,
-            end_time: raceInfo.end_time,
-            tags: raceInfo.tags,
-            problems: raceInfo.problems,
-            user_num: raceInfo.user_num,
-            user_status: raceInfo.user_status
-        };
-    } catch (error) {
-        console.error('请求失败:', error);
-    }
-});
+// // 根据状态设置样式类
+// const competitionStatusClass = computed(() => ({
+//     'status-not-started': competitionStatus.value.status === 'not-started',
+//     'status-in-progress': competitionStatus.value.status === 'in-progress',
+//     'status-ended': competitionStatus.value.status === 'ended',
+//     'status-signup': competitionStatus.value.status === 'signup'
+// }));
+
 </script>
 
 <style scoped>

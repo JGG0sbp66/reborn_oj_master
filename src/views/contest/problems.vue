@@ -1,9 +1,9 @@
 <template>
   <main>
-    <competitionheader />
+    <competitionheader :raceInfo="raceInfo"/>
     <div class="main-content">
       <div class="left-panel">
-        <sidebarproblem />
+        <sidebarproblem :raceInfo="raceInfo"/>
       </div>
       <div class="content-area">
         <div class="content-wrapper">
@@ -11,7 +11,7 @@
             <competitionshow :raceInfo="raceInfo"/>
           </div>
           <div class="right-main">
-            <competitioninformation />
+            <competitioninformation :raceInfo="raceInfo"/>
           </div>
         </div>
       </div>
@@ -44,6 +44,14 @@ const fetchData = async () => {
 };
 
 onMounted(fetchData); // 在组件挂载时调用 fetchData 函数
+
+// const link = document.querySelector('a') as HTMLAnchorElement | null;
+
+// if (link) {
+//   const url = new URL(link.href);
+//   const uid = parseInt(url.searchParams.get('uid') || '1'); // 将string转为number,如果为null则使用默认值1
+// }
+
 </script>
 
 <style scoped>

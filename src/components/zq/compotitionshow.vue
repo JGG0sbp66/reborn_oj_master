@@ -47,10 +47,10 @@
                     </tr>
                 </thead>
                 <tbody class="problems-body">
-                    <tr v-for="(problem, index) in raceinfoData.problems" :key="problem.id" class="problem-row">
+                    <tr v-for="(problem, index) in props.raceInfo?.value?.race_info.problems" :key="index" class="problem-row">
                         <td class="column-status">
                             <span class="status-tag" :class="getStatusClass(problem.status)">
-                                {{ problem.status }}
+                                {{ problem.status || '未提交' }}
                             </span>
                         </td>
                         <td class="column-title">
@@ -88,96 +88,35 @@ import { Document, Edit, Trophy, DataLine, TrendCharts, User } from '@element-pl
 import axios from 'axios';
 
 const props = defineProps({
-  raceInfo: Object, // 定义一个名为 raceInfo 的 prop，类型为 Object
+  raceInfo: Object,
 });
 
-console.log('props:', props.raceInfo);
-
-// const link = document.querySelector('a') as HTMLAnchorElement | null;
-
-// if (link) {
-//   const url = new URL(link.href);
-//   const uid = parseInt(url.searchParams.get('uid') || '1'); // 将string转为number,如果为null则使用默认值1
-// }
-const defaultUid = 1;
-
-// 将数字索引转换为字母序号（0 -> A, 1 -> B, etc.）
-const getAlphabetIndex = (index: number): string => {
-    return String.fromCharCode(65 + index); // 65 是 'A' 的 ASCII 码
+// 获取字母索引（A, B, C...）
+const getAlphabetIndex = (index: number) => {
+  return String.fromCharCode(65 + index);
 };
 
-// 获取状态对应的样式类
-const getStatusClass = (status: string): string => {
-    const statusMap: Record<string, string> = {
-        'AC': 'status-accepted',
-        'WA': 'status-wrong',
-        'pending': 'status-pending',
-        'default': 'status-default'
-    };
-    return statusMap[status] || 'status-default';
+// 获取题目状态的样式类
+const getStatusClass = (status: string) => {
+  switch (status) {
+    case 'AC':
+      return 'status-accepted';
+    case 'WA':
+      return 'status-wrong';
+    case 'PENDING':
+      return 'status-pending';
+    default:
+      return 'status-default';
+  }
 };
 
 // 格式化通过率
-const formatPassRate = (solved: number, total: number): string => {
-    if (total === 0 || isNaN(solved / total)) {
-        return '0%';
-    }
-    return `${((solved / total) * 100).toFixed(1)}%`;
+const formatPassRate = (solveNum: number, submitNum: number) => {
+  if (submitNum === 0) return '0.00%';
+  return ((solveNum / submitNum) * 100).toFixed(2) + '%';
 };
 
-interface Problem {
-    id: number;
-    title: string;
-    status: string;
-    solve_num: number;
-    submit_num: number;
-}
-
-interface RaceInfo {
-    title: string;
-    start_time: string;
-    end_time: string;
-    tags: string[];
-    problems: Problem[];
-    user_status: string[];
-    user_num: number;
-}
-
-const raceinfoData = ref<RaceInfo>({
-    title: '',
-    start_time: '',
-    end_time: '',
-    tags: [],
-    problems: [],
-    user_status: [],
-    user_num: 0
-});
-
-onMounted(async () => {
-    try {
-        const response = await axios({
-            url: 'http://127.0.0.1:5000/api/race-info',
-            method: 'post',
-            data: { uid: defaultUid }
-        });
-
-        console.log(response.data);
-
-        const raceInfo = response.data.race_info;
-        raceinfoData.value = {
-            title: raceInfo.title,
-            start_time: raceInfo.start_time,
-            end_time: raceInfo.end_time,
-            tags: raceInfo.tags,
-            problems: raceInfo.problems,
-            user_num: raceInfo.user_num,
-            user_status: raceInfo.user_status
-        };
-        console.log('比赛信息已更新:', raceinfoData.value);
-    } catch (error) {
-        console.error('请求失败:', error);
-    }
-});
+console.log('props:', props.raceInfo);
 </script>
 
 <style scoped>
