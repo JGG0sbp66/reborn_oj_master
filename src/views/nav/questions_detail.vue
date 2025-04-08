@@ -1,7 +1,6 @@
 <template>
   <!-- <showtitle text="这里是题目详情页面"/> -->
-  <navlinks />
-
+  <!-- <navlinks /> -->
   <!-- 题目详情页页眉组件 -->
   <questions_detailHeader></questions_detailHeader>
   <!-- 题目详情组件 -->

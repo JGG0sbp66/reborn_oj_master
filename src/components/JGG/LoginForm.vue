@@ -51,6 +51,10 @@ import { useRouter } from 'vue-router';
 import axios from 'axios';
 import alertbox from '@/components/JGG/alertbox.vue';
 import betInput from './betInput.vue';
+import { checkAuth } from '@/utils/auth';
+
+// 定义登录成功事件
+const emit = defineEmits(['login-success']);
 
 const usernameRules = [
     {
@@ -104,7 +108,21 @@ const handleSubmit = async () => {
 
         if (userData.success) {
             alertboxRef.value?.show('登陆成功！', 0);
-            // 注册成功后跳转到登录页面
+            
+            // 更新登录状态并存储在localStorage
+            localStorage.setItem('isLoggedIn', 'true');
+            
+            // 获取并存储用户信息
+            const { authenticated, user } = await checkAuth();
+            if (authenticated && user) {
+                localStorage.setItem('username', user.uid);
+                localStorage.setItem('userRole', user.role);
+            }
+            
+            // 触发登录成功事件，通知父组件
+            emit('login-success');
+            
+            // 登录成功后跳转到首页
             setTimeout(() => {
                 router.push('/nav/home');
             }, 1000);

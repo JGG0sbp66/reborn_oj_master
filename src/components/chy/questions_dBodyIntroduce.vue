@@ -74,6 +74,7 @@
         </div>
       </div>
       <div
+        v-if="questionDetail"
         class="content-container"
         v-show="activeTab === 'description'"
       >
@@ -115,56 +116,102 @@
           <p>{{this.questionDetail?.pattern_text}}</p>
           <h3>输出格式</h3>
           <p>{{this.questionDetail?.print_text}}</p>
-          <h3>测试样例1</h3>
-          <div class="Testinput">
-            <div class="TestinputB">
-              <div>
-                <span>输入数据</span>
+          <template
+            v-for="(example, index) in questionDetail?.examples"
+            :key="index"
+          >
+            <h3>测试样例{{index+1}}</h3>
+            <div class="Testinput">
+              <div class="TestinputB">
+                <div>
+                  <span>输入数据</span>
+                </div>
+                <div>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    style="width: 14px; height: 14px; position: relative; top:2px;"
+                  >
+                    <path
+                      d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"
+                      fill="currentColor"
+                    ></path>
+                  </svg>
+                  <span>复制</span>
+                </div>
               </div>
-              <div>
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  style="width: 14px; height: 14px; position: relative; top:2px;"
-                >
-                  <path
-                    d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"
-                    fill="currentColor"
-                  ></path>
-                </svg>
-                <span>复制</span>
-              </div>
+              <div
+                class="Testinputc"
+                style="padding: 5px 16px 12px; font-size: 14px; font-weight: 300;"
+              >{{ example?.input }}</div>
             </div>
-            <div
-              class="Testinputc"
-              style="padding: 5px 16px 12px; font-size: 14px; font-weight: 300;"
-            >{{this.questionDetail?.test_input}}</div>
-          </div>
-          <div class="Testout">
-            <div class="TestinputB">
-              <div>
-                <span>输出数据</span>
+            <div class="Testout">
+              <div class="TestinputB">
+                <div>
+                  <span>输出数据</span>
+                </div>
+                <div>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    style="width: 14px; height: 14px; position: relative; top:2px;"
+                  >
+                    <path
+                      d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"
+                      fill="currentColor"
+                    ></path>
+                  </svg>
+                  <span>复制</span>
+                </div>
               </div>
-              <div>
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  style="width: 14px; height: 14px; position: relative; top:2px;"
-                >
-                  <path
-                    d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"
-                    fill="currentColor"
-                  ></path>
-                </svg>
-                <span>复制</span>
-              </div>
+              <div
+                class="Testinputc"
+                style="padding: 5px 16px 12px; font-size: 14px; font-weight: 300;"
+              >{{ example?.output }}</div>
             </div>
-            <div
-              class="Testinputc"
-              style="padding: 5px 16px 12px; font-size: 14px; font-weight: 300;"
-            >{{this.questionDetail?.test_print}}</div>
-          </div>
+            <template v-if="example.explanation && example.explanation.trim() !== ''">
+              <h3>解释{{index+1}}</h3>
+              <div class="Testinput">
+                <div class="TestinputB">
+                  <div>
+                    <span>题目描述</span>
+                  </div>
+                  <div>
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      style="width: 14px; height: 14px; position: relative; top:2px;"
+                    >
+                      <path
+                        d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"
+                        fill="currentColor"
+                      ></path>
+                    </svg>
+                    <span>复制</span>
+                  </div>
+                </div>
+                <div
+                  class="Testinputc"
+                  style="padding: 5px 16px 12px; font-size: 14px; font-weight: 300;"
+                >{{example?.explanation}}</div>
+              </div>
+            </template>
+          </template>
         </div>
+      </div>
+      <div
+        v-else
+        class="skeleton-container"
+      >
+        <!-- 骨架屏内容 -->
+        <div class="skeleton-title"></div>
+        <div class="skeleton-meta">
+          <div class="skeleton-meta-item"></div>
+          <div class="skeleton-meta-item"></div>
+        </div>
+        <div class="skeleton-content"></div>
+        <div class="skeleton-content"></div>
+        <div class="skeleton-content"></div>
       </div>
       <div
         class="content-container"
@@ -274,6 +321,47 @@ export default {
 </script>
 
 <style scoped>
+skeleton-container {
+  padding: 16px;
+}
+
+.skeleton-title {
+  height: 28px;
+  width: 60%;
+  background: #f1f5f9;
+  border-radius: 4px;
+  margin-bottom: 20px;
+}
+
+.skeleton-meta {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.skeleton-meta-item {
+  height: 32px;
+  width: 120px;
+  background: #f1f5f9;
+  border-radius: 16px;
+}
+
+.skeleton-content {
+  height: 16px;
+  width: 100%;
+  background: #f1f5f9;
+  border-radius: 4px;
+  margin-bottom: 12px;
+}
+
+.skeleton-content:nth-child(2) {
+  width: 90%;
+}
+
+.skeleton-content:nth-child(3) {
+  width: 80%;
+}
+
 .describe-container {
   width: 100%;
   height: 100%;
@@ -575,6 +663,7 @@ td {
   vertical-align: middle;
   transition: background-color 0.2s ease;
   white-space: nowrap;
+  text-align: center;
 }
 
 tr:hover td {
@@ -583,8 +672,6 @@ tr:hover td {
 
 td:first-child {
   font-weight: 500;
-  display: flex;
-  align-items: center;
 }
 
 td:first-child svg {
