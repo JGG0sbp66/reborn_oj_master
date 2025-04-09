@@ -1,5 +1,5 @@
 <template>
-  <competitionheader />
+  <competitionheader :raceInfo="raceInfo" />
   <main>
     <div class="main-content">
       <div class="left-panel">
@@ -26,9 +26,50 @@ import rank from "@/components/zq/rank.vue";
 import axios from "axios";
 import { onMounted } from "vue";
 
+const raceInfo = ref({});
 const raceRank = ref({
     race_rank: []
 });
+
+const get_race_info = async () => {
+    try {
+        const { data: raceData } = await axios({
+            url: "http://localhost:5000/api/race-info",
+            method: "post",
+            data: { uid: 1 },
+        });
+        console.log('比赛信息:', raceData);
+        // 确保返回的数据格式正确
+        return {
+            value: {
+                race_info: {
+                    title: raceData.race_info?.title || '未知比赛',
+                    start_time: raceData.race_info?.start_time || '',
+                    end_time: raceData.race_info?.end_time || '',
+                    tags: raceData.race_info?.tags || [],
+                    problems: raceData.race_info?.problems || [],
+                    user_num: raceData.race_info?.user_num || 0,
+                    user_status: raceData.race_info?.user_status || []
+                }
+            }
+        };
+    } catch (error) {
+        console.error('获取比赛信息失败:', error);
+        return {
+            value: {
+                race_info: {
+                    title: '加载失败',
+                    start_time: '',
+                    end_time: '',
+                    tags: [],
+                    problems: [],
+                    user_num: 0,
+                    user_status: []
+                }
+            }
+        };
+    }
+};
 
 const get_race_rank = async () => {
     try {
@@ -47,13 +88,23 @@ const get_race_rank = async () => {
 
 const fetchData = async () => {
     try {
-        const race_rank_data = await get_race_rank();
+        const [race_info_data, race_rank_data] = await Promise.all([
+            get_race_info(),
+            get_race_rank()
+        ]);
+        
+        if (race_info_data) {
+            raceInfo.value = race_info_data;
+            console.log('更新后的raceInfo:', raceInfo.value);
+            console.log('比赛标题:', raceInfo.value?.value?.race_info?.title);
+        }
+        
         if (race_rank_data) {
             raceRank.value = race_rank_data;
             console.log('更新后的raceRank:', raceRank.value);
         }
     } catch (error) {
-        console.error('更新排名数据失败:', error);
+        console.error('更新数据失败:', error);
     }
 };
 

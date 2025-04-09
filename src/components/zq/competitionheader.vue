@@ -102,6 +102,7 @@ const menuCloseTimer = ref<number | null>(null); // 用于延迟关闭菜单
 const props = defineProps({
   raceInfo: Object,
 });
+console.log(props.raceInfo);
 // 从用户名生成缩写
 const userInitials = computed(() => {
   if (!username.value || typeof username.value !== 'string') return '?';
