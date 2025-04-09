@@ -130,7 +130,7 @@ export default {
 .questions {
   display: flex;
   padding: 8px;
-  margin: 10px 0px;
+  margin: 50px 0px;
   min-height: 892px;
   position: relative;
   height: calc(100vh - 20px); /* 确保有明确高度 */
