@@ -35,7 +35,12 @@ const routes = [
         path: "/contest/ranks",
         name: "ranks",
         component: () => import("@/views/contest/ranks.vue"),
-    },
+    },{
+        path: "/user/profile",
+        name: "profile",
+        component: () => import("@/views/user/profile.vue"),
+        meta: { requiresAuth: true }
+    }
 ];
 
 // 创建路由实例
@@ -55,9 +60,9 @@ router.beforeEach(async (to) => {
       const { authenticated } = await checkAuth();
       if (!authenticated) {
         return {
-          path: '/login',
+          path: '/account/login',
           query: { redirect: to.fullPath }
         };
       }
     }
-  });
+});
