@@ -36,43 +36,53 @@
                     </tr>
                 </thead>
                 <tbody class="rank-body">
-                    <tr v-for="(rank, index) in raceRank.race_rank" :key="rank.user_id" class="rank-row">
-                        <td class="column-rank">
-                            <div class="rank-number-wrapper">
-                                <div class="rank-number" :class="getRankClass(index + 1)">
-                                    {{ index + 1 }}
-                                </div>
-                            </div>
-                        </td>
-                        <td class="column-player">
-                            <div class="player-info">
-                                <div class="player-avatar">
-                                    <el-icon><User /></el-icon>
-                                </div>
-                                <span class="player-name">选手 {{ rank.user_id }}</span>
-                            </div>
-                        </td>
-                        <td class="column-solved">
-                            <div class="solved-count">{{ rank.total_solved }}</div>
-                        </td>
-                        <td class="column-time">
-                            <div class="total-time">{{ rank.total_penalty }}分钟</div>
-                        </td>
-                        <td v-for="(problem, pIndex) in problems" :key="pIndex" class="column-problem">
-                            <div 
-                                class="problem-status" 
-                                :class="getProblemStatusClass(rank.problem_stats['problem_' + (pIndex + 1)])">
-                                <template v-if="rank.problem_stats['problem_' + (pIndex + 1)]">
-                                    <div v-if="rank.problem_stats['problem_' + (pIndex + 1)].solved" class="status-solved">
-                                        {{ rank.problem_stats['problem_' + (pIndex + 1)].penalty_time }}
-                                        <div class="submit-count">{{ rank.problem_stats['problem_' + (pIndex + 1)].submit_count }} {{ rank.problem_stats['problem_' + (pIndex + 1)].submit_count > 1 ? 'trys' : 'try' }}</div>
+                    <template v-if="hasRankData">
+                        <tr v-for="(rank, index) in raceRank.race_rank" :key="rank.user_id" class="rank-row">
+                            <td class="column-rank">
+                                <div class="rank-number-wrapper">
+                                    <div class="rank-number" :class="getRankClass(index + 1)">
+                                        {{ index + 1 }}
                                     </div>
-                                    <div v-else-if="rank.problem_stats['problem_' + (pIndex + 1)].submit_count > 0" class="status-attempted">
-                                        <div class="submit-count">{{ rank.problem_stats['problem_' + (pIndex + 1)].submit_count }} {{ rank.problem_stats['problem_' + (pIndex + 1)].submit_count > 1 ? 'trys' : 'try' }}</div>
+                                </div>
+                            </td>
+                            <td class="column-player">
+                                <div class="player-info">
+                                    <div class="player-avatar">
+                                        <el-icon><User /></el-icon>
                                     </div>
+                                    <span class="player-name">选手 {{ rank.user_id }}</span>
+                                </div>
+                            </td>
+                            <td class="column-solved">
+                                <div class="solved-count">{{ rank.total_solved }}</div>
+                            </td>
+                            <td class="column-time">
+                                <div class="total-time">{{ rank.total_penalty }}分钟</div>
+                            </td>
+                            <td v-for="(problem, pIndex) in problems" :key="pIndex" class="column-problem">
+                                <div 
+                                    class="problem-status" 
+                                    :class="getProblemStatusClass(rank.problem_stats['problem_' + (pIndex + 1)])">
+                                    <template v-if="rank.problem_stats['problem_' + (pIndex + 1)]">
+                                        <div v-if="rank.problem_stats['problem_' + (pIndex + 1)].solved" class="status-solved">
+                                            {{ rank.problem_stats['problem_' + (pIndex + 1)].penalty_time }}
+                                            <div class="submit-count">{{ rank.problem_stats['problem_' + (pIndex + 1)].submit_count }} {{ rank.problem_stats['problem_' + (pIndex + 1)].submit_count > 1 ? 'trys' : 'try' }}</div>
+                                        </div>
+                                        <div v-else-if="rank.problem_stats['problem_' + (pIndex + 1)].submit_count > 0" class="status-attempted">
+                                            <div class="submit-count">{{ rank.problem_stats['problem_' + (pIndex + 1)].submit_count }} {{ rank.problem_stats['problem_' + (pIndex + 1)].submit_count > 1 ? 'trys' : 'try' }}</div>
+                                        </div>
+                                        <div v-else class="status-unattempted">—</div>
+                                    </template>
                                     <div v-else class="status-unattempted">—</div>
-                                </template>
-                                <div v-else class="status-unattempted">—</div>
+                                </div>
+                            </td>
+                        </tr>
+                    </template>
+                    <tr v-else class="empty-row">
+                        <td :colspan="problems.length + 4" class="empty-cell">
+                            <div class="empty-content">
+                                <el-icon class="empty-icon"><DataLine /></el-icon>
+                                <span class="empty-text">暂无排名数据</span>
                             </div>
                         </td>
                     </tr>
@@ -83,7 +93,7 @@
 </template>
 
 <script setup>
-import { Trophy, User, Check, Timer } from '@element-plus/icons-vue';
+import { Trophy, User, Check, Timer, DataLine } from '@element-plus/icons-vue';
 import { ref, computed, defineProps } from 'vue';
 
 // 定义题目列
@@ -117,6 +127,14 @@ const props = defineProps({
 // 使用计算属性代替直接访问props
 const raceRank = computed(() => props.raceRank);
 
+// 判断是否有排名数据
+const hasRankData = computed(() => {
+    return raceRank.value && 
+           raceRank.value.race_rank && 
+           Array.isArray(raceRank.value.race_rank) && 
+           raceRank.value.race_rank.length > 0;
+});
+
 console.log('Rank组件接收到的数据:', raceRank.value);
 </script>
 
@@ -124,6 +142,7 @@ console.log('Rank组件接收到的数据:', raceRank.value);
 .competition-rank {
     width: 100%;
     padding: 16px;
+    overflow-x: auto;
 }
 
 .rank-card {
@@ -131,7 +150,7 @@ console.log('Rank组件接收到的数据:', raceRank.value);
     border-radius: 12px;
     box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
     overflow: hidden;
-    max-width: 1400px;
+    min-width: 1000px;
     margin: 0 auto;
 }
 
@@ -192,11 +211,11 @@ console.log('Rank组件接收到的数据:', raceRank.value);
     text-align: center;
 }
 
-.column-rank { width: 60px; }
-.column-player { width: 160px; }
-.column-solved { width: 80px; }
-.column-time { width: 80px; }
-.column-problem { width: 60px; }
+.column-rank { min-width: 60px; width: 60px; }
+.column-player { min-width: 160px; width: 160px; }
+.column-solved { min-width: 80px; width: 80px; }
+.column-time { min-width: 80px; width: 80px; }
+.column-problem { min-width: 60px; width: 60px; }
 
 .rank-number-wrapper {
     display: flex;
@@ -324,7 +343,7 @@ console.log('Rank组件接收到的数据:', raceRank.value);
 
 @media (max-width: 992px) {
     .rank-card {
-        max-width: 100%;
+        min-width: 800px;
     }
     
     .th-content {
@@ -338,10 +357,39 @@ console.log('Rank组件接收到的数据:', raceRank.value);
         align-items: center;
     }
     
-    .column-rank { width: 50px; }
-    .column-player { width: 80px; }
-    .column-solved { width: 60px; }
-    .column-time { width: 70px; }
-    .column-problem { width: 40px; }
+    .column-rank { min-width: 50px; width: 50px; }
+    .column-player { min-width: 80px; width: 80px; }
+    .column-solved { min-width: 60px; width: 60px; }
+    .column-time { min-width: 70px; width: 70px; }
+    .column-problem { min-width: 40px; width: 40px; }
+}
+
+/* 添加空数据状态的样式 */
+.empty-row {
+    height: 200px;
+}
+
+.empty-cell {
+    text-align: center;
+    color: #94a3b8;
+}
+
+.empty-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 0;
+    gap: 16px;
+}
+
+.empty-icon {
+    font-size: 48px;
+    color: #cbd5e1;
+}
+
+.empty-text {
+    font-size: 16px;
+    color: #64748b;
 }
 </style>
