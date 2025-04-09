@@ -8,7 +8,7 @@
       <div class="content-area">
         <div class="content-wrapper">
           <div class="left-main">
-            <rank />
+            <rank :raceRank="raceRank" />
           </div>
         </div>
       </div>
@@ -16,13 +16,51 @@
   </main>
 </template>
 
-<script setup lang="ts">
-import { ref, reactive } from "vue"
+<script setup>
+import { ref } from "vue"
 import showtitle from "@/components/test/showtitle.vue"
 import navlinks from "@/components/test/navlinks.vue";
 import competitionheader from "@/components/zq/competitionheader.vue";
 import sidebarrank from "@/components/zq/sidebar-rank.vue";
 import rank from "@/components/zq/rank.vue";
+import axios from "axios";
+import { onMounted } from "vue";
+
+const raceRank = ref({
+    race_rank: []
+});
+
+const get_race_rank = async () => {
+    try {
+        const { data: userData } = await axios({
+            url: "http://localhost:5000/api/race-rank",
+            method: "post",
+            data: { uid: 1 },
+        });
+        console.log('API返回数据:', userData);
+        return userData;
+    } catch (error) {
+        console.error('获取排名数据失败:', error);
+        return null;
+    }
+};
+
+const fetchData = async () => {
+    try {
+        const race_rank_data = await get_race_rank();
+        if (race_rank_data) {
+            raceRank.value = race_rank_data;
+            console.log('更新后的raceRank:', raceRank.value);
+        }
+    } catch (error) {
+        console.error('更新排名数据失败:', error);
+    }
+};
+
+onMounted(() => {
+    console.log('组件挂载，开始获取数据');
+    fetchData();
+});
 </script>
 
 <style scoped>
@@ -35,7 +73,6 @@ import rank from "@/components/zq/rank.vue";
   top: 70px;
   overflow: hidden;
 }
-
 
 .page-title {
   animation: slideInDown 0.5s ease-out;
@@ -71,7 +108,6 @@ import rank from "@/components/zq/rank.vue";
   z-index: 10;
 }
 
-
 .content-area {
   flex: 1;
   display: flex;
@@ -80,50 +116,39 @@ import rank from "@/components/zq/rank.vue";
   justify-content: center;
   position: relative;
   z-index: 1;
+  background-color: #f1f5f9;
+  overflow: auto;
 }
 
 .content-wrapper {
   display: flex;
-  max-width: 1280px;
   width: 100%;
+  max-width: 1800px;
   gap: 24px;
+  justify-content: center;
+  position: relative;
 }
 
 .left-main {
-  flex: 2;
-  max-width: 860px;
-  background-color: #fff;
+  flex: 1;
+  width: 100%;
+  min-width: 0;
+  background-color: transparent;
   border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
-  padding: 24px;
   animation: fadeInUp 0.6s ease-out;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  transition: transform 0.3s ease;
   position: relative;
-  overflow: hidden;
-  backdrop-filter: blur(10px);
-  background: rgba(255, 255, 255, 0.95);
-}
-
-.left-main:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.08);
+  overflow: visible;
+  padding: 0;
 }
 
 .left-main::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 3px;
-  background: linear-gradient(90deg, #10b981, #3b82f6);
-  transform: scaleX(0);
-  transform-origin: left;
-  transition: transform 0.4s ease;
+  display: none;
 }
 
-.left-main:hover::after {
-  transform: scaleX(1);
+.left-main:hover {
+  transform: none;
+  box-shadow: none;
 }
 
 .right-main {
@@ -328,8 +353,8 @@ main::before {
   width: 100%;
   height: 100%;
   background-image: 
-    radial-gradient(circle at 20% 20%, rgba(16, 185, 129, 0.03) 0, transparent 50px),
-    radial-gradient(circle at 80% 80%, rgba(59, 130, 246, 0.03) 0, transparent 50px);
+    radial-gradient(circle at 20% 20%, rgba(16, 185, 129, 0.03) 0, transparent 200px),
+    radial-gradient(circle at 80% 80%, rgba(59, 130, 246, 0.03) 0, transparent 200px);
 }
 
 /* 媒体查询适配不同屏幕尺寸 */
@@ -361,9 +386,8 @@ main::before {
     padding: 16px;
   }
 
-  .left-main,
-  .right-main {
-    padding: 16px;
+  .left-main {
+    padding: 0;
   }
 }
 </style>
