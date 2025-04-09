@@ -139,7 +139,7 @@
             </div>
             
             <div class="action-section">
-              <router-link to="/contest/problems" class="action-btn">
+              <router-link to="/contest/problems" class="action-btn" target="_blank">
                 <span>Let's go</span>
                 <i class="btn-arrow">→</i>
               </router-link>
