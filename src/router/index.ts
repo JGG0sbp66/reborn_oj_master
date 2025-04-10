@@ -40,7 +40,11 @@ const routes = [
         name: "profile",
         component: () => import("@/views/user/profile.vue"),
         meta: { requiresAuth: true }
-    }
+    },{
+        path: "/user/manager",
+        name: "manager",
+        component: () => import("@/views/user/manager.vue"),
+    }   
 ];
 
 // 创建路由实例
