@@ -17,7 +17,8 @@
                 </betInput>
 
                 <!-- 密码输入 -->
-                <betInput ref="passwordInput" v-model="form.password" placeholder="请输入密码" type="password" :rules="passwordRules">
+                <betInput ref="passwordInput" v-model="form.password" placeholder="请输入密码" type="password"
+                    :rules="passwordRules">
                     <template #icon>
                         <svg style="height: 18px;width: 18px;margin-left: 10px;" xmlns="http://www.w3.org/2000/svg"
                             xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 1024 1024">
@@ -30,6 +31,43 @@
                         </svg>
                     </template>
                 </betInput>
+
+                <!-- 邮箱输入 -->
+                <betInput ref="emailInput" v-model="form.email" placeholder="请输入邮箱" type="text" :rules="emailRules">
+                    <template #icon>
+                        <svg style="height: 18px;width: 18px;margin-left: 10px;" xmlns="http://www.w3.org/2000/svg"
+                            xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 32 32">
+                            <path
+                                d="M28 6H4a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h24a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2zm-2.2 2L16 14.78L6.2 8zM4 24V8.91l11.43 7.91a1 1 0 0 0 1.14 0L28 8.91V24z"
+                                fill="currentColor"></path>
+                        </svg>
+                    </template>
+                </betInput>
+
+                <!-- 邮箱验证码输入 -->
+                <div style="display: flex;justify-content: space-around; gap: 10px;">
+                    <betInput ref="codeInput" v-model="form.code" placeholder="请输入验证码" type="code" :rules="codeRules">
+                        <template #icon>
+                            <svg style="height: 18px;width: 18px;margin-left: 10px;" xmlns="http://www.w3.org/2000/svg"
+                                xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 1024 1024">
+                                <path
+                                    d="M512 64L128 192v384c0 212.1 171.9 384 384 384s384-171.9 384-384V192L512 64zm312 512c0 172.3-139.7 312-312 312S200 748.3 200 576V246l312-110l312 110v330z"
+                                    fill="currentColor"></path>
+                                <path
+                                    d="M378.4 475.1a35.91 35.91 0 0 0-50.9 0a35.91 35.91 0 0 0 0 50.9l129.4 129.4l2.1 2.1a33.98 33.98 0 0 0 48.1 0L730.6 434a33.98 33.98 0 0 0 0-48.1l-2.8-2.8a33.98 33.98 0 0 0-48.1 0L483 579.7L378.4 475.1z"
+                                    fill="currentColor"></path>
+                            </svg>
+                        </template>
+                    </betInput>
+                    <button 
+    class="verification-btn"
+    @click.prevent="sendVerificationCode" 
+    :disabled="isSendingCode"
+    :class="{ 'disabled': isSendingCode }"
+>
+    {{ isSendingCode ? `${countdown}s后重试` : '获取验证码' }}
+</button>
+                </div>
 
                 <cfCAPTCHA ref="turnstileWidget" @verified="(token) => form.cfToken = token" class="cf-turnstile"
                     sitekey="0x4AAAAAABC_ObuVF8KoPAhe" />
@@ -52,6 +90,7 @@ import axios from 'axios'
 import cfCAPTCHA from "@/components/JGG/cfCAPTCHA.vue";
 import alertbox from "@/components/JGG/alertbox.vue";
 import betInput from './betInput.vue';
+import { onUnmounted } from 'vue';
 
 const usernameRules = [
     {
@@ -67,8 +106,24 @@ const passwordRules = [
     }
 ]
 
+const emailRules = [
+    {
+        pattern: /^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/,
+        message: '邮箱格式有误'
+    }
+]
+
+const codeRules = [
+    {
+        pattern: /^[0-9]{6}$/,
+        message: '验证码有误'
+    }
+]
+
 const usernameInput = ref<InstanceType<typeof betInput>>()
 const passwordInput = ref<InstanceType<typeof betInput>>()
+const emailInput = ref<InstanceType<typeof betInput>>()
+const codeInput = ref<InstanceType<typeof betInput>>()
 
 // 获取路由实例
 const router = useRouter();
@@ -77,7 +132,58 @@ const router = useRouter();
 const form = ref({
     username: '',
     password: '',
+    email: '',
+    code: '',
     cfToken: ''
+});
+
+const isSendingCode = ref(false);
+const countdown = ref(60);
+let countdownTimer: number | null = null;
+
+const sendVerificationCode = async () => {
+    // Validate email first
+    const isEmailValid = emailInput.value?.validate();
+    if (!isEmailValid) {
+        alertboxRef.value?.show('请先输入有效的邮箱地址', 2);
+        return;
+    }
+
+    try {
+        isSendingCode.value = true;
+        // Call API to send verification code
+        await axios({
+            url: 'http://localhost:5000/api/send-email-code',
+            method: 'post',
+            data: {
+                email: form.value.email
+            }
+        });
+
+        // Start countdown
+        countdown.value = 60;
+        countdownTimer = setInterval(() => {
+            countdown.value--;
+            if (countdown.value <= 0) {
+                if (countdownTimer) clearInterval(countdownTimer);
+                isSendingCode.value = false;
+            }
+        }, 1000);
+
+        alertboxRef.value?.show('验证码已发送到您的邮箱', 0);
+    } catch (error) {
+        isSendingCode.value = false;
+        if ((error as any).response) {
+            alertboxRef.value?.show('发送失败: ' + (error as any).response.data.message, 2);
+        } else {
+            alertboxRef.value?.show('发送验证码失败', 2);
+        }
+    }
+};
+
+// Don't forget to clear the timer when component unmounts
+onUnmounted(() => {
+    if (countdownTimer) clearInterval(countdownTimer);
 });
 
 const isSubmitting = ref(false);
@@ -89,8 +195,10 @@ const handleSubmit = async () => {
         // 前端校验
         const isUsernameValid = usernameInput.value?.validate()
         const isPasswordValid = passwordInput.value?.validate()
-        if (!isUsernameValid || !isPasswordValid) {
-            alertboxRef.value?.show('注册失败，账号或密码输入有误', 2);
+        const isEmailValid = emailInput.value?.validate()
+        const isCodeValid = codeInput.value?.validate()
+        if (!isUsernameValid || !isPasswordValid || !isEmailValid || !isCodeValid) {
+            alertboxRef.value?.show('注册失败，输入内容有误', 2);
             return;
         }
         // 验证账号密码是否正确
@@ -100,6 +208,8 @@ const handleSubmit = async () => {
             data: {
                 username: form.value.username,
                 password: form.value.password,
+                email: form.value.email,
+                email_code: form.value.code,
                 cfToken: form.value.cfToken
             }
         })
@@ -125,8 +235,45 @@ const handleSubmit = async () => {
 </script>
 
 <style scoped>
+.verification-btn {
+    min-width: 110px;
+    height: 34px;
+    border: none;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #18a058, #0d8a4d);
+    color: white;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+    padding: 0 16px;
+    box-shadow: 0 2px 6px rgba(24, 160, 88, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.verification-btn:hover:not(.disabled) {
+    background: linear-gradient(135deg, #0d8a4d, #18a058);
+    box-shadow: 0 4px 8px rgba(24, 160, 88, 0.3);
+    transform: translateY(-1px);
+}
+
+.verification-btn:active:not(.disabled) {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(24, 160, 88, 0.2);
+}
+
+.verification-btn.disabled {
+    background: #e0e0e0;
+    color: #a0a0a0;
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
+}
 .register-card {
-    height: 400px;
+    height: 550px;
     /* 增加高度以容纳验证码 */
     width: 420px;
     background-color: #ffffff;
@@ -151,7 +298,7 @@ const handleSubmit = async () => {
 
 .register-card-form {
     width: 300px;
-    height: 250px;
+    height: 350px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -187,7 +334,7 @@ const handleSubmit = async () => {
     box-shadow: 0 0 0 2px #18a05711;
 }
 
-.register-card-form button {
+.register-card-form-item button {
     width: 300px;
     height: 34px;
     border: none;

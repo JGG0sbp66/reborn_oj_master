@@ -5,7 +5,6 @@
   <div style="margin-bottom: 20px;">
     <LoginForm @login-success="handleLoginSuccess" />
   </div>
-  <foot />
 </template>
 
 

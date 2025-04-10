@@ -1,7 +1,6 @@
 <template>
   <headerheader />
   <div style="margin-bottom: 20px;"><RegisterForm /></div>
-  <foot />
 </template>
 
 <script setup lang="ts">
