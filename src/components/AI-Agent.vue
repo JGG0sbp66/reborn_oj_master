@@ -13,13 +13,16 @@
         name="fade"
         mode="out-in"
       >
-        <i
+        <img
           v-if="!isChatOpen"
-          class="fas fa-robot chatbot-icon"
-        ></i>
+          :src="bacAvatar"
+          class="chatbot-icon"
+          alt="AI背景图标"
+        >
         <i
           v-else
           class="fas fa-chevron-down chatbot-icon"
+          style="height: 30px;"
         ></i>
       </transition>
     </button>
@@ -31,11 +34,6 @@
         class="chatbot-container"
       >
         <div class="chat-header">
-          <img
-            :src="aiAvatar"
-            class="ai-avatar"
-            alt="AI头像"
-          >
           {{ title }}
           <button
             @click="toggleChat"
@@ -63,18 +61,18 @@
                 class="ai-avatar"
                 alt="AI头像"
               >
-              <div class="message bot">
-                {{ msg.text }}
-              </div>
+              <div
+                class="message bot"
+                v-html="msg.isMarkdown ? renderMarkdown(msg.text) : msg.text"
+              ></div>
             </div>
 
             <!-- 用户消息 -->
             <div
               v-else
               class="message user"
-            >
-              {{ msg.text }}
-            </div>
+              v-html="formatUserMessage(msg.text)"
+            ></div>
           </div>
         </div>
 
@@ -89,19 +87,22 @@
             {{ tip }}
           </button>
         </div>
-
         <div class="chat-input">
-          <input
+          <textarea
             v-model="userInput"
-            @keyup.enter="sendMessage"
+            @keydown.enter.exact.prevent="handleEnter"
+            @keydown.shift.enter.exact.prevent="handleShiftEnter"
             placeholder="输入你的问题..."
             class="input-field"
-          />
+            rows="1"
+            ref="textInput"
+            @input="handleInput"
+          ></textarea>
           <button
             @click="sendMessage"
             class="send-button"
           >
-          <i class="fas fa-paper-plane"></i> 
+            <i class="fas fa-paper-plane"></i>
           </button>
         </div>
       </div>
@@ -111,7 +112,9 @@
 
 <script>
 import axios from "axios";
-import defaultAvatar from "@/assets/icons/ai-avatar.png"; // 默认AI头像路径
+import defaultaiAvatar from "@/assets/icons/ai-avatar.png"; // 默认AI头像路径
+import defaultbacAvatar from "@/assets/icons/bak.png"; // 默认AI背景图标路径
+import MarkdownIt from "markdown-it";
 
 export default {
   name: "ChatbotWidget",
@@ -126,11 +129,16 @@ export default {
     },
     initialGreeting: {
       type: String,
-      default: "你好！我是AI-XiXi，有什么可以帮您的吗？",
+      default:
+        "吾乃『黄金判官·葛孚雷』！ 凡踏入此界者，无论汝是深陷『Bug泥沼』，还是遭『需求变更之兽』追猎——报上汝之苦难！",
     },
     aiAvatar: {
       type: String,
-      default: defaultAvatar, // 使用导入的默认头像
+      default: defaultaiAvatar, // 使用导入的默认头像
+    },
+    bacAvatar: {
+      type: String,
+      default: defaultbacAvatar, // 使用导入的ai背景图标
     },
   },
   data() {
@@ -139,9 +147,16 @@ export default {
       userInput: "",
       messages: [{ sender: "bot", text: this.initialGreeting }],
       quickTips: ["这是什么？", "怎么使用？", "有哪些功能？", "能帮我做什么？"],
+      md: new MarkdownIt(), // 初始化 markdown-it 实例
+      lineHeight: 40, // 默认值，会在 mounted 中更新
     };
   },
   methods: {
+    formatUserMessage(text) {
+      // 将换行符转换为 <br>，同时转义 HTML 防止 XSS
+      const md = this.md;
+      return md.renderInline(text.replace(/\n/g, "\n"));
+    },
     sendQuickTip(tip) {
       this.userInput = tip;
       this.sendMessage();
@@ -160,8 +175,17 @@ export default {
         this.messages.push({ sender: "user", text: message });
         this.userInput = "";
 
+        // 重置文本框高度
+        if (this.$refs.textInput) {
+          this.$refs.textInput.style.height = "auto";
+        }
+
         const thinkingIndex = this.messages.length;
-        this.messages.push({ sender: "bot", text: "思考中..." });
+        this.messages.push({
+          sender: "bot",
+          text: "思考中...",
+          isMarkdown: false, // 标记这不是 markdown
+        });
 
         this.$nextTick(() => {
           this.scrollToBottom();
@@ -185,6 +209,7 @@ export default {
         );
 
         this.messages[thinkingIndex].text = "";
+        this.messages[thinkingIndex].isMarkdown = true; // 标记这是 markdown
 
         const lines = response.data.split("\n").filter((line) => line.trim());
         let fullText = "";
@@ -205,6 +230,7 @@ export default {
       } catch (error) {
         this.messages[thinkingIndex].text =
           "出错: " + (error.message || "未知错误");
+        this.messages[thinkingIndex].isMarkdown = false;
         this.$nextTick(() => this.scrollToBottom());
       }
     },
@@ -229,11 +255,89 @@ export default {
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
       }
     },
+    // 添加 markdown 渲染方法
+    renderMarkdown(text) {
+      return this.md.render(text);
+    },
+    handleEnter() {
+      if (this.userInput.trim()) {
+        this.sendMessage();
+      }
+    },
+    handleInput() {
+      // 只有当检测到换行符时才调整高度
+      if (this.userInput.includes("\n")) {
+        this.$nextTick(() => {
+          this.adjustTextareaHeight();
+        });
+      }
+    },
+    handleShiftEnter() {
+      // 在光标位置插入换行符
+      const textarea = this.$refs.textInput;
+      const startPos = textarea.selectionStart;
+      const endPos = textarea.selectionEnd;
+
+      this.userInput =
+        this.userInput.substring(0, startPos) +
+        "\n" +
+        this.userInput.substring(endPos);
+
+      // 调整光标位置并确保高度调整
+      this.$nextTick(() => {
+        textarea.selectionStart = startPos + 1;
+        textarea.selectionEnd = startPos + 1;
+        this.adjustTextareaHeight();
+      });
+    },
+    // 自动调整文本框高度
+    adjustTextareaHeight() {
+      const textarea = this.$refs.textInput;
+      // 保存当前光标位置
+      const selectionStart = textarea.selectionStart;
+      const selectionEnd = textarea.selectionEnd;
+
+      // 先重置为最小高度
+      textarea.style.height = "auto";
+
+      // 计算单行高度
+      const singleLineHeight = parseInt(getComputedStyle(textarea).lineHeight);
+
+      // 只有当内容确实需要多行时才扩展高度
+      if (textarea.scrollHeight > singleLineHeight * 1.5) {
+        // 1.5倍行高作为阈值
+        textarea.style.height = `${Math.min(textarea.scrollHeight, 120)}px`;
+      } else {
+        // 保持单行高度
+        textarea.style.height = `${singleLineHeight}px`;
+      }
+
+      // 恢复光标位置
+      textarea.selectionStart = selectionStart;
+      textarea.selectionEnd = selectionEnd;
+    },
+  },
+  mounted() {
+    // 初始化时计算单行高度
+    this.$nextTick(() => {
+      if (this.$refs.textInput) {
+        const style = getComputedStyle(this.$refs.textInput);
+        this.lineHeight = parseInt(style.lineHeight);
+        // 设置初始高度
+        this.$refs.textInput.style.height = `${this.lineHeight}px`;
+      }
+    });
   },
 };
 </script>
 
 <style scoped>
+.chatbot-icon {
+  width: 60px; /* 设置图片宽度 */
+  height: 60px; /* 设置图片高度 */
+  object-fit: cover; /* 确保图片比例正确 */
+  border-radius: 50%; /* 如果需要圆形 */
+}
 /* 更新样式部分 */
 .chatbot-toggle {
   position: fixed;
@@ -344,7 +448,7 @@ export default {
 }
 
 .message {
-  padding: 12px 16px;
+  padding: 12px 25px;
   border-radius: 18px;
   word-wrap: break-word;
   line-height: 1.5;
@@ -368,13 +472,13 @@ export default {
   margin-left: auto;
   max-width: 85%; /* 限制最大宽度 */
   margin-right: 0; /* 移除右边距 */
+  white-space: pre-wrap; /* 保留换行符和空格 */
 }
 
 .message.bot {
   background-color: #f1f1f1;
   border-bottom-left-radius: 4px;
   margin-right: auto;
-  margin-left: 0;
   max-width: 85%; /* 限制最大宽度 */
   margin-left: 0; /* 移除左边距 */
 }
@@ -383,6 +487,7 @@ export default {
   padding: 15px;
   border-top: 1px solid #ddd;
   display: flex;
+  align-items: center;
 }
 
 /* AI头像 */
@@ -404,14 +509,18 @@ export default {
 
 .input-field {
   flex: 1;
-  padding: 10px 14px;
+  padding: 5px 10px;
   border: 1px solid #ddd;
   border-radius: 8px;
-  margin-right: 8px;
   font-size: 14px;
   transition: all 0.3s ease;
   outline: none;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  min-height: 40px; /* 与 lineHeight 保持一致 */
+  max-height: 120px;
+  resize: none; /* 禁止手动调整大小 */
+  overflow-y: auto; /* 内容超出时显示滚动条 */
+  line-height: 1.5; /* 行高 */
+  white-space: pre-wrap; /* 保留换行符 */
 }
 
 .input-field:focus {
@@ -449,7 +558,7 @@ export default {
 
 .send-button {
   padding: 8px 12px; /* 调整内边距 */
-  color: blackrgb(63 63 70/var(--tw-text-opacity));
+  color: blackrgb(63 63 70 / var(--tw-text-opacity));
   border: none;
   border-radius: 50%; /* 改为圆形 */
   cursor: pointer;
