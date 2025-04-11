@@ -213,7 +213,7 @@
     </div>
   </div>
   <AIAgent
-    title="AI-bot XiXi"
+    title="「黄金判官·葛孚雷」"
     buttonColor="#3b82f6"
   />
 </template>
