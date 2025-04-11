@@ -45,7 +45,7 @@
                         <span class="search-label">难度等级:</span>
                         <el-select v-model="difficultyFilter" placeholder="难度等级" clearable @change="handleSearch">
                             <el-option label="全部" value="" />
-                            <el-option label="简单" value="简单" />
+                            <el-option label="入门" value="入门" />
                             <el-option label="中等" value="中等" />
                             <el-option label="困难" value="困难" />
                         </el-select>
