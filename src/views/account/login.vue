@@ -1,17 +1,15 @@
 <template>
-  <!-- <showtitle text="这里是登陆页面" />
-  <navlinks /> -->
-  <headerheader ref="headerRef" />
-  <div style="margin-bottom: 20px;">
-    <LoginForm @login-success="handleLoginSuccess" />
+  <div>
+    <headerheader ref="headerRef" />
+    <div style="margin-bottom: 20px;">
+      <LoginForm @login-success="handleLoginSuccess" />
+    </div>
   </div>
 </template>
 
 
 <script setup lang="ts">
 import { ref, reactive, onMounted } from "vue"
-import showtitle from "@/components/test/showtitle.vue"
-import navlinks from "@/components/test/navlinks.vue";
 import LoginForm from "@/components/JGG/LoginForm.vue";
 import headerheader from "@/components/headerheader.vue";
 import foot from "@/components/foot.vue";

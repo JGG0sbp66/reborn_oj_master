@@ -1,6 +1,10 @@
 <template>
-  <headerheader />
-  <div style="margin-bottom: 20px;"><RegisterForm /></div>
+  <div>
+    <headerheader />
+    <div style="margin-bottom: 20px;">
+      <RegisterForm />
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">
