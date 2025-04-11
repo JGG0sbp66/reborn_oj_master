@@ -212,6 +212,10 @@
       </div>
     </div>
   </div>
+  <AIAgent
+    title="AI-bot XiXi"
+    buttonColor="#3b82f6"
+  />
 </template>
 
 
@@ -221,6 +225,7 @@ import showtitle from "@/components/test/showtitle.vue"
 import headerheader from "@/components/headerheader.vue";
 import foot from "@/components/foot.vue";
 import axios from "axios";
+import AIAgent from "@/components/AI-Agent.vue";
 
 // 定义类型
 interface Tag {
