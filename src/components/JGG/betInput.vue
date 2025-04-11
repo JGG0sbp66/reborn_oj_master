@@ -1,10 +1,9 @@
 <template>
-    <div class="validated-input-container">
+    <div class="validated-input-container" :class="{ 'code-type': type === 'code' }">
         <div class="input-wrapper" :class="{ 'has-error': showError, 'focus': isFocused }">
             <slot name="icon"></slot>
             <input v-model="inputValue" @blur="handleBlur" @focus="handleFocus" :type="showPassword ? 'text' : type"
                 :placeholder="placeholder">
-            <!-- 美化后的密码切换按钮 -->
             <button v-if="type === 'password'" class="password-toggle" @click.prevent="togglePasswordVisibility"
                 :aria-label="showPassword ? '隐藏密码' : '显示密码'">
                 <transition name="fade" mode="out-in">
@@ -28,7 +27,7 @@ const props = defineProps({
     type: {
         type: String,
         default: 'text',
-        validator: (value: string) => ['text', 'password', 'email', 'number'].includes(value)
+        validator: (value: string) => ['text', 'password', 'email', 'number', 'code'].includes(value)
     },
     placeholder: String,
     rules: {
@@ -170,6 +169,10 @@ input[type="password"]::-ms-reveal {
     font-size: 14px;
 }
 
+.validated-input-container.code-type input {
+    width: 120px; /* Shorter width for code type */
+}
+
 .input-wrapper {
     display: flex;
     height: 34px;
@@ -181,6 +184,10 @@ input[type="password"]::-ms-reveal {
         border-color 0.3s ease-out,
         box-shadow 0.3s ease-out;
     position: relative;
+}
+
+.validated-input-container.code-type .input-wrapper {
+    width: 180px; /* Shorter width for code type */
 }
 
 .input-wrapper.has-error {

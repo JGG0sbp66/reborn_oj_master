@@ -39,6 +39,7 @@
                 </div>
             </form>
             <div class="link-to-register">
+                <router-link :to="{ name: 'repassword' }">忘记密码？点击重置</router-link>
                 <router-link :to="{ name: 'register' }">没有账号？点击注册</router-link>
             </div>
         </div>
@@ -166,11 +167,11 @@ const handleSubmit = async () => {
 
 .register-card-form {
     width: 300px;
-    height: 150px;
+    height: auto;
     display: flex;
     flex-direction: column;
     align-items: center;
-    margin-bottom: 20px;
+    margin-top: 20px;
 }
 
 .register-card-form-item {
@@ -223,8 +224,11 @@ const handleSubmit = async () => {
 }
 
 .link-to-register {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
     height: 34px;
-    width: 300px;
+    width: 350px;
 }
 
 .link-to-register a {

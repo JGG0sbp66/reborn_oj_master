@@ -123,6 +123,44 @@
           </div>
         </div>
       </div>
+      <button
+        class="format-button"
+        @click="formatCode"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <polyline points="16 3 21 3 21 8"></polyline>
+          <line
+            x1="4"
+            y1="20"
+            x2="21"
+            y2="3"
+          ></line>
+          <polyline points="21 16 21 21 16 21"></polyline>
+          <line
+            x1="15"
+            y1="15"
+            x2="21"
+            y2="21"
+          ></line>
+          <line
+            x1="4"
+            y1="4"
+            x2="9"
+            y2="9"
+          ></line>
+        </svg>
+        格式化
+      </button>
     </div>
     <div class="codeBody">
       <div class="Aline">
@@ -138,6 +176,7 @@
               v-model="codeLines[index]"
               @keydown="handleKeyDown($event, index)"
               @keyup="handleKeyUp($event)"
+              @paste="handlePaste($event, index)"
               :ref="'input_' + index"
               @input="handleInput(index)"
             />
@@ -214,6 +253,11 @@ export default {
         },
       ],
       highlightedLines: [""], // 存储高亮后的代码行
+      history: [[]], // 存储代码历史记录
+      historyIndex: 0, // 当前历史记录索引
+      maxHistoryLength: 1000, // 最大历史记录长度
+      isUndoRedoInProgress: false, // 标记是否正在执行撤销/重做
+      saveHistoryTimeout: null, // 防抖定时器
     };
   },
   watch: {
@@ -228,6 +272,123 @@ export default {
     },
   },
   methods: {
+    // 添加保存历史记录的方法
+    // 修改saveHistory方法
+    saveHistory() {
+      // 如果正在执行撤销/重做，不保存历史
+      if (this.isUndoRedoInProgress) return;
+
+      // 使用防抖
+      clearTimeout(this.saveHistoryTimeout);
+      // 如果当前索引不是最新的，截断后面的历史
+      if (this.historyIndex < this.history.length - 1) {
+        this.history = this.history.slice(0, this.historyIndex + 1);
+      }
+
+      // 确保至少有一个空行
+      const currentCode =
+        this.codeLines.length === 0 ? [""] : [...this.codeLines];
+
+      // 只有当当前代码与最新历史记录不同时才保存
+      if (!this.isEqual(currentCode, this.history[this.history.length - 1])) {
+        this.history.push(currentCode);
+        this.historyIndex++;
+      }
+
+      // 限制历史记录长度
+      if (this.history.length > this.maxHistoryLength) {
+        this.history.shift();
+        this.historyIndex--;
+      }
+    },
+
+    // 添加辅助方法比较代码是否相同
+    isEqual(a, b) {
+      if (a.length !== b.length) return false;
+      for (let i = 0; i < a.length; i++) {
+        if (a[i] !== b[i]) return false;
+      }
+      return true;
+    },
+
+    // 添加撤销方法
+    undo() {
+      if (this.historyIndex > 0) {
+        this.isUndoRedoInProgress = true;
+
+        this.historyIndex--;
+        const prevHistory = this.history[this.historyIndex];
+
+        // 确保至少保留一个空行
+        this.codeLines = prevHistory.length === 0 ? [""] : [...prevHistory];
+
+        this.highlightAllLines();
+
+        // 延迟设置焦点，确保撤销完成
+        this.$nextTick(() => {
+          const lastIndex = this.codeLines.length - 1;
+          const inputRef = this.$refs[`input_${lastIndex}`];
+          if (inputRef && inputRef[0]) {
+            inputRef[0].focus();
+          }
+          this.isUndoRedoInProgress = false;
+        });
+      }
+    },
+
+    // 添加重做方法
+    // 修改redo方法
+    redo() {
+      if (this.historyIndex < this.history.length - 1) {
+        this.isUndoRedoInProgress = true;
+
+        this.historyIndex++;
+        const nextHistory = this.history[this.historyIndex];
+
+        // 确保至少保留一个空行
+        this.codeLines = nextHistory.length === 0 ? [""] : [...nextHistory];
+
+        this.highlightAllLines();
+
+        // 延迟设置焦点，确保重做完成
+        this.$nextTick(() => {
+          const lastIndex = this.codeLines.length - 1;
+          const inputRef = this.$refs[`input_${lastIndex}`];
+          if (inputRef && inputRef[0]) {
+            inputRef[0].focus();
+          }
+          this.isUndoRedoInProgress = false;
+        });
+      }
+    },
+    // 全选代码
+    selectAllCode() {
+      // 创建一个临时 textarea 来保存所有代码
+      const textarea = document.createElement("textarea");
+      textarea.value = this.codeLines.join("\n");
+      document.body.appendChild(textarea);
+
+      // 选中 textarea 中的内容
+      textarea.select();
+
+      // 复制到剪贴板
+      document.execCommand("copy");
+
+      // 移除临时 textarea
+      document.body.removeChild(textarea);
+
+      // 高亮显示所有行（视觉反馈）
+      this.$el.querySelectorAll(".AlineDiv").forEach((div) => {
+        div.style.backgroundColor = "rgba(3, 102, 214, 0.1)";
+      });
+
+      // 3秒后移除高亮
+      setTimeout(() => {
+        this.$el.querySelectorAll(".AlineDiv").forEach((div) => {
+          div.style.backgroundColor = "";
+        });
+      }, 3000);
+    },
     toggleLanguageSelection() {
       this.showLanguageSelection = !this.showLanguageSelection;
     },
@@ -255,6 +416,7 @@ export default {
       } else {
         this.splitLineAtCursor(index, cursorPosition);
       }
+      this.saveHistory(); // 添加历史保存
     },
 
     // 在指定行后插入新行
@@ -277,13 +439,13 @@ export default {
 
       this.codeLines[index] = beforeCursor;
       this.codeLines.splice(index + 1, 0, afterCursor);
+      this.highlightAllLines(); // 立即更新高亮
 
       this.$nextTick(() => {
         const newIndex = index + 1;
         const inputRef = this.$refs[`input_${newIndex}`];
         if (inputRef && inputRef[0]) {
           inputRef[0].focus();
-          // 将光标设置在新行的开头
           inputRef[0].setSelectionRange(0, 0);
         }
       });
@@ -298,15 +460,131 @@ export default {
           const inputRef = this.$refs[`input_${prevIndex}`];
           if (inputRef && inputRef[0]) {
             inputRef[0].focus();
+            // 立即更新高亮显示
+            this.highlightAllLines();
           }
         });
       }
+      this.saveHistory(); // 添加历史保存
+    },
+
+    // 处理粘贴事件
+    handlePaste(event, index) {
+      event.preventDefault();
+      const clipboardData = event.clipboardData || window.clipboardData;
+      const pastedText = clipboardData.getData("text");
+
+      if (pastedText.includes("\n")) {
+        // 处理多行粘贴
+        const lines = pastedText.split("\n");
+        const currentLine = this.codeLines[index];
+        const inputElement = this.$refs[`input_${index}`][0];
+        const cursorPosition = inputElement.selectionStart;
+
+        // 分割当前行为光标前后两部分
+        const beforeCursor = currentLine.substring(0, cursorPosition);
+        const afterCursor = currentLine.substring(cursorPosition);
+
+        // 构建新的行数组
+        const newLines = [];
+        newLines.push(beforeCursor + lines[0]); // 第一行
+
+        // 中间行
+        for (let i = 1; i < lines.length - 1; i++) {
+          newLines.push(lines[i]);
+        }
+
+        // 最后一行
+        newLines.push(lines[lines.length - 1] + afterCursor);
+
+        // 替换当前行并插入新行
+        this.codeLines.splice(index, 1, ...newLines);
+
+        this.$nextTick(() => {
+          // 将焦点设置在新插入的最后一行
+          const newIndex = index + newLines.length - 1;
+          const inputRef = this.$refs[`input_${newIndex}`];
+          if (inputRef && inputRef[0]) {
+            inputRef[0].focus();
+            // 将光标设置在最后一行文本的末尾
+            const cursorPos = lines[lines.length - 1].length;
+            inputRef[0].setSelectionRange(cursorPos, cursorPos);
+          }
+        });
+      } else {
+        // 单行文本，正常插入
+        const currentLine = this.codeLines[index];
+        const inputElement = this.$refs[`input_${index}`][0];
+        const cursorPosition = inputElement.selectionStart;
+
+        this.codeLines[index] =
+          currentLine.substring(0, cursorPosition) +
+          pastedText +
+          currentLine.substring(cursorPosition);
+
+        this.$nextTick(() => {
+          inputElement.setSelectionRange(
+            cursorPosition + pastedText.length,
+            cursorPosition + pastedText.length
+          );
+        });
+      }
+      this.highlightAllLines(); // 立即更新高亮
+      this.saveHistory(); // 添加历史保存
     },
 
     // 添加keydown和keyup事件处理
     handleKeyDown(event, index) {
+      // 添加 Ctrl+C 处理 - 复制当前行
+      if (event.key === "c" && (event.ctrlKey || event.metaKey)) {
+        event.preventDefault();
+        const lineToCopy = this.codeLines[index];
+        if (lineToCopy.trim() !== "") {
+          navigator.clipboard
+            .writeText(lineToCopy)
+            .then(() => {
+              // 高亮显示被复制的行
+              const lineDiv = this.$el.querySelectorAll(".AlineDiv")[index];
+              if (lineDiv) {
+                lineDiv.style.backgroundColor = "rgba(3, 102, 214, 0.1)";
+                setTimeout(() => {
+                  lineDiv.style.backgroundColor = "";
+                }, 500);
+              }
+            })
+            .catch((err) => {
+              console.error("复制失败:", err);
+            });
+        }
+        return;
+      }
+
+      // 添加 Ctrl+Z 处理 - 撤销
+      if (event.key === "z" && (event.ctrlKey || event.metaKey)) {
+        event.preventDefault();
+        if (!event.shiftKey) {
+          this.undo();
+        } else {
+          // Ctrl+Shift+Z 重做
+          this.redo();
+        }
+        return;
+      }
+
+      // 添加 Ctrl+Y 处理 - 重做
+      if (event.key === "y" && (event.ctrlKey || event.metaKey)) {
+        event.preventDefault();
+        this.redo();
+        return;
+      }
+      // 添加 Ctrl+A 处理
+      if (event.key === "a" && (event.ctrlKey || event.metaKey)) {
+        event.preventDefault();
+        this.selectAllCode();
+        return;
+      }
       if (event.key === "Enter") {
-        event.preventDefault(); // 阻止默认的换行行为
+        event.preventDefault();
         if (!this.isEnterKeyDown) {
           this.isEnterKeyDown = true;
           this.addNewLine(index);
@@ -316,6 +594,39 @@ export default {
           }, 100);
         }
       } else if (event.key === "Backspace") {
+        const inputElement = this.$refs[`input_${index}`][0];
+        const cursorPosition = inputElement.selectionStart;
+        const selectionEnd = inputElement.selectionEnd;
+
+        if (selectionEnd !== cursorPosition) {
+          return;
+        }
+
+        if (cursorPosition === 0 && index > 0) {
+          event.preventDefault();
+          const currentLine = this.codeLines[index];
+          const prevLine = this.codeLines[index - 1];
+
+          // 合并两行
+          this.codeLines[index - 1] = prevLine + currentLine;
+          this.codeLines.splice(index, 1);
+
+          // 立即更新高亮
+          this.highlightAllLines();
+
+          this.$nextTick(() => {
+            const prevInput = this.$refs[`input_${index - 1}`][0];
+            if (prevInput) {
+              prevInput.focus();
+              // 设置光标位置到合并后的位置（前一行末尾）
+              prevInput.setSelectionRange(prevLine.length, prevLine.length);
+              // 更新当前焦点索引
+              this.currentFocusIndex = index - 1;
+            }
+          });
+          return;
+        }
+
         if (!this.isBackspaceKeyDown) {
           this.isBackspaceKeyDown = true;
           this.removeLineIfEmpty(index);
@@ -334,6 +645,26 @@ export default {
             }
           }, 100);
         }
+      } else if (event.key === "Tab") {
+        event.preventDefault(); // 阻止默认的Tab行为
+        const inputElement = this.$refs[`input_${index}`][0];
+        const cursorPosition = inputElement.selectionStart;
+        const currentLine = this.codeLines[index];
+
+        // 插入两个空格作为缩进
+        const newLine =
+          currentLine.substring(0, cursorPosition) +
+          "  " + // 两个空格缩进
+          currentLine.substring(cursorPosition);
+
+        this.codeLines[index] = newLine;
+
+        this.$nextTick(() => {
+          inputElement.setSelectionRange(
+            cursorPosition + 2,
+            cursorPosition + 2
+          );
+        });
       }
     },
 
@@ -347,6 +678,83 @@ export default {
         clearInterval(this.backspaceKeyInterval);
         this.backspaceKeyInterval = null;
       }
+    },
+
+    // 格式化代码
+    formatCode() {
+      // 获取当前代码
+      const code = this.codeLines.join("\n");
+
+      // 根据语言应用不同的格式化规则
+      switch (this.selectedLanguage) {
+        case "C":
+        case "C++":
+        case "Java":
+          // 简单的C风格格式化 - 在实际应用中可以使用更复杂的格式化库
+          let formatted = [];
+          let indentLevel = 0;
+          const lines = code.split("\n");
+
+          lines.forEach((line) => {
+            const trimmed = line.trim();
+
+            // 减少缩进级别的行
+            if (trimmed.endsWith("}") || trimmed.startsWith("}")) {
+              indentLevel = Math.max(0, indentLevel - 1);
+            }
+
+            // 添加缩进
+            formatted.push("  ".repeat(indentLevel) + trimmed);
+
+            // 增加缩进级别的行
+            if (trimmed.endsWith("{") || trimmed.startsWith("{")) {
+              indentLevel += 1;
+            }
+          });
+
+          this.codeLines = formatted;
+          break;
+
+        case "Python":
+          // Python格式化 - 在实际应用中可以使用更复杂的格式化库
+          let pyFormatted = [];
+          let pyIndent = 0;
+          const pyLines = code.split("\n");
+
+          pyLines.forEach((line) => {
+            const trimmed = line.trim();
+
+            // 减少缩进
+            if (
+              trimmed.startsWith("elif ") ||
+              trimmed.startsWith("else:") ||
+              trimmed.startsWith("except ") ||
+              trimmed.startsWith("finally:")
+            ) {
+              pyIndent = Math.max(0, pyIndent - 1);
+            }
+
+            pyFormatted.push("    ".repeat(pyIndent) + trimmed);
+
+            // 增加缩进
+            if (trimmed.endsWith(":") && !trimmed.startsWith("#")) {
+              pyIndent += 1;
+            }
+          });
+
+          this.codeLines = pyFormatted;
+          break;
+
+        default:
+          // 默认情况下只去除前后空白行
+          this.codeLines = code.trim().split("\n");
+      }
+
+      // 确保至少有一行
+      if (this.codeLines.length === 0) {
+        this.codeLines = [""];
+      }
+      this.saveHistory(); // 添加历史保存
     },
 
     getRunTime() {
@@ -442,21 +850,45 @@ export default {
       }
     },
     highlightAllLines() {
-      this.highlightedLines = this.codeLines.map((line) =>
-        this.highlightLine(line)
-      );
+      // 使用requestAnimationFrame确保DOM更新后执行
+      requestAnimationFrame(() => {
+        this.highlightedLines = this.codeLines.map((line) => {
+          try {
+            const result = hljs.highlight(line, {
+              language: this.getLanguageMode(),
+              ignoreIllegals: true,
+            });
+            return result.value || line;
+          } catch (e) {
+            return line;
+          }
+        });
+
+        // 强制Vue更新DOM
+        this.$forceUpdate();
+      });
     },
+    // 修改 handleInput 方法，在输入时保存历史
     handleInput(index) {
       this.$nextTick(() => {
         this.highlightedLines[index] = this.highlightLine(
           this.codeLines[index]
         );
+        // 确保输入框内容同步
+        const input = this.$refs[`input_${index}`]?.[0];
+        if (input) {
+          input.value = this.codeLines[index];
+        }
+
+        // 输入时保存历史
+        this.saveHistory();
       });
     },
   },
   mounted() {
     this.highlightAllLines();
     document.addEventListener("keyup", this.handleKeyUp);
+    this.saveHistory(); // 保存初始状态
   },
   beforeDestroy() {
     clearInterval(this.enterKeyInterval);
@@ -488,6 +920,7 @@ export default {
   border-bottom: 1px solid #f0f0f0;
   display: flex;
   align-items: center;
+  justify-content: space-between;
   background-color: #f9f9f9;
   position: relative;
 }
@@ -632,6 +1065,11 @@ export default {
   scrollbar-gutter: stable;
   padding-right: 4px; /* 为滚动条留出空间 */
   background: #ffffff; /* 纯白背景 */
+}
+
+/* 添加全选高亮样式 */
+.AlineDiv.selected {
+  background-color: rgba(3, 102, 214, 0.1) !important;
 }
 
 .Aline::-webkit-scrollbar {
@@ -826,5 +1264,30 @@ export default {
 .codefooter button:active {
   box-shadow: 0 4px 12px rgba(66, 185, 131, 0.3);
   transform: translateY(0px);
+}
+
+/* 格式化按钮样式 */
+.format-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 12px;
+  padding: 6px 12px;
+  background-color: #f0f0f0;
+  border: 1px solid #d9d9d9;
+  border-radius: 4px;
+  font-size: 13px;
+  color: #333;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.format-button:hover {
+  background-color: #e6e6e6;
+  border-color: #c0c0c0;
+}
+
+.format-button svg {
+  margin-right: 6px;
 }
 </style>
