@@ -16,22 +16,6 @@
                     </template>
                 </betInput>
 
-                <!-- 密码输入 -->
-                <betInput ref="passwordInput" v-model="form.password" placeholder="请输入密码" type="password"
-                    :rules="passwordRules">
-                    <template #icon>
-                        <svg style="height: 18px;width: 18px;margin-left: 10px;" xmlns="http://www.w3.org/2000/svg"
-                            xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 1024 1024">
-                            <path
-                                d="M512 64L128 192v384c0 212.1 171.9 384 384 384s384-171.9 384-384V192L512 64zm312 512c0 172.3-139.7 312-312 312S200 748.3 200 576V246l312-110l312 110v330z"
-                                fill="currentColor"></path>
-                            <path
-                                d="M378.4 475.1a35.91 35.91 0 0 0-50.9 0a35.91 35.91 0 0 0 0 50.9l129.4 129.4l2.1 2.1a33.98 33.98 0 0 0 48.1 0L730.6 434a33.98 33.98 0 0 0 0-48.1l-2.8-2.8a33.98 33.98 0 0 0-48.1 0L483 579.7L378.4 475.1z"
-                                fill="currentColor"></path>
-                        </svg>
-                    </template>
-                </betInput>
-
                 <!-- 邮箱输入 -->
                 <betInput ref="emailInput" v-model="form.email" placeholder="请输入邮箱" type="text" :rules="emailRules">
                     <template #icon>
@@ -65,13 +49,26 @@
                     </button>
                 </div>
 
-                <cfCAPTCHA ref="turnstileWidget" @verified="(token) => form.cfToken = token" class="cf-turnstile"
-                    sitekey="0x4AAAAAABC_ObuVF8KoPAhe" />
+                <!-- 密码输入 -->
+                <betInput ref="passwordInput" v-model="form.password" placeholder="请输入新的密码" type="password"
+                    :rules="passwordRules">
+                    <template #icon>
+                        <svg style="height: 18px;width: 18px;margin-left: 10px;" xmlns="http://www.w3.org/2000/svg"
+                            xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 1024 1024">
+                            <path
+                                d="M512 64L128 192v384c0 212.1 171.9 384 384 384s384-171.9 384-384V192L512 64zm312 512c0 172.3-139.7 312-312 312S200 748.3 200 576V246l312-110l312 110v330z"
+                                fill="currentColor"></path>
+                            <path
+                                d="M378.4 475.1a35.91 35.91 0 0 0-50.9 0a35.91 35.91 0 0 0 0 50.9l129.4 129.4l2.1 2.1a33.98 33.98 0 0 0 48.1 0L730.6 434a33.98 33.98 0 0 0 0-48.1l-2.8-2.8a33.98 33.98 0 0 0-48.1 0L483 579.7L378.4 475.1z"
+                                fill="currentColor"></path>
+                        </svg>
+                    </template>
+                </betInput>
 
                 <!-- 提交按钮 -->
                 <div class="register-card-form-item">
                     <button type="submit" :disabled="isSubmitting">
-                        {{ isSubmitting ? '注册中...' : '注册' }}
+                        {{ isSubmitting ? '重置密码中...' : '重置密码' }}
                     </button>
                 </div>
             </form>
@@ -90,8 +87,8 @@ import { onUnmounted } from 'vue';
 
 const usernameRules = [
     {
-        pattern: /^[a-zA-Z0-9]{5,12}$/,
-        message: '用户名需为5-12位字母或数字'
+        pattern: /.{1,}/,
+        message: '请输入用户名'
     }
 ]
 
@@ -117,9 +114,9 @@ const codeRules = [
 ]
 
 const usernameInput = ref<InstanceType<typeof betInput>>()
-const passwordInput = ref<InstanceType<typeof betInput>>()
 const emailInput = ref<InstanceType<typeof betInput>>()
 const codeInput = ref<InstanceType<typeof betInput>>()
+const passwordInput = ref<InstanceType<typeof betInput>>()
 
 // 获取路由实例
 const router = useRouter();
@@ -127,10 +124,9 @@ const router = useRouter();
 // 表单数据
 const form = ref({
     username: '',
-    password: '',
     email: '',
     code: '',
-    cfToken: ''
+    password: ''
 });
 
 const isSendingCode = ref(false);
@@ -188,36 +184,34 @@ const handleSubmit = async () => {
         isSubmitting.value = true;
         // 前端校验
         const isUsernameValid = usernameInput.value?.validate()
-        const isPasswordValid = passwordInput.value?.validate()
         const isEmailValid = emailInput.value?.validate()
         const isCodeValid = codeInput.value?.validate()
-        if (!isUsernameValid || !isPasswordValid || !isEmailValid || !isCodeValid) {
+        const isPasswordValid = passwordInput.value?.validate()
+        if (!isUsernameValid || !isEmailValid || !isCodeValid || !isPasswordValid) {
             alertboxRef.value?.show('注册失败，输入内容有误', 2);
             return;
         }
         // 验证账号密码是否正确
         const { data: userData } = await axios({
-            url: 'http://localhost:5000/api/register',
+            url: 'http://localhost:5000/api/repassword',
             method: 'post',
             data: {
                 username: form.value.username,
-                password: form.value.password,
                 email: form.value.email,
                 email_code: form.value.code,
-                cfToken: form.value.cfToken
+                password: form.value.password,
             }
         })
 
         if (userData.success) {
-            alertboxRef.value?.show('注册成功！', 0);
-            // 注册成功后跳转到登录页面
+            alertboxRef.value?.show('修改密码成功！', 0);
             setTimeout(() => {
                 router.push('/account/login');
             }, 1000);
         }
     } catch (error) {
         if ((error as any).response) {
-            alertboxRef.value?.show('注册失败，' + (error as any).response.data.message, 2);
+            alertboxRef.value?.show('修改密码失败，' + (error as any).response.data.message, 2);
         } else {
             alertboxRef.value?.show('发生未知错误，请联系管理员，错误原因：' + String(error), 2);
         }
@@ -268,7 +262,7 @@ const handleSubmit = async () => {
 }
 
 .register-card {
-    height: 550px;
+    height: 500px;
     /* 增加高度以容纳验证码 */
     width: 420px;
     background-color: #ffffff;
@@ -293,7 +287,7 @@ const handleSubmit = async () => {
 
 .register-card-form {
     width: 300px;
-    height: 350px;
+    height: auto;
     display: flex;
     flex-direction: column;
     align-items: center;

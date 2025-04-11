@@ -28,6 +28,10 @@ const routes = [
         name: "register",
         component: () => import("@/views/account/register.vue"),
     },{
+        path: "/account/repassword",
+        name: "repassword",
+        component: () => import("@/views/account/repassword.vue"),
+    },{
         path: "/contest/problems",
         name: "problems",
         component: () => import("@/views/contest/problems.vue"),
