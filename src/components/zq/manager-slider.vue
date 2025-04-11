@@ -6,39 +6,37 @@
       </div>
     </div>
     
-    <div class="sidebar-menu">
-      <div 
-        v-for="(item, index) in menuItems" 
-        :key="index" 
-        class="menu-item"
-        :class="{ 'active': item.active, 'has-submenu': item.children && item.children.length }"
-      >
-        <div class="menu-title" @click="toggleMenuItem(index)">
-          <div class="item-icon" :class="item.iconClass">
-            <component :is="item.icon" v-if="item.icon" />
-            <i v-else class="default-icon"></i>
+    <div class="sidebar-menu navbar">
+      <ul class="navbar__menu">
+        <li 
+          v-for="(item, index) in menuItems" 
+          :key="index" 
+          class="navbar__item"
+        >
+          <div class="navbar__link" @click="toggleMenuItem(index)">
+            <div class="item-icon" :class="item.iconClass">
+              <component :is="item.icon" v-if="item.icon" />
+              <i v-else class="default-icon"></i>
+            </div>
+            <span v-show="!collapsed">{{ item.title }}</span>
           </div>
-          <div class="item-text" v-show="!collapsed">{{ item.title }}</div>
-          <div class="arrow" v-if="item.children && item.children.length && !collapsed">
-            <i :class="[item.expanded ? 'arrow-down' : 'arrow-right']"></i>
-          </div>
-        </div>
-        
-        <transition name="submenu">
-          <div class="submenu" v-if="item.children && item.children.length && item.expanded && !collapsed">
-            <router-link 
-              v-for="(subItem, subIndex) in item.children" 
-              :key="subIndex" 
-              :to="subItem.route" 
-              class="submenu-item"
-              :class="{ 'active': subItem.active }"
-            >
-              <div class="submenu-dot"></div>
-              <div class="submenu-text">{{ subItem.title }}</div>
-            </router-link>
-          </div>
-        </transition>
-      </div>
+          
+          <transition name="submenu">
+            <div class="submenu" v-if="item.children && item.children.length && item.expanded && !collapsed">
+              <router-link 
+                v-for="(subItem, subIndex) in item.children" 
+                :key="subIndex" 
+                :to="subItem.route" 
+                class="submenu-item"
+                :class="{ 'active': subItem.active }"
+              >
+                <div class="submenu-dot"></div>
+                <div class="submenu-text">{{ subItem.title }}</div>
+              </router-link>
+            </div>
+          </transition>
+        </li>
+      </ul>
     </div>
     
     <div class="sidebar-footer">
@@ -75,8 +73,8 @@ const menuItems = reactive([
     active: false,
     expanded: false,
     children: [
-      { title: '题库管理', route: '/system/questions', active: false },
-      { title: '竞赛管理', route: '/system/competitions', active: false },
+      { title: '题库管理', route: '/user/mproblem', active: false },
+      { title: '竞赛管理', route: '/user/mrace', active: false },
     ]
   }
 ]);
@@ -104,6 +102,33 @@ defineExpose({
 </script>
 
 <style scoped>
+@import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@600&display=swap');
+
+/* 变量定义 */
+:root {
+  --border-radius: 10px;
+  --spacer: 1rem;
+  --primary: #42b983;
+  --primary-gradient: linear-gradient(135deg, #42b983, #33c6aa);
+  --text: #6a778e;
+  --link-height: calc(var(--spacer) * 3.5);
+  --timing: 250ms;
+  --transition: var(--timing) ease all;
+}
+
+/* Gooey Effect Keyframes */
+@keyframes gooeyEffect-1 {
+  0% { transform: scale(1, 1); }
+  50% { transform: scale(0.5, 1.5); }
+  100% { transform: scale(1, 1); }
+}
+
+@keyframes gooeyEffect-2 {
+  0% { transform: scale(1, 1); }
+  50% { transform: scale(0.5, 1.5); }
+  100% { transform: scale(1, 1); }
+}
+
 .manager-sidebar {
   width: 220px;
   height: calc(100vh - 80px); /* 减去头部高度 */
@@ -117,10 +142,12 @@ defineExpose({
   top: 80px; /* 设置顶部距离为头部组件高度 */
   overflow: hidden;
   z-index: 999; /* 确保在大多数内容之上，但在头部之下 */
+  border-radius: var(--border-radius);
+  font-family: 'Open Sans', sans-serif;
 }
 
 .manager-sidebar.collapsed {
-  width: 60px;
+  width: 80px;
 }
 
 .sidebar-header {
@@ -161,29 +188,97 @@ defineExpose({
   transition: all 0.3s ease;
 }
 
+/* 侧边栏菜单 - 应用新样式 */
 .sidebar-menu {
   flex: 1;
   overflow-y: auto;
-  padding: 16px 0;
-}
-
-.menu-item {
   position: relative;
-  transition: all 0.3s ease;
+  padding: var(--spacer) 0;
 }
 
-.menu-title {
+.navbar__menu {
+  position: relative;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.navbar__item {
+  position: relative;
+}
+
+.navbar__item:last-child:before {
+  content: '';
+  position: absolute;
+  opacity: 0;
+  z-index: -1;
+  top: 0;
+  left: var(--spacer);
+  width: var(--link-height);
+  height: var(--link-height);
+  background: var(--primary-gradient);
+  border-radius: calc(var(--border-radius) * 1.75);
+  transition: var(--timing) cubic-bezier(1, 0.2, 0.1, 1.2) all;
+  box-shadow: 0 2px 8px rgba(66, 185, 131, 0.3);
+}
+
+.navbar__item:hover ~ .navbar__item:last-child:before,
+.navbar__item:last-child:hover:before {
+  opacity: 1;
+}
+
+.navbar__item:first-child:hover ~ .navbar__item:last-child:before {
+  top: 0;
+  animation: gooeyEffect-1 var(--timing) 1;
+}
+
+.navbar__item:nth-child(2):hover ~ .navbar__item:last-child:before {
+  top: 50%;
+  animation: gooeyEffect-2 var(--timing) 1;
+}
+
+.navbar__item:last-child:hover:before {
+  top: 100%;
+  animation: gooeyEffect-2 var(--timing) 1;
+}
+
+.navbar__link {
+  position: relative;
   display: flex;
   align-items: center;
   padding: 12px 16px;
+  height: var(--link-height);
+  color: var(--text);
+  transition: var(--transition);
   cursor: pointer;
-  transition: all 0.2s ease;
 }
 
-.menu-title:hover {
-  background-color: rgba(66, 185, 131, 0.05);
+.navbar__link span {
+  margin-left: 12px;
+  transition: var(--transition);
+  color: #333;
+  font-size: 14px;
+  font-weight: 500;
 }
 
+.navbar__link:hover {
+  color: var(--primary);
+  background-color: rgba(66, 185, 131, 0.12);
+  border-radius: var(--border-radius);
+}
+
+.navbar__link:hover span {
+  color: var(--primary);
+  font-weight: 600;
+  transform: translateX(2px);
+}
+
+.navbar__link:hover .item-icon {
+  color: var(--primary);
+  transform: scale(1.1);
+}
+
+/* 图标样式 */
 .item-icon {
   width: 24px;
   height: 24px;
@@ -191,40 +286,15 @@ defineExpose({
   align-items: center;
   justify-content: center;
   color: #64748b;
-  margin-right: 12px;
   transition: all 0.3s ease;
 }
 
-.item-text {
-  flex: 1;
-  color: #333;
-  font-size: 14px;
-  font-weight: 500;
-  white-space: nowrap;
-  transition: all 0.3s ease;
+.default-icon:before {
+  content: '•';
+  font-size: 24px;
 }
 
-.arrow {
-  width: 16px;
-  height: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.3s ease;
-}
-
-.arrow-right:after {
-  content: '→';
-  font-size: 12px;
-  color: #64748b;
-}
-
-.arrow-down:after {
-  content: '↓';
-  font-size: 12px;
-  color: #64748b;
-}
-
+/* 子菜单样式 */
 .submenu {
   padding: 5px 0 5px 44px;
   background-color: rgba(248, 250, 252, 0.8);
@@ -241,7 +311,7 @@ defineExpose({
 }
 
 .submenu-item:hover {
-  color: #42b983;
+  color: var(--primary);
 }
 
 .submenu-dot {
@@ -259,56 +329,29 @@ defineExpose({
 }
 
 .submenu-item:hover .submenu-dot {
-  background-color: #42b983;
+  background-color: var(--primary);
 }
 
 .submenu-item.active {
-  color: #42b983;
+  color: var(--primary);
 }
 
 .submenu-item.active .submenu-dot {
-  background-color: #42b983;
+  background-color: var(--primary);
 }
 
-.menu-item.active > .menu-title {
-  background-color: rgba(66, 185, 131, 0.1);
-}
-
-.menu-item.active > .menu-title .item-icon {
-  color: #42b983;
-}
-
-.menu-item.active > .menu-title .item-text {
-  color: #42b983;
-  font-weight: 600;
-}
-
-/* 图标样式 */
+/* 图标激活样式 */
 .home-icon,
-.setting-icon,
-.monitor-icon,
-.tools-icon,
-.network-icon,
-.logs-icon,
-.example-icon {
+.setting-icon {
   color: #64748b;
 }
 
-.menu-item.active .home-icon,
-.menu-item.active .setting-icon,
-.menu-item.active .monitor-icon,
-.menu-item.active .tools-icon,
-.menu-item.active .network-icon,
-.menu-item.active .logs-icon,
-.menu-item.active .example-icon {
-  color: #42b983;
+.navbar__item:hover .home-icon,
+.navbar__item:hover .setting-icon {
+  color: var(--primary);
 }
 
-.default-icon:before {
-  content: '•';
-  font-size: 24px;
-}
-
+/* 页脚样式 */
 .sidebar-footer {
   padding: 16px;
   border-top: 1px solid rgba(0, 0, 0, 0.05);
@@ -322,7 +365,8 @@ defineExpose({
 
 .highlight {
   color: #42b983;
-  font-weight: 500;
+  font-weight: 600;
+  text-shadow: 0 0 1px rgba(66, 185, 131, 0.3);
 }
 
 /* 子菜单动画 */
@@ -368,7 +412,17 @@ defineExpose({
   }
   
   .manager-sidebar.collapsed {
-    left: -60px;
+    left: -80px;
   }
+}
+
+.chart-bar {
+  width: 40px;
+  background: var(--primary-gradient);
+  border-radius: 4px 4px 0 0;
+  transition: all 0.5s ease;
+  position: relative;
+  display: flex;
+  justify-content: center;
 }
 </style>
