@@ -44,7 +44,15 @@ const routes = [
         path: "/user/manager",
         name: "manager",
         component: () => import("@/views/user/manager.vue"),
-    }   
+    },{
+        path: "/user/mproblem",
+        name: "mproblem",
+        component: () => import("@/views/user/mproblem.vue"),
+    },{
+        path: "/user/mrace",
+        name: "mrace",
+        component: () => import("@/views/user/mrace.vue"),
+    }
 ];
 
 // 创建路由实例

@@ -14,7 +14,6 @@
         <div class="main-nav">
           <div class="competition-title">
             <span class="title-text">后台管理</span>
-            <span class="title-highlight"></span>
           </div>
         </div>
   
@@ -884,48 +883,6 @@
     font-size: 24px;
     font-weight: 700;
     color: #1a1a1a;
-    letter-spacing: -0.5px;
-    background: linear-gradient(135deg, #42b983 0%, #00c4ff 100%);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-  }
-  
-  .title-highlight {
-    position: absolute;
-    width: 100%;
-    height: 8px;
-    background: rgba(66, 185, 131, 0.15);
-    border-radius: 4px;
-    bottom: -4px;
-    left: 0;
-    z-index: 1;
-    transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-    transform: scaleX(0.8);
-    transform-origin: center;
-  }
-  
-  .competition-title:hover .title-text {
-    transform: translateY(-2px);
-    text-shadow: 0 4px 12px rgba(66, 185, 131, 0.25);
-  }
-  
-  .competition-title:hover .title-highlight {
-    transform: scaleX(1);
-    opacity: 0.3;
-  }
-  
-  /* 响应式设计 */
-  @media (max-width: 768px) {
-    .title-text {
-      font-size: 20px;
-    }
-    
-    .title-highlight {
-      height: 6px;
-      bottom: -3px;
-    }
   }
   </style>
   

@@ -2,7 +2,7 @@
   <div class="manager-sidebar" :class="{ 'collapsed': collapsed }">
     <div class="sidebar-header">
       <div class="collapse-btn" @click="toggleCollapse">
-        <i class="collapse-icon">{{ collapsed ? '→' : '←' }}</i>
+        <el-icon class="collapse-icon">{{ collapsed ? 'CaretRight' : 'CaretLeft' }}</el-icon>
       </div>
     </div>
     
@@ -43,7 +43,7 @@
     
     <div class="sidebar-footer">
       <div class="copyright" v-show="!collapsed">
-        Copyright © 2019 <span class="highlight">IT中台</span> All rights reserved.
+        Copyright © 2025 <span class="highlight">所谓混学</span> All rights reserved.
       </div>
     </div>
   </div>
@@ -51,7 +51,7 @@
 
 <script setup lang="ts">
 import { ref, reactive } from 'vue';
-import { Setting, Monitor, Tools, Connection, Document } from '@element-plus/icons-vue';
+import { Setting, Document, CaretLeft, CaretRight } from '@element-plus/icons-vue';
 
 // 控制侧边栏折叠状态
 const collapsed = ref(false);
@@ -75,61 +75,9 @@ const menuItems = reactive([
     active: false,
     expanded: false,
     children: [
-      { title: '用户管理', route: '/system/users', active: false },
       { title: '题库管理', route: '/system/questions', active: false },
       { title: '竞赛管理', route: '/system/competitions', active: false },
     ]
-  },
-  {
-    title: '系统监控',
-    icon: Monitor,
-    iconClass: 'monitor-icon',
-    route: '',
-    active: false,
-    expanded: false,
-    children: [
-      { title: '服务监控', route: '/monitor/services', active: false },
-      { title: '性能监控', route: '/monitor/performance', active: false },
-    ]
-  },
-  {
-    title: '系统工具',
-    icon: Tools,
-    iconClass: 'tools-icon',
-    route: '',
-    active: false,
-    expanded: false,
-    children: [
-      { title: '代码生成', route: '/tools/generator', active: false },
-      { title: '系统接口', route: '/tools/api', active: false },
-    ]
-  },
-  {
-    title: '系统依赖',
-    icon: Connection,
-    iconClass: 'network-icon',
-    route: '/network',
-    active: false,
-    expanded: false,
-    children: []
-  },
-  {
-    title: '测试日志',
-    icon: Document,
-    iconClass: 'logs-icon',
-    route: '/logs',
-    active: false,
-    expanded: false,
-    children: []
-  },
-  {
-    title: '实例展示',
-    icon: Document,
-    iconClass: 'example-icon',
-    route: '/examples',
-    active: false,
-    expanded: false,
-    children: []
   }
 ]);
 
@@ -179,30 +127,37 @@ defineExpose({
   height: 60px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   padding: 0 16px;
   border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  position: relative;
 }
 
 .collapse-btn {
-  width: 24px;
-  height: 24px;
+  width: 32px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  border-radius: 4px;
-  transition: all 0.3s ease;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(66, 185, 131, 0.1), rgba(0, 196, 255, 0.1));
+  border: 1px solid rgba(66, 185, 131, 0.2);
+  transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+  position: absolute;
+  right: -16px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
 }
 
 .collapse-btn:hover {
-  background-color: rgba(66, 185, 131, 0.1);
+  background: linear-gradient(135deg, rgba(66, 185, 131, 0.15), rgba(0, 196, 255, 0.15));
+  transform: scale(1.05);
+  box-shadow: 0 3px 8px rgba(66, 185, 131, 0.25);
 }
 
 .collapse-icon {
   color: #42b983;
-  font-style: normal;
-  font-size: 14px;
+  font-size: 16px;
   transition: all 0.3s ease;
 }
 
