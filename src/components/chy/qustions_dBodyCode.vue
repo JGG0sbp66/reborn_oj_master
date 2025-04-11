@@ -256,6 +256,8 @@ export default {
       history: [[]], // 存储代码历史记录
       historyIndex: 0, // 当前历史记录索引
       maxHistoryLength: 1000, // 最大历史记录长度
+      isUndoRedoInProgress: false, // 标记是否正在执行撤销/重做
+      saveHistoryTimeout: null, // 防抖定时器
     };
   },
   watch: {
@@ -271,7 +273,13 @@ export default {
   },
   methods: {
     // 添加保存历史记录的方法
+    // 修改saveHistory方法
     saveHistory() {
+      // 如果正在执行撤销/重做，不保存历史
+      if (this.isUndoRedoInProgress) return;
+
+      // 使用防抖
+      clearTimeout(this.saveHistoryTimeout);
       // 如果当前索引不是最新的，截断后面的历史
       if (this.historyIndex < this.history.length - 1) {
         this.history = this.history.slice(0, this.historyIndex + 1);
@@ -281,9 +289,11 @@ export default {
       const currentCode =
         this.codeLines.length === 0 ? [""] : [...this.codeLines];
 
-      // 添加新历史记录
-      this.history.push(currentCode);
-      this.historyIndex++;
+      // 只有当当前代码与最新历史记录不同时才保存
+      if (!this.isEqual(currentCode, this.history[this.history.length - 1])) {
+        this.history.push(currentCode);
+        this.historyIndex++;
+      }
 
       // 限制历史记录长度
       if (this.history.length > this.maxHistoryLength) {
@@ -292,37 +302,63 @@ export default {
       }
     },
 
+    // 添加辅助方法比较代码是否相同
+    isEqual(a, b) {
+      if (a.length !== b.length) return false;
+      for (let i = 0; i < a.length; i++) {
+        if (a[i] !== b[i]) return false;
+      }
+      return true;
+    },
+
     // 添加撤销方法
     undo() {
       if (this.historyIndex > 0) {
+        this.isUndoRedoInProgress = true;
+
         this.historyIndex--;
         const prevHistory = this.history[this.historyIndex];
 
         // 确保至少保留一个空行
-        if (prevHistory.length === 0) {
-          this.codeLines = [""];
-        } else {
-          this.codeLines = [...prevHistory];
-        }
+        this.codeLines = prevHistory.length === 0 ? [""] : [...prevHistory];
 
         this.highlightAllLines();
+
+        // 延迟设置焦点，确保撤销完成
+        this.$nextTick(() => {
+          const lastIndex = this.codeLines.length - 1;
+          const inputRef = this.$refs[`input_${lastIndex}`];
+          if (inputRef && inputRef[0]) {
+            inputRef[0].focus();
+          }
+          this.isUndoRedoInProgress = false;
+        });
       }
     },
 
     // 添加重做方法
+    // 修改redo方法
     redo() {
       if (this.historyIndex < this.history.length - 1) {
+        this.isUndoRedoInProgress = true;
+
         this.historyIndex++;
         const nextHistory = this.history[this.historyIndex];
 
         // 确保至少保留一个空行
-        if (nextHistory.length === 0) {
-          this.codeLines = [""];
-        } else {
-          this.codeLines = [...nextHistory];
-        }
+        this.codeLines = nextHistory.length === 0 ? [""] : [...nextHistory];
 
         this.highlightAllLines();
+
+        // 延迟设置焦点，确保重做完成
+        this.$nextTick(() => {
+          const lastIndex = this.codeLines.length - 1;
+          const inputRef = this.$refs[`input_${lastIndex}`];
+          if (inputRef && inputRef[0]) {
+            inputRef[0].focus();
+          }
+          this.isUndoRedoInProgress = false;
+        });
       }
     },
     // 全选代码
