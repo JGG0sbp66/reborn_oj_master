@@ -2,13 +2,13 @@
   <div>
     <headerheader />
     <div style="margin-bottom: 20px;">
-      <RegisterForm />
+      <RepasswordForm />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import RegisterForm from "@/components/JGG/RegisterForm.vue";
+import RepasswordForm from "@/components/JGG/RepasswordForm.vue";
 import headerheader from "@/components/headerheader.vue";
 import foot from "@/components/foot.vue";
 </script>
