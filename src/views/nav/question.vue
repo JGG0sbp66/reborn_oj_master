@@ -10,6 +10,10 @@
     </div>
     <!-- 页尾组件 -->
     <foot />
+    <AIAgent
+      title="AI-bot XiXi"
+      buttonColor="#3b82f6"
+    />
   </div>
 </template>
   
@@ -20,6 +24,7 @@ import navlinks from "@/components/test/navlinks.vue";
 import questiobSum from "@/components/chy/questionSum.vue";
 import foot from "@/components/foot.vue";
 import headerheader from "@/components/headerheader.vue";
+import AIAgent from "@/components/AI-Agent.vue";
 </script>
 
 <style scoped>
