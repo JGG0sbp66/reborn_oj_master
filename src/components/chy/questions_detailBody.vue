@@ -9,6 +9,7 @@
         :submissions="submissions"
         :activeTab="activeTab"
         @switch-tab="switchTab"
+        @question-loaded="handleQuestionLoaded"
       ></questions_dBodyIntroduce>
     </div>
 
@@ -18,6 +19,7 @@
     <!-- 题目详情页编码区 -->
     <div class="right-panel">
       <qustions_dBodyCode
+        :questionDetail="questionDetail"
         @show-alert="handleCodeAlert"
         @submit-code="handleCodeSubmit"
       ></qustions_dBodyCode>
@@ -56,6 +58,7 @@ export default {
       isDragging: false,
       startX: 0,
       startWidth: 0,
+      questionDetail: null, // 存储题目详情
     };
   },
   mounted() {
@@ -98,17 +101,7 @@ export default {
     },
     handleCodeAlert(payload) {
       // 显示错误提示
-      this.showAlertMessage("error", payload.message || "提交的代码不能为空");
-    },
-    handleCodeSubmit(submission) {
-      // 添加新的提交记录
-      this.submissions.unshift(submission);
-
-      // 显示成功提示
-      this.showAlertMessage("success", "提交成功,等待测评");
-
-      // 切换到提交记录标签页
-      this.activeTab = "submissions";
+      this.showAlertMessage(payload.type, payload.message || "提交的代码不能为空");
     },
     showAlertMessage(type, message) {
       this.alertType = type;
@@ -121,6 +114,26 @@ export default {
     },
     closeAlert() {
       this.showAlert = false;
+    },
+    handleQuestionLoaded(detail) {
+      this.questionDetail = detail;
+    },
+
+    // 修改提交处理逻辑
+    async handleCodeSubmit(submission) {
+      try {
+        // 显示提交中状态
+        this.showAlertMessage("success", "代码测评完成");
+
+        // 添加提交记录
+        this.submissions.unshift(submission);
+
+        // 切换到提交记录标签页
+        this.activeTab = "submissions";
+      } catch (error) {
+        console.error("提交失败:", error);
+        this.showAlertMessage("error", "提交失败，请稍后重试");
+      }
     },
   },
 };

@@ -168,6 +168,7 @@
           class="AlineDiv"
           v-for="(line, index) in codeLines"
           :key="index"
+          :class="{ 'selected-line': isAllSelected }"
         >
           <span class="lineNumber">{{ index + 1 }}</span>
           <div class="code-input-wrapper">
@@ -195,9 +196,11 @@
 <script>
 import hljs from "highlight.js";
 import "highlight.js/styles/github-dark.css";
+import axios from "axios";
 
 export default {
   name: "CodeComponent",
+  props: ["questionDetail"],
   data() {
     return {
       selectedLanguage: "C++",
@@ -258,6 +261,7 @@ export default {
       maxHistoryLength: 1000, // 最大历史记录长度
       isUndoRedoInProgress: false, // 标记是否正在执行撤销/重做
       saveHistoryTimeout: null, // 防抖定时器
+      isAllSelected: false,
     };
   },
   watch: {
@@ -272,6 +276,10 @@ export default {
     },
   },
   methods: {
+    toggleLanguageSelection(e) {
+      e.stopPropagation(); // 阻止事件冒泡
+      this.showLanguageSelection = !this.showLanguageSelection;
+    },
     // 添加保存历史记录的方法
     // 修改saveHistory方法
     saveHistory() {
@@ -363,34 +371,19 @@ export default {
     },
     // 全选代码
     selectAllCode() {
-      // 创建一个临时 textarea 来保存所有代码
-      const textarea = document.createElement("textarea");
-      textarea.value = this.codeLines.join("\n");
-      document.body.appendChild(textarea);
+      // 先清除可能存在的旧监听器
+      document.removeEventListener("click", this.handleGlobalClick);
 
-      // 选中 textarea 中的内容
-      textarea.select();
+      // 设置全选状态
+      this.isAllSelected = true;
 
-      // 复制到剪贴板
-      document.execCommand("copy");
-
-      // 移除临时 textarea
-      document.body.removeChild(textarea);
-
-      // 高亮显示所有行（视觉反馈）
+      // 高亮显示所有行
       this.$el.querySelectorAll(".AlineDiv").forEach((div) => {
         div.style.backgroundColor = "rgba(3, 102, 214, 0.1)";
       });
 
-      // 3秒后移除高亮
-      setTimeout(() => {
-        this.$el.querySelectorAll(".AlineDiv").forEach((div) => {
-          div.style.backgroundColor = "";
-        });
-      }, 3000);
-    },
-    toggleLanguageSelection() {
-      this.showLanguageSelection = !this.showLanguageSelection;
+      // 添加全局点击事件监听器
+      document.addEventListener("click", this.handleGlobalClick);
     },
     closeLanguageSelection() {
       setTimeout(() => {
@@ -535,21 +528,48 @@ export default {
 
     // 添加keydown和keyup事件处理
     handleKeyDown(event, index) {
-      // 添加 Ctrl+C 处理 - 复制当前行
+      // 检查是否是IME输入过程
+      if (event.isComposing || event.keyCode === 229) {
+        return; // 如果是IME输入，不处理
+      }
+
+      // 添加 Ctrl+C 处理 - 复制选中内容
       if (event.key === "c" && (event.ctrlKey || event.metaKey)) {
         event.preventDefault();
-        const lineToCopy = this.codeLines[index];
-        if (lineToCopy.trim() !== "") {
+
+        // 获取当前选中的内容
+        let textToCopy = "";
+
+        if (this.isAllSelected) {
+          // 全选状态下复制所有代码
+          textToCopy = this.codeLines.join("\n");
+        } else {
+          // 否则复制当前行
+          textToCopy = this.codeLines[index];
+        }
+
+        if (textToCopy.trim() !== "") {
           navigator.clipboard
-            .writeText(lineToCopy)
+            .writeText(textToCopy)
             .then(() => {
               // 高亮显示被复制的行
-              const lineDiv = this.$el.querySelectorAll(".AlineDiv")[index];
-              if (lineDiv) {
-                lineDiv.style.backgroundColor = "rgba(3, 102, 214, 0.1)";
-                setTimeout(() => {
-                  lineDiv.style.backgroundColor = "";
-                }, 500);
+              if (this.isAllSelected) {
+                this.$el.querySelectorAll(".AlineDiv").forEach((div) => {
+                  div.style.backgroundColor = "rgba(3, 102, 214, 0.1)";
+                  setTimeout(() => {
+                    if (!this.isAllSelected) {
+                      div.style.backgroundColor = "";
+                    }
+                  }, 500);
+                });
+              } else {
+                const lineDiv = this.$el.querySelectorAll(".AlineDiv")[index];
+                if (lineDiv) {
+                  lineDiv.style.backgroundColor = "rgba(3, 102, 214, 0.1)";
+                  setTimeout(() => {
+                    lineDiv.style.backgroundColor = "";
+                  }, 500);
+                }
               }
             })
             .catch((err) => {
@@ -680,6 +700,20 @@ export default {
       }
     },
 
+    handleGlobalClick(e) {
+      // 无论点击哪里都清除选择状态
+      this.clearSelection();
+      // 移除事件监听器（确保只执行一次）
+      document.removeEventListener("click", this.handleGlobalClick);
+    },
+
+    clearSelection() {
+      this.isAllSelected = false;
+      this.$el.querySelectorAll(".AlineDiv").forEach((div) => {
+        div.style.backgroundColor = "";
+      });
+    },
+
     // 格式化代码
     formatCode() {
       // 获取当前代码
@@ -796,7 +830,7 @@ export default {
       const seconds = String(now.getSeconds()).padStart(2, "0");
       return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
     },
-    submitCode() {
+    async submitCode() {
       const nonEmptyLines = this.codeLines.filter((line) => line.trim() !== "");
       if (nonEmptyLines.length === 0) {
         this.$emit("show-alert", {
@@ -806,27 +840,77 @@ export default {
         return;
       }
 
+      // 显示提交中状态
       this.$emit("show-alert", {
-        type: "success",
-        message: "提交成功,等待测评",
+        type: "info",
+        message: "代码提交成功，正在评测中...",
       });
 
-      // 随机选择一个状态
-      const randomState =
-        this.stateOptions[Math.floor(Math.random() * this.stateOptions.length)];
+      console.log(JSON.stringify(this.questionDetail));
+      console.log(this.codeLines.join("\n")); // 用户代码
+      try {
+        const formData = new FormData();
+        formData.append("question", JSON.stringify(this.questionDetail));
+        formData.append("prompt", this.codeLines.join("\n"));
 
-      const submission = {
-        status: randomState.status,
-        language: this.selectedLanguage,
-        runTime: this.getRunTime(),
-        memoryUsage: this.getMemoryUsage(),
-        submitTime: this.getSubmitTime(),
-      };
+        for (let [key, value] of formData.entries()) {
+          console.log(key, value);
+        }
 
-      this.$emit("submit-code", submission);
+        const { data: response } = await axios({
+          url: "http://localhost:5000/api/askAi-question",
+          method: "post",
+          data: formData,
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        });
 
-      // 清空代码输入
-      this.codeLines = [""];
+        // 解析AI返回的结果
+        console.log("AI返回的结果:", response);
+        const aiResponse = response.message;
+        console.log(aiResponse);
+
+        // 根据AI返回的结果确定状态
+        let statusOption = this.stateOptions.find((option) =>
+          option.status.includes(this.getStatusFromAiResponse(aiResponse))
+        );
+
+        // 如果没有匹配的状态，使用默认状态
+        if (!statusOption) {
+          statusOption = this.stateOptions[0]; // 默认使用第一个状态
+        }
+
+        const submission = {
+          status: statusOption.status,
+          language: this.selectedLanguage,
+          runTime: this.getRunTime(),
+          memoryUsage: this.getMemoryUsage(),
+          submitTime: this.getSubmitTime(),
+          aiFeedback: aiResponse, // 可选：存储AI反馈
+        };
+
+        this.$emit("submit-code", submission);
+
+        // 清空代码输入
+        this.codeLines = [""];
+      } catch (error) {
+        console.error("提交失败:", error);
+        this.$emit("show-alert", {
+          type: "error",
+          message: "提交失败，请稍后重试",
+        });
+      }
+    },
+    // 辅助方法：从AI响应中提取状态
+    getStatusFromAiResponse(response) {
+      if (response.includes("正确")) return "答案正确";
+      if (response.includes("错误")) return "答案错误";
+      if (response.includes("编译")) return "编译错误";
+      if (response.includes("内存")) return "内存超限";
+      if (response.includes("时间")) return "运行超时";
+      if (response.includes("运行")) return "运行错误";
+      return "编译错误"; // 默认返回编译错误
     },
     getLanguageMode() {
       // 将选中的语言映射到 highlight.js 的语言模式
@@ -870,25 +954,25 @@ export default {
     },
     // 修改 handleInput 方法，在输入时保存历史
     handleInput(index) {
-      this.$nextTick(() => {
-        this.highlightedLines[index] = this.highlightLine(
-          this.codeLines[index]
-        );
-        // 确保输入框内容同步
-        const input = this.$refs[`input_${index}`]?.[0];
-        if (input) {
-          input.value = this.codeLines[index];
-        }
-
-        // 输入时保存历史
-        this.saveHistory();
-      });
+      // 确保输入框内容同步
+      const input = this.$refs[`input_${index}`]?.[0];
+      if (input) {
+        this.codeLines[index] = input.value; // 直接使用input.value
+        this.highlightedLines[index] = this.highlightLine(input.value);
+      }
+      this.saveHistory();
     },
   },
   mounted() {
     this.highlightAllLines();
     document.addEventListener("keyup", this.handleKeyUp);
     this.saveHistory(); // 保存初始状态
+    this.$el.addEventListener("compositionstart", () => {
+      this.isComposing = true;
+    });
+    this.$el.addEventListener("compositionend", () => {
+      this.isComposing = false;
+    });
   },
   beforeDestroy() {
     clearInterval(this.enterKeyInterval);
@@ -896,6 +980,7 @@ export default {
     this.enterKeyInterval = null;
     this.backspaceKeyInterval = null;
     document.removeEventListener("keyup", this.handleKeyUp);
+    document.removeEventListener("click", this.handleGlobalClick); // 新增
   },
 };
 </script>
@@ -982,15 +1067,14 @@ export default {
 
 .selection {
   position: absolute;
-  top: calc(70% + 8px);
-  left: 3px;
+  top: 87%; /* 改为从底部开始 */
+  left: 1%;
   width: 180px;
   background-color: white;
   margin-top: 8px;
-  margin-left: 10px;
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  z-index: 10;
+  z-index: 1000; /* 提高z-index */
   transform-origin: top;
   animation: fadeIn 0.15s ease-out;
 }
@@ -1072,6 +1156,23 @@ export default {
   background-color: rgba(3, 102, 214, 0.1) !important;
 }
 
+.selected-line {
+  background-color: rgba(3, 102, 214, 0.2) !important;
+  transition: background-color 0.3s ease;
+}
+
+/* 增强选中效果 */
+.AlineDiv.selected-line:hover {
+  background-color: rgba(3, 102, 214, 0.25) !important;
+}
+
+/* 添加边框效果 */
+.AlineDiv.selected-line {
+  background-color: rgba(3, 102, 214, 0.2) !important;
+  transition: background-color 0.3s ease;
+  box-shadow: inset 0 0 0 1px rgba(3, 102, 214, 0.3);
+}
+
 .Aline::-webkit-scrollbar {
   width: 10px;
 }
@@ -1151,7 +1252,7 @@ export default {
   width: 100%;
   height: 100%;
   background: transparent;
-  color: transparent;
+  color: transparent !important; /* 保持文本透明 */
   caret-color: #0366d6;
   z-index: 2;
   padding: 0 12px;
@@ -1160,6 +1261,7 @@ export default {
   line-height: 22px;
   /* 添加光标动画 */
   animation: blink 1s step-end infinite;
+  opacity: 1 !important; /* 确保输入框不透明 */
 }
 
 @keyframes blink {

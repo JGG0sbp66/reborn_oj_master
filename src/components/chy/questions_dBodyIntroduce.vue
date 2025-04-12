@@ -298,7 +298,9 @@ export default {
         console.log("Fetched question detail:", response); // 调试日志
 
         this.questionDetail = response.question_detail;
-        console.log(this.questionDetail.mle);
+
+        // 触发事件将数据传递给父组件
+        this.$emit("question-loaded", this.questionDetail);
       } catch (error) {
         this.error = "获取题目详情失败，请稍后重试";
         console.error("Failed to fetch data:", error);
