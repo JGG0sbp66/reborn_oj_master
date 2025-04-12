@@ -201,7 +201,7 @@ import axios from "axios";
 
 export default {
   name: "CodeComponent",
-  props: ["questionDetail"],
+  props: ["questionDetail", "id"],
   data() {
     return {
       selectedLanguage: "C++",
@@ -263,6 +263,7 @@ export default {
       isUndoRedoInProgress: false, // 标记是否正在执行撤销/重做
       saveHistoryTimeout: null, // 防抖定时器
       isAllSelected: false,
+      shouldClearOnNextAction: false, // 新增，用于标记是否需要在下一次操作时清空代码
     };
   },
   watch: {
@@ -370,6 +371,16 @@ export default {
         });
       }
     },
+    checkAndClearSelection() {
+      if (this.shouldClearOnNextAction) {
+        this.codeLines = [""]; // 清空代码，只保留一个空行
+        this.highlightAllLines();
+        this.shouldClearOnNextAction = false;
+        this.isAllSelected = false;
+        return true; // 表示已执行清空
+      }
+      return false; // 表示未执行清空
+    },
     // 全选代码
     selectAllCode() {
       // 先清除可能存在的旧监听器
@@ -377,6 +388,7 @@ export default {
 
       // 设置全选状态
       this.isAllSelected = true;
+      this.shouldClearOnNextAction = true; // 标记下次操作需要清空
 
       // 高亮显示所有行
       this.$el.querySelectorAll(".AlineDiv").forEach((div) => {
@@ -464,6 +476,10 @@ export default {
 
     // 处理粘贴事件
     handlePaste(event, index) {
+      // 检查是否需要清空选择
+      if (this.checkAndClearSelection()) {
+        index = 0; // 重置索引到第一行
+      }
       event.preventDefault();
       const clipboardData = event.clipboardData || window.clipboardData;
       const pastedText = clipboardData.getData("text");
@@ -594,6 +610,10 @@ export default {
 
     // 添加keydown和keyup事件处理
     handleKeyDown(event, index) {
+      // 检查是否需要清空选择
+      if (this.checkAndClearSelection()) {
+        index = 0; // 重置索引到第一行
+      }
       this.currentFocusIndex = index;
 
       // 检查是否是IME输入过程
@@ -790,14 +810,18 @@ export default {
     },
 
     handleGlobalClick(e) {
-      // 无论点击哪里都清除选择状态
-      this.clearSelection();
+      // 检查点击是否在代码区域内
+      const isClickInsideCode = this.$el.contains(e.target);
+      if (!isClickInsideCode) {
+        this.clearSelection();
+      }
       // 移除事件监听器（确保只执行一次）
       document.removeEventListener("click", this.handleGlobalClick);
     },
 
     clearSelection() {
       this.isAllSelected = false;
+      this.shouldClearOnNextAction = false;
       this.$el.querySelectorAll(".AlineDiv").forEach((div) => {
         div.style.backgroundColor = "";
       });
@@ -936,9 +960,11 @@ export default {
       });
 
       console.log(JSON.stringify(this.questionDetail));
+      console.log(JSON.stringify(this.id));
       console.log(this.codeLines.join("\n")); // 用户代码
       try {
         const formData = new FormData();
+        formData.append("question_uid", this.id); // 题目ID
         formData.append("question", JSON.stringify(this.questionDetail));
         formData.append("prompt", this.codeLines.join("\n"));
 
