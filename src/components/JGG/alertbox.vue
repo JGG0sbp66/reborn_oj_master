@@ -80,32 +80,63 @@ defineExpose({ show, hide });
     transform: translateY(-20px);
 }
 
+/* 过渡动画 */
+.alert-fade-enter-active,
+.alert-fade-leave-active {
+  transition: all 0.3s ease;
+}
+
+.alert-fade-enter-from,
+.alert-fade-leave-to {
+  opacity: 0;
+  transform: translateY(-20px) translateX(-50%);
+}
+
 /* 基础样式 */
 .alert {
-    position: fixed;
-    top: 90px;
-    left: 50%;
-    transform: translateX(-50%);
-    padding: 12px 18px;
-    border-radius: 8px;
-    background-color: #ffffff;
-    color: #1f2225;
-    font-size: 14px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    animation: slideDown 0.3s ease-out;
-    height: 20px;
-    white-space: nowrap;
+  position: fixed;
+  top: 90px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 12px 18px;
+  border-radius: 8px;
+  background-color: #ffffff;
+  color: #1f2225;
+  font-size: 14px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  display: inline-flex;
+  align-items: center;
+  z-index: 9999;
+  max-width: 80%;
+}
+
+.alert:hover {
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
 }
 
 #alertContent {
-    display: flex;
-    justify-content: space-around;
-    align-items: center;
+  display: flex;
+  align-items: center;
 }
 
 .alert-icon {
-    height: 20px;
-    width: 20px;
-    margin-right: 10px;
+  height: 20px;
+  width: 20px;
+  margin-right: 12px;
+  flex-shrink: 0;
+}
+
+#alertMessage {
+  line-height: 1.5;
+  white-space: normal;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .alert {
+    width: auto;
+    max-width: 90%;
+    padding: 12px 16px;
+  }
 }
 </style>
