@@ -10,6 +10,7 @@
         :activeTab="activeTab"
         @switch-tab="switchTab"
         @question-loaded="handleQuestionLoaded"
+        @question-id="handleQuestionId"
       ></questions_dBodyIntroduce>
     </div>
 
@@ -20,6 +21,7 @@
     <div class="right-panel">
       <qustions_dBodyCode
         :questionDetail="questionDetail"
+        :id="id"
         @show-alert="handleCodeAlert"
         @submit-code="handleCodeSubmit"
       ></qustions_dBodyCode>
@@ -59,6 +61,7 @@ export default {
       startX: 0,
       startWidth: 0,
       questionDetail: null, // 存储题目详情
+      id: null, // 存储题目ID
     };
   },
   mounted() {
@@ -118,7 +121,9 @@ export default {
     handleQuestionLoaded(detail) {
       this.questionDetail = detail;
     },
-
+    handleQuestionId(detail) {
+      this.id = detail;
+    },
     // 修改提交处理逻辑
     async handleCodeSubmit(submission) {
       try {

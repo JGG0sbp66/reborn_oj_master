@@ -296,11 +296,12 @@ export default {
         });
 
         console.log("Fetched question detail:", response); // 调试日志
-
+        console.log("Question ID:", this.questionId); // 调试日志
         this.questionDetail = response.question_detail;
 
         // 触发事件将数据传递给父组件
         this.$emit("question-loaded", this.questionDetail);
+        this.$emit("question-id", this.questionId);
       } catch (error) {
         this.error = "获取题目详情失败，请稍后重试";
         console.error("Failed to fetch data:", error);
