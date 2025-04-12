@@ -264,6 +264,10 @@ export default {
       saveHistoryTimeout: null, // 防抖定时器
       isAllSelected: false,
       shouldClearOnNextAction: false, // 新增，用于标记是否需要在下一次操作时清空代码
+      isCtrlKeyDown: false, // 跟踪Ctrl键是否按下
+      isShiftKeyDown: false, // 跟踪Shift键是否按下
+      isMetaKeyDown: false, // 跟踪Meta键是否按下（Mac的Command键）
+      pendingClearAction: false, // 标记是否有待处理的清空操作
     };
   },
   watch: {
@@ -372,14 +376,34 @@ export default {
       }
     },
     checkAndClearSelection() {
-      if (this.shouldClearOnNextAction) {
-        this.codeLines = [""]; // 清空代码，只保留一个空行
-        this.highlightAllLines();
-        this.shouldClearOnNextAction = false;
-        this.isAllSelected = false;
-        return true; // 表示已执行清空
+      if (this.shouldClearOnNextAction && this.pendingClearAction) {
+        // 如果是Ctrl+V组合键，执行清空
+        if (
+          (this.isCtrlKeyDown || this.isMetaKeyDown) &&
+          event.key.toLowerCase() === "v"
+        ) {
+          this.codeLines = [""]; // 清空代码，只保留一个空行
+          this.highlightAllLines();
+          this.shouldClearOnNextAction = false;
+          this.isAllSelected = false;
+          this.pendingClearAction = false;
+          return true;
+        }
+        // 如果是其他非修饰键操作，执行清空
+        else if (
+          !this.isCtrlKeyDown &&
+          !this.isMetaKeyDown &&
+          !this.isShiftKeyDown
+        ) {
+          this.codeLines = [""];
+          this.highlightAllLines();
+          this.shouldClearOnNextAction = false;
+          this.isAllSelected = false;
+          this.pendingClearAction = false;
+          return true;
+        }
       }
-      return false; // 表示未执行清空
+      return false;
     },
     // 全选代码
     selectAllCode() {
@@ -389,6 +413,7 @@ export default {
       // 设置全选状态
       this.isAllSelected = true;
       this.shouldClearOnNextAction = true; // 标记下次操作需要清空
+      this.pendingClearAction = true; // 标记有待处理的清空操作
 
       // 高亮显示所有行
       this.$el.querySelectorAll(".AlineDiv").forEach((div) => {
@@ -541,6 +566,7 @@ export default {
       }
       this.highlightAllLines(); // 立即更新高亮
       this.saveHistory(); // 添加历史保存
+      this.pendingClearAction = false; // 粘贴完成后重置状态
     },
 
     // 添加垂直移动光标的方法
@@ -610,9 +636,16 @@ export default {
 
     // 添加keydown和keyup事件处理
     handleKeyDown(event, index) {
-      // 检查是否需要清空选择
-      if (this.checkAndClearSelection()) {
-        index = 0; // 重置索引到第一行
+      // 跟踪修饰键状态
+      if (event.ctrlKey) this.isCtrlKeyDown = true;
+      if (event.shiftKey) this.isShiftKeyDown = true;
+      if (event.metaKey) this.isMetaKeyDown = true;
+
+      // 检查是否需要清空选择（仅在不是修饰键组合时）
+      if (this.shouldClearOnNextAction && !this.isModifierKey(event.key)) {
+        if (this.checkAndClearSelection()) {
+          index = 0; // 重置索引到第一行
+        }
       }
       this.currentFocusIndex = index;
 
@@ -645,6 +678,7 @@ export default {
       // 添加 Ctrl+C 处理 - 复制选中内容
       if (event.key === "c" && (event.ctrlKey || event.metaKey)) {
         event.preventDefault();
+        this.pendingClearAction = false; // 复制时不执行清空
 
         // 获取当前选中的内容
         let textToCopy = "";
@@ -796,8 +830,18 @@ export default {
         });
       }
     },
-
+    // 添加辅助方法判断是否是修饰键
+    isModifierKey(key) {
+      return ["Control", "Shift", "Alt", "Meta", "Ctrl"].includes(key);
+    },
+    // 修改handleKeyUp方法
     handleKeyUp(event) {
+      // 更新修饰键状态
+      if (event.key === "Control") this.isCtrlKeyDown = false;
+      if (event.key === "Shift") this.isShiftKeyDown = false;
+      if (event.key === "Meta") this.isMetaKeyDown = false;
+
+      // 处理其他键的keyup
       if (event.key === "Enter") {
         this.isEnterKeyDown = false;
         clearInterval(this.enterKeyInterval);
@@ -808,7 +852,6 @@ export default {
         this.backspaceKeyInterval = null;
       }
     },
-
     handleGlobalClick(e) {
       // 检查点击是否在代码区域内
       const isClickInsideCode = this.$el.contains(e.target);
