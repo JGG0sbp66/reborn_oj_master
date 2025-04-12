@@ -26,18 +26,20 @@ import { ref, computed } from 'vue';
 import { ElTable, ElTableColumn, ElTag } from 'element-plus';
 
 const recentQuestions = ref([
-    { id: 'Q-1024', title: '两数之和的高效算法', difficulty: '简单', createdAt: '2023-12-01 10:30:45' },
-    { id: 'Q-1025', title: '二叉树的中序遍历', difficulty: '中等', createdAt: '2023-12-02 14:22:10' },
-    { id: 'Q-1026', title: '最长回文子串', difficulty: '中等', createdAt: '2023-12-03 09:15:33' },
-    { id: 'Q-1027', title: '高级动态规划问题', difficulty: '困难', createdAt: '2023-12-04 16:40:27' },
-    { id: 'Q-1028', title: '字符串匹配算法', difficulty: '简单', createdAt: '2023-12-05 11:05:19' }
+    { id: 'Q-1024', title: '两数之和的高效算法', difficulty: '入门', createdAt: '2023-12-01 10:30:45' },
+    { id: 'Q-1025', title: '二叉树的中序遍历', difficulty: '普及', createdAt: '2023-12-02 14:22:10' },
+    { id: 'Q-1026', title: '最长回文子串', difficulty: '提高', createdAt: '2023-12-03 09:15:33' },
+    { id: 'Q-1027', title: '高级动态规划问题', difficulty: '省选', createdAt: '2023-12-04 16:40:27' },
+    { id: 'Q-1028', title: '字符串匹配算法', difficulty: 'NOI', createdAt: '2023-12-05 11:05:19' }
 ]);
 
 const getDifficultyType = (difficulty: string) => {
     switch (difficulty) {
-        case '简单': return 'success';
-        case '中等': return 'warning';
-        case '困难': return 'danger';
+        case '入门': return 'success';
+        case '普及': return 'warning';
+        case '提高': return 'danger';
+        case '省选': return 'primary';
+        case 'NOI': return 'danger';
         default: return 'info';
     }
 };

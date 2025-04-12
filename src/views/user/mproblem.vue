@@ -27,10 +27,10 @@
                         @input="handleSearch"
                     >
                         <template #append>
-                            <el-button @click="handleSearch">搜索</el-button>
+                            <el-button @click="handleSearch" style="background-color: #18a058; border-color: #18a058; color: white;">搜索</el-button>
                         </template>
                     </el-input>
-                    <el-button type="primary" plain @click="showAdvancedSearch = !showAdvancedSearch">
+                    <el-button type="primary" plain @click="showAdvancedSearch = !showAdvancedSearch" style="background-color: rgba(24, 160, 88, 0.05); border-color: #18a05880; color: #18a058;">
                         {{ showAdvancedSearch ? '收起' : '高级筛选' }}
                         <el-icon>
                             <component :is="showAdvancedSearch ? 'ArrowUp' : 'ArrowDown'" />
@@ -46,8 +46,10 @@
                         <el-select v-model="difficultyFilter" placeholder="难度等级" clearable @change="handleSearch">
                             <el-option label="全部" value="" />
                             <el-option label="入门" value="入门" />
-                            <el-option label="中等" value="中等" />
-                            <el-option label="困难" value="困难" />
+                            <el-option label="普及" value="普及" />
+                            <el-option label="提高" value="提高" />
+                            <el-option label="省选" value="省选" />
+                            <el-option label="NOI" value="NOI" />
                         </el-select>
                     </div>
                     <div class="search-item">
@@ -218,7 +220,7 @@ const problems = ref([
         id: 'P-101', 
         title: '两数之和', 
         category: '算法', 
-        difficulty: '简单',
+        difficulty: '入门',
         passRate: 75,
         submissionCount: 12543,
         createTime: '2023-01-10 10:20:30'
@@ -227,7 +229,7 @@ const problems = ref([
         id: 'P-102', 
         title: '三数之和', 
         category: '算法', 
-        difficulty: '中等',
+        difficulty: '普及',
         passRate: 45,
         submissionCount: 8765,
         createTime: '2023-02-15 14:30:00'
@@ -236,7 +238,7 @@ const problems = ref([
         id: 'P-103', 
         title: '最长回文子串', 
         category: '字符串', 
-        difficulty: '中等',
+        difficulty: '提高',
         passRate: 38,
         submissionCount: 7651,
         createTime: '2023-03-05 09:15:45'
@@ -245,7 +247,7 @@ const problems = ref([
         id: 'P-104', 
         title: '接雨水', 
         category: '动态规划', 
-        difficulty: '困难',
+        difficulty: '省选',
         passRate: 22,
         submissionCount: 4532,
         createTime: '2023-04-12 16:40:20'
@@ -254,7 +256,7 @@ const problems = ref([
         id: 'P-105', 
         title: '二叉树的最大深度', 
         category: '数据结构', 
-        difficulty: '简单',
+        difficulty: 'NOI',
         passRate: 82,
         submissionCount: 9876,
         createTime: '2023-05-20 11:25:00'
@@ -400,17 +402,19 @@ const tableRowClassName = () => {
 // 获取难度标签类型
 const getDifficultyType = (difficulty: string) => {
     switch (difficulty) {
-        case '简单': return 'success';
-        case '中等': return 'warning';
-        case '困难': return 'danger';
+        case '入门': return 'success';
+        case '普及': return 'success';
+        case '提高': return 'warning';
+        case '省选': return 'warning';
+        case 'NOI': return 'danger';
         default: return 'info';
     }
 };
 
 // 获取通过率颜色
 const getPassRateColor = (rate: number) => {
-    if (rate >= 70) return '#67C23A';
-    if (rate >= 40) return '#E6A23C';
+    if (rate >= 70) return '#18a058';  // 蓝绿色
+    if (rate >= 40) return '#18a05880'; // 半透明蓝绿色
     return '#F56C6C';
 };
 
@@ -529,6 +533,7 @@ onMounted(() => {
     padding: 16px;
     margin-bottom: 24px;
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+    border-left: 3px solid rgba(24, 160, 88, 0.3);
 }
 
 .advanced-search-content {
@@ -560,6 +565,7 @@ onMounted(() => {
     justify-content: space-between;
     align-items: center;
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+    border-left: 3px solid rgba(24, 160, 88, 0.3);
 }
 
 .selected-count {
@@ -578,6 +584,7 @@ onMounted(() => {
     overflow: hidden;
     box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
     margin-bottom: 24px;
+    border: 1px solid rgba(24, 160, 88, 0.1);
 }
 
 .problem-title {
@@ -668,10 +675,52 @@ onMounted(() => {
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    background-color: #18a058;
+    border-color: #18a058;
 }
 
 .button-icon {
     margin-right: 4px;
     display: flex;
+}
+
+.search-input :deep(.el-input__wrapper.is-focus) {
+    box-shadow: 0 0 0 1px #18a058 inset;
+}
+
+.search-input :deep(.el-input__wrapper:hover) {
+    box-shadow: 0 0 0 1px #18a058 inset;
+}
+
+.search-item :deep(.el-select .el-input__wrapper.is-focus) {
+    box-shadow: 0 0 0 1px #18a058 inset;
+}
+
+.search-item :deep(.el-select .el-input__wrapper:hover) {
+    box-shadow: 0 0 0 1px #18a058 inset;
+}
+
+.search-item :deep(.el-select-dropdown__item.selected) {
+    color: #18a058;
+}
+
+.search-item :deep(.el-slider__runway.show-input) {
+    margin-right: 160px;
+}
+
+.search-item :deep(.el-slider__bar) {
+    background-color: #18a058;
+}
+
+.search-item :deep(.el-slider__button) {
+    border-color: #18a058;
+}
+
+.search-item :deep(.el-date-editor .el-input__wrapper.is-focus) {
+    box-shadow: 0 0 0 1px #18a058 inset;
+}
+
+.search-item :deep(.el-date-editor .el-input__wrapper:hover) {
+    box-shadow: 0 0 0 1px #18a058 inset;
 }
 </style>
