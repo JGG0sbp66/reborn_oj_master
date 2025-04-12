@@ -180,6 +180,7 @@
               @paste="handlePaste($event, index)"
               :ref="'input_' + index"
               @input="handleInput(index)"
+              @focus="currentFocusIndex = index"
             />
             <pre
               class="highlighted-code"
@@ -526,11 +527,99 @@ export default {
       this.saveHistory(); // 添加历史保存
     },
 
+    // 添加垂直移动光标的方法
+    moveCursorVertically(currentIndex, direction) {
+      const targetIndex = currentIndex + direction;
+
+      if (targetIndex < 0 || targetIndex >= this.codeLines.length) {
+        return;
+      }
+
+      const currentInput = this.$refs[`input_${currentIndex}`][0];
+      const cursorPosition = currentInput.selectionStart;
+      const targetLineLength = this.codeLines[targetIndex].length;
+      const targetCursorPosition = Math.min(cursorPosition, targetLineLength);
+
+      this.currentFocusIndex = targetIndex;
+
+      this.$nextTick(() => {
+        const targetInput = this.$refs[`input_${targetIndex}`][0];
+        if (targetInput) {
+          targetInput.focus();
+          targetInput.setSelectionRange(
+            targetCursorPosition,
+            targetCursorPosition
+          );
+        }
+      });
+    },
+    // 添加水平移动光标的方法
+    moveCursorHorizontally(index, direction) {
+      const input = this.$refs[`input_${index}`][0];
+      if (!input) return;
+
+      const currentPosition = input.selectionStart;
+      const newPosition = currentPosition + direction;
+
+      // 检查是否移动到行首/行尾需要换行
+      if (newPosition < 0 && index > 0) {
+        // 移动到上一行末尾
+        this.moveCursorVertically(index, -1);
+        this.$nextTick(() => {
+          const prevInput = this.$refs[`input_${index - 1}`][0];
+          if (prevInput) {
+            prevInput.setSelectionRange(
+              prevInput.value.length,
+              prevInput.value.length
+            );
+          }
+        });
+      } else if (
+        newPosition > input.value.length &&
+        index < this.codeLines.length - 1
+      ) {
+        // 移动到下一行开头
+        this.moveCursorVertically(index, 1);
+        this.$nextTick(() => {
+          const nextInput = this.$refs[`input_${index + 1}`][0];
+          if (nextInput) {
+            nextInput.setSelectionRange(0, 0);
+          }
+        });
+      } else {
+        // 正常移动光标
+        input.setSelectionRange(newPosition, newPosition);
+      }
+    },
+
     // 添加keydown和keyup事件处理
     handleKeyDown(event, index) {
+      this.currentFocusIndex = index;
+
       // 检查是否是IME输入过程
       if (event.isComposing || event.keyCode === 229) {
         return; // 如果是IME输入，不处理
+      }
+
+      // 在 handleKeyDown 方法中添加以下 case
+      switch (event.key) {
+        case "ArrowUp":
+          event.preventDefault();
+          this.moveCursorVertically(index, -1); // 上移
+          break;
+        case "ArrowDown":
+          event.preventDefault();
+          this.moveCursorVertically(index, 1); // 下移
+          break;
+        case "ArrowLeft":
+          event.preventDefault();
+          this.moveCursorHorizontally(index, -1);
+          break;
+          break;
+        case "ArrowRight":
+          event.preventDefault();
+          this.moveCursorHorizontally(index, 1);
+          break;
       }
 
       // 添加 Ctrl+C 处理 - 复制选中内容
