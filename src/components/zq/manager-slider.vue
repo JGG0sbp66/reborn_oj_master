@@ -13,7 +13,15 @@
           :key="index" 
           class="navbar__item"
         >
-          <div class="navbar__link" @click="toggleMenuItem(index)">
+          <router-link v-if="!item.children || !item.children.length" :to="item.route" class="navbar__link">
+            <div class="item-icon" :class="item.iconClass">
+              <component :is="item.icon" v-if="item.icon" />
+              <i v-else class="default-icon"></i>
+            </div>
+            <span v-show="!collapsed">{{ item.title }}</span>
+          </router-link>
+          
+          <div v-else class="navbar__link" @click="toggleMenuItem(index)">
             <div class="item-icon" :class="item.iconClass">
               <component :is="item.icon" v-if="item.icon" />
               <i v-else class="default-icon"></i>
@@ -49,7 +57,11 @@
 
 <script setup lang="ts">
 import { ref, reactive } from 'vue';
+import { useRouter } from 'vue-router';
 import { Setting, Document, CaretLeft, CaretRight } from '@element-plus/icons-vue';
+
+// 获取路由实例
+const router = useRouter();
 
 // 控制侧边栏折叠状态
 const collapsed = ref(false);
@@ -60,7 +72,7 @@ const menuItems = reactive([
     title: '首页',
     icon: Document,
     iconClass: 'home-icon',
-    route: '/',
+    route: '/user/manager',
     active: true,
     expanded: false,
     children: []
@@ -87,9 +99,21 @@ const toggleCollapse = () => {
 // 切换菜单项展开状态
 const toggleMenuItem = (index: number) => {
   if (collapsed.value) return;
-  if (menuItems[index].children && menuItems[index].children.length) {
-    menuItems[index].expanded = !menuItems[index].expanded;
+  
+  // 如果菜单项没有子菜单或子菜单为空，则直接导航到对应路由
+  if (!menuItems[index].children || menuItems[index].children.length === 0) {
+    if (menuItems[index].route) {
+      navigateTo(menuItems[index].route);
+    }
+    return;
   }
+  
+  menuItems[index].expanded = !menuItems[index].expanded;
+};
+
+// 导航到指定路由
+const navigateTo = (route: string) => {
+  router.push(route);
 };
 
 // 提供给模板使用的变量和方法
@@ -251,6 +275,7 @@ defineExpose({
   color: var(--text);
   transition: var(--transition);
   cursor: pointer;
+  text-decoration: none;
 }
 
 .navbar__link span {

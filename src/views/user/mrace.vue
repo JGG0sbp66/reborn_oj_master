@@ -27,10 +27,10 @@
                         @input="handleSearch"
                     >
                         <template #append>
-                            <el-button @click="handleSearch">搜索</el-button>
+                            <el-button @click="handleSearch" style="background-color: #18a058; border-color: #18a058; color: white;">搜索</el-button>
                         </template>
                     </el-input>
-                    <el-button type="primary" plain @click="showAdvancedSearch = !showAdvancedSearch">
+                    <el-button type="primary" plain @click="showAdvancedSearch = !showAdvancedSearch" style="background-color: rgba(24, 160, 88, 0.05); border-color: #18a05880; color: #18a058;">
                         {{ showAdvancedSearch ? '收起' : '高级筛选' }}
                         <el-icon>
                             <component :is="showAdvancedSearch ? 'ArrowUp' : 'ArrowDown'" />
@@ -43,7 +43,7 @@
                 <div class="advanced-search-content">
                     <div class="search-item">
                         <span class="search-label">竞赛状态:</span>
-                        <el-select v-model="statusFilter" placeholder="竞赛状态" clearable @change="handleSearch">
+                        <el-select v-model="statusFilter" placeholder="竞赛状态" clearable @change="handleSearch" style="flex: 1;">
                             <el-option label="全部" value="" />
                             <el-option label="进行中" value="进行中" />
                             <el-option label="报名中" value="报名中" />
@@ -61,6 +61,7 @@
                             end-placeholder="结束日期"
                             format="YYYY-MM-DD"
                             @change="handleSearch"
+                            style="flex: 1;"
                         />
                     </div>
                     <div class="search-item">
@@ -69,14 +70,15 @@
                             v-model="participantsRange"
                             range
                             :min="0"
-                            :max="500"
-                            :marks="{0: '0', 100: '100', 200: '200', 300: '300', 400: '400', 500: '500'}"
+                            :max="200"
+                            :marks="{0: '0', 50: '50', 100: '100', 150: '150', 200: '200'}"
                             @change="handleSearch"
+                            style="flex: 1;"
                         />
                     </div>
                     <div class="search-item">
                         <span class="search-label">竞赛时长:</span>
-                        <el-select v-model="durationFilter" placeholder="竞赛时长" clearable @change="handleSearch">
+                        <el-select v-model="durationFilter" placeholder="竞赛时长" clearable @change="handleSearch" style="flex: 1;">
                             <el-option label="全部" value="" />
                             <el-option label="1天以内" value="<1" />
                             <el-option label="1-3天" value="1-3" />
@@ -186,7 +188,7 @@ const currentPage = ref(1);
 const pageSize = ref(10);
 const totalCompetitions = ref(100);
 const showAdvancedSearch = ref(false);
-const participantsRange = ref([0, 500]);
+const participantsRange = ref([0, 200]);
 const durationFilter = ref('');
 const selectedCompetitions = ref([]);
 const searchTimeout = ref(null);
@@ -384,8 +386,8 @@ const getStatusType = (status: string) => {
     switch (status) {
         case '进行中': return 'success';
         case '未开始': return 'info';
-        case '已结束': return 'danger';
-        case '报名中': return 'warning';
+        case '已结束': return 'info';
+        case '报名中': return 'success';
         default: return 'info';
     }
 };
@@ -505,6 +507,7 @@ onMounted(() => {
     padding: 16px;
     margin-bottom: 24px;
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+    border-left: 3px solid rgba(24, 160, 88, 0.3);
 }
 
 .advanced-search-content {
@@ -518,6 +521,15 @@ onMounted(() => {
     align-items: center;
     gap: 12px;
     min-width: 300px;
+}
+
+.search-item :deep(.el-slider) {
+    width: 100%;
+    margin-left: 0;
+}
+
+.search-item :deep(.el-slider__runway) {
+    margin: 16px 0;
 }
 
 .search-label {
@@ -536,6 +548,7 @@ onMounted(() => {
     justify-content: space-between;
     align-items: center;
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+    border-left: 3px solid rgba(24, 160, 88, 0.3);
 }
 
 .selected-count {
@@ -554,6 +567,7 @@ onMounted(() => {
     overflow: hidden;
     box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
     margin-bottom: 24px;
+    border: 1px solid rgba(24, 160, 88, 0.1);
 }
 
 .competition-title {
@@ -575,11 +589,11 @@ onMounted(() => {
 
 /* 表格行样式 */
 :deep(.active-row) {
-    background-color: rgba(66, 185, 131, 0.1);
+    background-color: rgba(24, 160, 88, 0.05);  /* 更浅的蓝绿色 */
 }
 
 :deep(.registration-row) {
-    background-color: rgba(230, 162, 60, 0.1);
+    background-color: rgba(24, 160, 88, 0.02);  /* 非常浅的蓝绿色 */
 }
 
 /* 响应式调整 */
@@ -627,10 +641,52 @@ onMounted(() => {
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    background-color: #18a058;
+    border-color: #18a058;
 }
 
 .button-icon {
     margin-right: 4px;
     display: flex;
+}
+
+.search-input :deep(.el-input__wrapper.is-focus) {
+    box-shadow: 0 0 0 1px #18a058 inset;
+}
+
+.search-input :deep(.el-input__wrapper:hover) {
+    box-shadow: 0 0 0 1px #18a058 inset;
+}
+
+.search-item :deep(.el-select .el-input__wrapper.is-focus) {
+    box-shadow: 0 0 0 1px #18a058 inset;
+}
+
+.search-item :deep(.el-select .el-input__wrapper:hover) {
+    box-shadow: 0 0 0 1px #18a058 inset;
+}
+
+.search-item :deep(.el-select-dropdown__item.selected) {
+    color: #18a058;
+}
+
+.search-item :deep(.el-slider__runway.show-input) {
+    margin-right: 160px;
+}
+
+.search-item :deep(.el-slider__bar) {
+    background-color: #18a058;
+}
+
+.search-item :deep(.el-slider__button) {
+    border-color: #18a058;
+}
+
+.search-item :deep(.el-date-editor .el-input__wrapper.is-focus) {
+    box-shadow: 0 0 0 1px #18a058 inset;
+}
+
+.search-item :deep(.el-date-editor .el-input__wrapper:hover) {
+    box-shadow: 0 0 0 1px #18a058 inset;
 }
 </style>
