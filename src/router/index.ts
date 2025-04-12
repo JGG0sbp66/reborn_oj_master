@@ -6,36 +6,40 @@ const routes = [
         path: "/nav/home",
         name: "home",
         component: () => import("@/views/nav/home.vue"),
-        alias: "/"
-    },{
+        alias: "/",
+    }, {
         path: "/nav/competition",
         name: "competition",
         component: () => import("@/views/nav/competition.vue"),
-    },{
+    }, {
         path: "/nav/question",
         name: "question",
         component: () => import("@/views/nav/question.vue"),
-    },{
+    }, {
         path: "/nav/questions_detail",
         name: "questions_detail",
         component: () => import("@/views/nav/questions_detail.vue"),
-    },{
+    }, {
         path: "/account/login",
         name: "login",
         component: () => import("@/views/account/login.vue"),
-    },{
+    }, {
         path: "/account/register",
         name: "register",
         component: () => import("@/views/account/register.vue"),
-    },{
+    }, {
+        path: "/account/repassword",
+        name: "repassword",
+        component: () => import("@/views/account/repassword.vue"),
+    }, {
         path: "/contest/problems",
         name: "problems",
         component: () => import("@/views/contest/problems.vue"),
-    },{
+    }, {
         path: "/contest/ranks",
         name: "ranks",
         component: () => import("@/views/contest/ranks.vue"),
-    },{
+    }, {
         path: "/user/profile",
         name: "profile",
         component: () => import("@/views/user/profile.vue"),
@@ -52,6 +56,7 @@ const routes = [
         path: "/user/mrace",
         name: "mrace",
         component: () => import("@/views/user/mrace.vue"),
+        meta: { requiresAuth: true },
     }
 ];
 
@@ -66,15 +71,16 @@ export default router;
 
 // 路由守卫
 import { checkAuth } from '@/utils/auth';
+import { Transition } from "vue";
 
 router.beforeEach(async (to) => {
     if (to.meta.requiresAuth) {
-      const { authenticated } = await checkAuth();
-      if (!authenticated) {
-        return {
-          path: '/account/login',
-          query: { redirect: to.fullPath }
-        };
-      }
+        const { authenticated } = await checkAuth();
+        if (!authenticated) {
+            return {
+                path: '/account/login',
+                query: { redirect: to.fullPath }
+            };
+        }
     }
 });

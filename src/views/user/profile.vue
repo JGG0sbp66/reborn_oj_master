@@ -9,12 +9,12 @@
             <div class="user-avatar">
               <div v-if="avatarUrl || defaultAvatarUrl" class="avatar-img">
                 <img :src="avatarUrl || defaultAvatarUrl" alt="用户头像" />
-              </div>
-              <div v-else class="avatar-placeholder">
-                {{ userInitials }}
-              </div>
-            </div>
           </div>
+          <div v-else class="avatar-placeholder">
+            {{ userInitials }}
+          </div>
+        </div>
+        </div>
           <h2 class="user-name">{{ username }}</h2>
           <div class="user-role">{{ userRole }}</div>
           <div class="user-joined">
@@ -38,110 +38,207 @@
 
         <!-- 侧边导航菜单 -->
         <div class="user-nav">
-          <router-link 
-            to="/user/profile" 
-            class="nav-item" 
-            active-class="active"
-            exact
+          <div 
+            class="nav-item"
+            :class="{ active: activeSection === 'profile' }"
+            @click="activeSection = 'profile'"
           >
             <el-icon><UserFilled /></el-icon>
             <span>个人资料</span>
-          </router-link>
+          </div>
           
-          <router-link 
-            to="/user/solved-problems" 
-            class="nav-item" 
-            active-class="active"
+          <div 
+            class="nav-item"
+            :class="{ active: activeSection === 'solved-problems' }"
+            @click="activeSection = 'solved-problems'"
           >
             <el-icon><List /></el-icon>
             <span>解题记录</span>
-          </router-link>
+          </div>
           
-          <router-link 
-            to="/user/competitions" 
-            class="nav-item" 
-            active-class="active"
+          <div 
+            class="nav-item"
+            :class="{ active: activeSection === 'competitions' }"
+            @click="activeSection = 'competitions'"
           >
             <el-icon><Trophy /></el-icon>
             <span>参赛记录</span>
-          </router-link>
+          </div>
           
-          <router-link 
-            to="/user/settings" 
-            class="nav-item" 
-            active-class="active"
+          <div 
+            class="nav-item"
+            :class="{ active: activeSection === 'settings' }"
+            @click="activeSection = 'settings'"
           >
             <el-icon><Setting /></el-icon>
             <span>账户设置</span>
-          </router-link>
+          </div>
         </div>
       </div>
 
       <!-- 右侧内容区域 -->
       <div class="profile-main-content">
-        <router-view v-if="activeComponent !== 'profile'" />
+        <!-- 用户活动热力图 - 始终可见 -->
+        <div v-if="isHeatmapVisible" class="profile-section">
+          <h3 class="section-title">编程活动</h3>
+          <ActivityHeatmap />
+        </div>
+        <div v-else class="profile-section heatmap-placeholder">
+          <h3 class="section-title">编程活动</h3>
+          <div class="loading-indicator">
+            <div class="loading-spinner"></div>
+            <span>加载中...</span>
+          </div>
+        </div>
         
-        <template v-else>
-          <!-- 用户活动热力图 - 采用延迟加载 -->
-          <div v-if="isHeatmapVisible" class="profile-section">
-            <h3 class="section-title">编程活动</h3>
-            <ActivityHeatmap />
-          </div>
-          <div v-else class="profile-section heatmap-placeholder">
-            <h3 class="section-title">编程活动</h3>
-            <div class="loading-indicator">
-              <div class="loading-spinner"></div>
-              <span>加载中...</span>
+        <transition name="fade" mode="out-in">
+          <div v-if="activeSection === 'profile'" class="section-container" key="profile">
+            <!-- 用户资料 -->
+            <div class="profile-section">
+              <h3 class="section-title">基本资料</h3>
+              <div class="profile-form">
+                <el-form label-position="top">
+                  <el-form-item label="用户名">
+                    <el-input v-model="username" disabled />
+                  </el-form-item>
+                  <el-form-item label="电子邮箱">
+                    <el-input v-model="email" placeholder="请输入电子邮箱" />
+                  </el-form-item>
+                  <el-form-item label="个人简介">
+                    <el-input v-model="bio" type="textarea" :rows="4" placeholder="介绍一下自己吧..." />
+                  </el-form-item>
+                  <el-form-item label="所在学校/单位">
+                    <el-input v-model="organization" placeholder="请输入您的学校或单位" />
+                  </el-form-item>
+                  <el-form-item label="个人主页">
+                    <el-input v-model="website" placeholder="https://" />
+                  </el-form-item>
+                  <el-form-item>
+                    <el-button type="primary" class="save-btn" @click="saveProfile">保存更改</el-button>
+                  </el-form-item>
+                </el-form>
+              </div>
             </div>
-          </div>
 
-          <!-- 用户资料 -->
-          <div class="profile-section">
-            <h3 class="section-title">基本资料</h3>
-            <div class="profile-form">
-              <el-form label-position="top">
-                <el-form-item label="用户名">
-                  <el-input v-model="username" disabled />
-                </el-form-item>
-                <el-form-item label="电子邮箱">
-                  <el-input v-model="email" placeholder="请输入电子邮箱" />
-                </el-form-item>
-                <el-form-item label="个人简介">
-                  <el-input v-model="bio" type="textarea" :rows="4" placeholder="介绍一下自己吧..." />
-                </el-form-item>
-                <el-form-item label="所在学校/单位">
-                  <el-input v-model="organization" placeholder="请输入您的学校或单位" />
-                </el-form-item>
-                <el-form-item label="个人主页">
-                  <el-input v-model="website" placeholder="https://" />
-                </el-form-item>
-                <el-form-item>
-                  <el-button type="primary" class="save-btn" @click="saveProfile">保存更改</el-button>
-                </el-form-item>
-              </el-form>
-            </div>
-          </div>
-
-          <!-- 最近解题 -->
-          <div class="profile-section">
-            <h3 class="section-title">最近解题</h3>
-            <div class="recent-problems">
-              <div v-if="recentProblems.length > 0" class="problem-list">
-                <div v-for="(problem, index) in recentProblems" :key="index" class="problem-item">
-                  <div class="problem-info">
-                    <div class="problem-title">{{ problem.title }}</div>
-                    <div class="problem-difficulty" :class="problem.difficulty">{{ problem.difficultyText }}</div>
+            <!-- 最近解题 -->
+            <div class="profile-section">
+              <h3 class="section-title">最近解题</h3>
+              <div class="recent-problems">
+                <div v-if="recentProblems.length > 0" class="problem-list">
+                  <div v-for="(problem, index) in recentProblems" :key="index" class="problem-item">
+                    <div class="problem-info">
+                      <div class="problem-title">{{ problem.title }}</div>
+                      <div class="problem-difficulty" :class="problem.difficulty">{{ problem.difficultyText }}</div>
+                    </div>
+                    <div class="problem-date">{{ formatDate(problem.solvedAt) }}</div>
                   </div>
-                  <div class="problem-date">{{ formatDate(problem.solvedAt) }}</div>
+                </div>
+                <div v-else class="empty-state">
+                  <div class="empty-icon">📝</div>
+                  <div class="empty-text">暂无解题记录，开始刷题吧！</div>
                 </div>
               </div>
-              <div v-else class="empty-state">
-                <div class="empty-icon">📝</div>
-                <div class="empty-text">暂无解题记录，开始刷题吧！</div>
+            </div>
+          </div>
+
+          <div v-else-if="activeSection === 'solved-problems'" class="section-container" key="solved-problems">
+            <!-- 解题记录 -->
+            <div class="profile-section">
+              <h3 class="section-title">解题记录</h3>
+              <div class="solved-problems-container">
+                <div v-if="recentProblems.length > 0" class="problem-list full-list">
+                  <div v-for="(problem, index) in recentProblems" :key="index" class="problem-item">
+                    <div class="problem-info">
+                      <div class="problem-title">{{ problem.title }}</div>
+                      <div class="problem-difficulty" :class="problem.difficulty">{{ problem.difficultyText }}</div>
+                    </div>
+                    <div class="problem-date">{{ formatDate(problem.solvedAt) }}</div>
+                  </div>
+                </div>
+                <div v-else class="empty-state">
+                  <div class="empty-icon">📝</div>
+                  <div class="empty-text">暂无解题记录，开始刷题吧！</div>
+                </div>
               </div>
             </div>
           </div>
-        </template>
+
+          <div v-else-if="activeSection === 'competitions'" class="section-container" key="competitions">
+            <!-- 比赛记录 -->
+            <div class="profile-section">
+              <h3 class="section-title">参赛记录</h3>
+              <div class="competitions-container">
+                <!-- 示例比赛记录 -->
+                <div v-if="competitions.length > 0" class="competition-list">
+                  <div v-for="(competition, index) in competitions" :key="index" class="competition-item">
+                    <div class="competition-info">
+                      <div class="competition-title">{{ competition.title }}</div>
+                      <div class="competition-date">
+                        {{ formatDate(competition.startDate) }} - {{ formatDate(competition.endDate) }}
+                      </div>
+                    </div>
+                    <div class="competition-result" :class="competition.result">
+                      {{ competition.rank }}
+                    </div>
+                  </div>
+                </div>
+                <div v-else class="empty-state">
+                  <div class="empty-icon">🏆</div>
+                  <div class="empty-text">暂无参赛记录，快来参加比赛吧！</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div v-else-if="activeSection === 'settings'" class="section-container" key="settings">
+            <!-- 账户设置 -->
+            <div class="profile-section">
+              <h3 class="section-title">账户设置</h3>
+              <div class="settings-container">
+                <div class="profile-form">
+                  <el-form label-position="top">
+                    <el-form-item label="修改密码">
+                      <el-input type="password" v-model="oldPassword" placeholder="当前密码" />
+                    </el-form-item>
+                    <el-form-item>
+                      <el-input type="password" v-model="newPassword" placeholder="新密码" />
+                    </el-form-item>
+                    <el-form-item>
+                      <el-input type="password" v-model="confirmPassword" placeholder="确认新密码" />
+                    </el-form-item>
+                    <el-form-item>
+                      <el-button type="primary" class="save-btn" @click="changePassword">修改密码</el-button>
+                    </el-form-item>
+                  </el-form>
+                </div>
+                
+                <div class="settings-section">
+                  <h4 class="settings-subtitle">账户安全</h4>
+                  <div class="settings-option">
+                    <div class="option-label">两步验证</div>
+                    <el-switch v-model="twoFactorEnabled" />
+                  </div>
+                  <div class="settings-option">
+                    <div class="option-label">登录通知</div>
+                    <el-switch v-model="loginNotificationsEnabled" />
+        </div>
+      </div>
+
+                <div class="settings-section">
+                  <h4 class="settings-subtitle">隐私设置</h4>
+                  <div class="settings-option">
+                    <div class="option-label">公开我的解题记录</div>
+                    <el-switch v-model="publicSolvedProblems" />
+                  </div>
+                  <div class="settings-option">
+                    <div class="option-label">公开我的排名</div>
+                    <el-switch v-model="publicRanking" />
+          </div>
+              </div>
+              </div>
+            </div>
+          </div>
+        </transition>
       </div>
     </div>
   </div>
@@ -150,6 +247,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, watch, defineAsyncComponent } from 'vue';
+import type { Ref } from 'vue';
 import { useRoute } from 'vue-router';
 import headerheader from '@/components/headerheader.vue';
 import foot from '@/components/foot.vue';
@@ -160,6 +258,9 @@ const ActivityHeatmap = defineAsyncComponent(() =>
 import { UserFilled, List, Trophy, Setting } from '@element-plus/icons-vue';
 import axios from 'axios';
 import { ElMessage } from 'element-plus';
+
+// 控制当前显示的内容区域
+const activeSection = ref('profile');
 
 // 控制组件延迟加载的状态
 const isHeatmapVisible = ref(false);
@@ -183,6 +284,41 @@ const email = ref('');
 const bio = ref('');
 const organization = ref('');
 const website = ref('');
+
+// 账户设置相关数据
+const oldPassword = ref('');
+const newPassword = ref('');
+const confirmPassword = ref('');
+const twoFactorEnabled = ref(false);
+const loginNotificationsEnabled = ref(true);
+const publicSolvedProblems = ref(true);
+const publicRanking = ref(true);
+
+// 比赛记录
+interface Competition {
+  title: string;
+  startDate: Date;
+  endDate: Date;
+  rank: string;
+  result: string; // 'good', 'average', 'poor'
+}
+
+const competitions = ref<Competition[]>([
+  {
+    title: '2023年春季编程大赛',
+    startDate: new Date('2023-04-10'),
+    endDate: new Date('2023-04-12'),
+    rank: '第8名',
+    result: 'good'
+  },
+  {
+    title: '算法挑战赛',
+    startDate: new Date('2023-03-05'),
+    endDate: new Date('2023-03-05'),
+    rank: '第15名',
+    result: 'average'
+  }
+]);
 
 // 用户统计信息
 const problemSolved = ref(0);
@@ -312,7 +448,7 @@ interface ProblemRecord {
   solvedAt: Date;
 }
 
-const recentProblems = ref([
+const recentProblems = ref<ProblemRecord[]>([
   {
     title: '寻找两个有序数组的中位数',
     difficulty: 'hard',
@@ -388,6 +524,17 @@ const fetchUserProfile = async (): Promise<void> => {
   }
 };
 
+// 延迟显示热力图
+const showHeatmapAfterDelay = () => {
+  // 使用 requestAnimationFrame 确保UI绘制完成后再加载热力图
+  requestAnimationFrame(() => {
+    // 200ms延迟，让基本内容先显示
+    setTimeout(() => {
+      isHeatmapVisible.value = true;
+    }, 200);
+  });
+};
+
 // 保存用户资料
 const saveProfile = async (): Promise<void> => {
   try {
@@ -415,15 +562,49 @@ const saveProfile = async (): Promise<void> => {
   }
 };
 
-// 延迟显示热力图
-const showHeatmapAfterDelay = () => {
-  // 使用 requestAnimationFrame 确保UI绘制完成后再加载热力图
-  requestAnimationFrame(() => {
-    // 200ms延迟，让基本内容先显示
+// 修改密码
+const changePassword = async (): Promise<void> => {
+  if (!oldPassword.value || !newPassword.value || !confirmPassword.value) {
+    ElMessage({
+      message: '请填写所有密码字段',
+      type: 'warning'
+    });
+    return;
+  }
+  
+  if (newPassword.value !== confirmPassword.value) {
+    ElMessage({
+      message: '两次输入的新密码不一致',
+      type: 'error'
+    });
+    return;
+  }
+  
+  try {
+    // 这里应该发送请求到后端修改密码
+    // const response = await axios.post('/api/user/change-password', {
+    //   oldPassword: oldPassword.value,
+    //   newPassword: newPassword.value
+    // });
+    
+    // 模拟成功响应
     setTimeout(() => {
-      isHeatmapVisible.value = true;
-    }, 200);
-  });
+      ElMessage({
+        message: '密码已成功修改',
+        type: 'success'
+      });
+      // 清空表单
+      oldPassword.value = '';
+      newPassword.value = '';
+      confirmPassword.value = '';
+    }, 500);
+  } catch (error) {
+    console.error('修改密码失败:', error);
+    ElMessage({
+      message: '修改密码失败，请稍后重试',
+      type: 'error'
+    });
+  }
 };
 
 // 组件挂载时获取用户信息
@@ -464,17 +645,35 @@ onMounted(() => {
   border-radius: 12px;
   padding: 30px 20px;
   text-align: center;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
   margin-bottom: 20px;
   will-change: transform; /* 优化渲染性能 */
   transform: translateZ(0); /* 触发GPU加速 */
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.user-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 35px rgba(66, 185, 131, 0.15);
+}
+
+.user-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 5px;
+  background: linear-gradient(90deg, #42b983, #33c6aa);
 }
 
 .user-avatar-container {
   position: relative;
   width: 120px;
   height: 120px;
-  margin: 0 auto 20px;
+  margin: 0 auto 25px;
 }
 
 .user-avatar {
@@ -487,8 +686,14 @@ onMounted(() => {
   align-items: center;
   justify-content: center;
   border: 4px solid white;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 8px 20px rgba(66, 185, 131, 0.2);
   transform: translateZ(0); /* 触发GPU加速 */
+  transition: all 0.3s ease;
+}
+
+.user-avatar:hover {
+  transform: scale(1.05);
+  box-shadow: 0 10px 25px rgba(66, 185, 131, 0.3);
 }
 
 .avatar-img {
@@ -515,10 +720,11 @@ onMounted(() => {
 }
 
 .user-name {
-  font-size: 20px;
+  font-size: 22px;
   font-weight: 600;
   margin: 0 0 5px;
   color: #333;
+  letter-spacing: 0.5px;
 }
 
 .user-role {
@@ -526,33 +732,62 @@ onMounted(() => {
   font-size: 14px;
   margin-bottom: 15px;
   font-weight: 500;
+  position: relative;
+  display: inline-block;
+  padding: 3px 12px;
+  background-color: rgba(66, 185, 131, 0.1);
+  border-radius: 20px;
 }
 
 .user-joined {
   color: #888;
   font-size: 13px;
-  margin-bottom: 20px;
+  margin-bottom: 25px;
+  position: relative;
+}
+
+.user-joined:after {
+  content: '';
+  position: absolute;
+  bottom: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 40px;
+  height: 2px;
+  background-color: #f0f0f0;
 }
 
 .user-stats {
   display: flex;
   justify-content: space-around;
   border-top: 1px solid #f0f0f0;
-  padding-top: 15px;
+  padding-top: 20px;
 }
 
 .stat-item {
   text-align: center;
+  transition: all 0.3s ease;
+  padding: 5px 10px;
+  border-radius: 8px;
+}
+
+.stat-item:hover {
+  background-color: rgba(66, 185, 131, 0.05);
+  transform: translateY(-3px);
 }
 
 .stat-value {
-  font-size: 18px;
+  font-size: 24px;
   font-weight: 600;
   color: #333;
+  margin-bottom: 5px;
+  background: linear-gradient(90deg, #42b983, #33c6aa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 .stat-label {
-  font-size: 12px;
+  font-size: 13px;
   color: #888;
   margin-top: 3px;
 }
@@ -572,16 +807,45 @@ onMounted(() => {
   color: #666;
   cursor: pointer;
   border-bottom: 1px solid #f5f5f5;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
   text-decoration: none;
+  position: relative;
+  overflow: hidden;
 }
 
-.nav-item:last-child {
-  border-bottom: none;
+.nav-item:after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 0;
+  background-color: rgba(66, 185, 131, 0.05);
+  transition: height 0.3s ease;
+  z-index: -1;
 }
 
-.nav-item:hover {
-  background-color: #f9f9f9;
+.nav-item:hover:after {
+  height: 100%;
+}
+
+.nav-item .el-icon {
+  font-size: 18px;
+  transition: transform 0.3s ease, color 0.3s ease;
+}
+
+.nav-item:hover .el-icon {
+  transform: translateY(-2px);
+  color: #42b983;
+}
+
+.nav-item span {
+  font-size: 15px;
+  transition: transform 0.3s ease, color 0.3s ease;
+}
+
+.nav-item:hover span {
+  transform: translateX(2px);
   color: #42b983;
 }
 
@@ -590,6 +854,11 @@ onMounted(() => {
   background-color: rgba(66, 185, 131, 0.05);
   font-weight: 500;
   position: relative;
+}
+
+.nav-item.active .el-icon,
+.nav-item.active span {
+  color: #42b983;
 }
 
 .nav-item.active::before {
@@ -601,6 +870,16 @@ onMounted(() => {
   width: 4px;
   background-color: #42b983;
   border-radius: 0 2px 2px 0;
+  animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+  from { transform: translateY(100%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.nav-item:last-child {
+  border-bottom: none;
 }
 
 /* 右侧内容区域 */
@@ -615,8 +894,133 @@ onMounted(() => {
 .profile-section {
   background-color: white;
   border-radius: 12px;
-  padding: 20px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  padding: 25px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
+  position: relative;
+  transition: all 0.3s ease;
+  overflow: hidden;
+}
+
+.profile-section:hover {
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+}
+
+.section-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 25px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #f0f0f0;
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+.section-title::before {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 50px;
+  height: 3px;
+  background: linear-gradient(90deg, #42b983, #33c6aa);
+  border-radius: 3px;
+}
+
+/* Animation for problem items */
+@keyframes fadeIn {
+  from { 
+    opacity: 0; 
+    transform: translateX(-15px);
+  }
+  to { 
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Section container animations */
+.section-container {
+  will-change: transform, opacity;
+  animation: sectionFadeIn 0.5s ease forwards;
+}
+
+@keyframes sectionFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Enhance the settings sections */
+.settings-section {
+  border-top: 1px solid #f0f0f0;
+  padding-top: 25px;
+  margin-top: 5px;
+  position: relative;
+}
+
+.settings-section::before {
+  content: '';
+  position: absolute;
+  top: -1px;
+  left: 0;
+  width: 40px;
+  height: 3px;
+  background: linear-gradient(90deg, #f0f0f0, transparent);
+  border-radius: 3px;
+}
+
+.settings-subtitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 20px;
+  position: relative;
+  display: inline-block;
+}
+
+.settings-subtitle::after {
+  content: '';
+  position: absolute;
+  bottom: -5px;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  background-color: rgba(66, 185, 131, 0.2);
+}
+
+.settings-option {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px dashed rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+}
+
+.settings-option:last-child {
+  border-bottom: none;
+}
+
+.settings-option:hover {
+  background-color: rgba(66, 185, 131, 0.02);
+  padding-left: 5px;
+}
+
+.option-label {
+  font-size: 14px;
+  color: #555;
+  transition: all 0.3s ease;
+}
+
+.settings-option:hover .option-label {
+  color: #42b983;
 }
 
 /* 热力图加载占位符 */
@@ -650,17 +1054,6 @@ onMounted(() => {
   to { transform: rotate(360deg); }
 }
 
-.section-title {
-  font-size: 18px;
-  font-weight: 600;
-  color: #333;
-  margin: 0 0 20px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid #f0f0f0;
-  display: flex;
-  align-items: center;
-}
-
 .profile-form {
   max-width: 600px;
 }
@@ -672,6 +1065,25 @@ onMounted(() => {
   background-color: #42b983;
   border-color: #42b983;
   transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.save-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, rgba(255,255,255,0.2), rgba(255,255,255,0));
+  transition: 0.6s;
+  z-index: -1;
+}
+
+.save-btn:hover::before {
+  left: 100%;
 }
 
 .save-btn:hover {
@@ -695,7 +1107,26 @@ onMounted(() => {
   padding: 12px 16px;
   background-color: #f9f9f9;
   border-radius: 8px;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
+  transform: translateX(0);
+  animation: fadeIn 0.5s ease;
+  animation-fill-mode: both;
+}
+
+.problem-item:nth-child(2) {
+  animation-delay: 0.1s;
+}
+
+.problem-item:nth-child(3) {
+  animation-delay: 0.2s;
+}
+
+.problem-item:nth-child(4) {
+  animation-delay: 0.3s;
+}
+
+.problem-item:nth-child(5) {
+  animation-delay: 0.4s;
 }
 
 .problem-item:hover {
@@ -760,6 +1191,189 @@ onMounted(() => {
   font-size: 15px;
 }
 
+/* 比赛记录 */
+.competition-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.competition-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 16px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  transform: translateX(0);
+  animation: fadeIn 0.5s ease;
+  animation-fill-mode: both;
+}
+
+.competition-item:nth-child(2) {
+  animation-delay: 0.1s;
+}
+
+.competition-item:nth-child(3) {
+  animation-delay: 0.2s;
+}
+
+.competition-item:hover {
+  background-color: #f0f0f0;
+  transform: translateX(3px);
+}
+
+.competition-info {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.competition-title {
+  font-weight: 500;
+  color: #333;
+}
+
+.competition-date {
+  font-size: 13px;
+  color: #888;
+}
+
+.competition-result {
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 14px;
+}
+
+.competition-result.good {
+  background-color: #e6f7f0;
+  color: #42b983;
+}
+
+.competition-result.average {
+  background-color: #fff8e6;
+  color: #ffaa00;
+}
+
+.competition-result.poor {
+  background-color: #ffe6e6;
+  color: #ff6666;
+}
+
+/* 完整的问题列表 */
+.full-list {
+  max-height: 500px;
+  overflow-y: auto;
+  padding-right: 5px;
+}
+
+.full-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.full-list::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+.full-list::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 10px;
+}
+
+.full-list::-webkit-scrollbar-thumb:hover {
+  background: #aaa;
+}
+
+/* 过渡动画 */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+.el-form-item .el-button {
+  border-radius: 8px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+}
+
+.el-switch {
+  --el-switch-on-color: #42b983;
+}
+
+.el-switch.is-checked .el-switch__core {
+  border-color: #42b983;
+  background-color: #42b983;
+}
+
+/* 添加一些波纹效果的按钮，用于账户设置部分 */
+.settings-container .el-button {
+  position: relative;
+  overflow: hidden;
+}
+
+.settings-container .el-button:after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 5px;
+  height: 5px;
+  background: rgba(255, 255, 255, 0.5);
+  opacity: 0;
+  border-radius: 100%;
+  transform: scale(1, 1) translate(-50%);
+  transform-origin: 50% 50%;
+}
+
+.settings-container .el-button:focus:not(:active)::after {
+  animation: ripple 1s ease-out;
+}
+
+@keyframes ripple {
+  0% {
+    transform: scale(0, 0);
+    opacity: 0.5;
+  }
+  20% {
+    transform: scale(25, 25);
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(40, 40);
+  }
+}
+
+/* 美化输入框 */
+.el-input__inner {
+  transition: all 0.3s ease;
+}
+
+.el-input__inner:focus {
+  border-color: #42b983 !important;
+  box-shadow: 0 0 0 2px rgba(66, 185, 131, 0.2);
+}
+
+.el-textarea__inner:focus {
+  border-color: #42b983 !important;
+  box-shadow: 0 0 0 2px rgba(66, 185, 131, 0.2);
+}
+
+.settings-container {
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+}
+
 /* 响应式布局 */
 @media (max-width: 900px) {
   .profile-content {
@@ -779,4 +1393,4 @@ onMounted(() => {
     height: 100px;
   }
 }
-</style>
+</style> 

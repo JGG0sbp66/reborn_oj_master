@@ -28,6 +28,7 @@
 </template>
 
 <script setup lang="ts">
+import { nextTick } from 'vue';
 import { ref } from 'vue';
 
 const props = defineProps({
@@ -43,12 +44,20 @@ const currentMessage = ref('');
 
 // 暴露方法给父组件：手动触发显示/隐藏
 const show = (msg: string, code: number) => {
-    currentMessage.value = msg;
-    statusCode.value = code;
-    visible.value = true;
-    setTimeout(() => {
-        visible.value = false;
-    }, props.duration);
+    visible.value = false; // 先设置为false
+    void nextTick(() => { // 等待DOM更新
+        currentMessage.value = msg;
+        statusCode.value = code;
+        visible.value = true;
+        // 强制重排
+        const alertBox = document.getElementById('alertBox');
+        if (alertBox) {
+            void alertBox.offsetHeight;
+        }
+        setTimeout(() => {
+            visible.value = false;
+        }, props.duration);
+    });
 };
 
 const hide = () => {
