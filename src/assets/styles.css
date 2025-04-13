@@ -1,0 +1,53 @@
+:root {
+  /* 覆盖Element Plus的主题色变量 */
+  --el-color-primary: #18a058 !important;
+  --el-color-primary-light-1: #35b371 !important;
+  --el-color-primary-light-2: #52c289 !important;
+  --el-color-primary-light-3: #6fd0a1 !important;
+  --el-color-primary-light-4: #8bddb9 !important;
+  --el-color-primary-light-5: #a7e9d1 !important;
+  --el-color-primary-light-6: #c4f6e9 !important;
+  --el-color-primary-light-7: #e1fcf8 !important;
+  --el-color-primary-light-8: #f0fffd !important;
+  --el-color-primary-light-9: #f8ffff !important;
+  
+  /* 菜单相关变量 */
+  --el-menu-active-color: var(--el-color-primary) !important;
+  --el-menu-text-color: #2c3e50 !important;
+  --el-menu-hover-text-color: var(--el-color-primary) !important;
+  --el-menu-bg-color: #ffffff !important;
+  --el-menu-hover-bg-color: rgba(24, 160, 88, 0.1) !important;
+  --el-menu-border-color: transparent !important;
+  
+  /* 按钮相关变量 */
+  --el-button-hover-bg-color: rgba(24, 160, 88, 0.1) !important;
+  --el-button-active-bg-color: rgba(24, 160, 88, 0.2) !important;
+  
+  /* 文本颜色变量 */
+  --el-text-color-primary: #2c3e50 !important;
+  --el-text-color-regular: #606266 !important;
+}
+
+/* 确保表格内容单元格样式一致 */
+.el-table .el-table__cell {
+  padding: 8px 0 !important;
+}
+
+.el-table .el-table__row {
+  height: 60px !important;
+}
+
+.el-table .el-table__header-row {
+  height: 56px !important;
+}
+
+.el-table .el-table__header-cell {
+  background-color: #f8f9fa !important;
+  font-weight: 600 !important;
+  color: #2c3e50 !important;
+}
+
+/* 操作按钮边距 */
+.el-button.el-button--text {
+  padding: 6px 8px !important;
+} 
