@@ -18,7 +18,7 @@
             class="nav-item"
           >
             <el-icon class="nav-icon">
-              <Document />
+              <Collection />
             </el-icon>
             <span class="nav-text">题库</span>
             <span class="nav-hover-effect"></span>

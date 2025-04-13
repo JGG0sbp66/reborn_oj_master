@@ -126,7 +126,7 @@
                 <div>
                   <span>输入数据</span>
                 </div>
-                <div>
+                <div @click="copyToClipboard(example.input)">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     viewBox="0 0 24 24"
@@ -150,7 +150,7 @@
                 <div>
                   <span>输出数据</span>
                 </div>
-                <div>
+                <div @click="copyToClipboard(example.output)">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     viewBox="0 0 24 24"
@@ -176,7 +176,7 @@
                   <div>
                     <span>题目描述</span>
                   </div>
-                  <div>
+                  <div @click="copyToClipboard(example.explanation)">
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
                       viewBox="0 0 24 24"
@@ -307,6 +307,54 @@ export default {
         console.error("Failed to fetch data:", error);
       } finally {
         this.isLoading = false;
+      }
+    },
+    async copyToClipboard(text) {
+      try {
+        await navigator.clipboard.writeText(text);
+        // 可以添加一些视觉反馈，比如显示一个短暂的通知
+        this.$notify({
+          title: "复制成功",
+          message: "内容已复制到剪贴板",
+          type: "success",
+          duration: 2000,
+        });
+      } catch (err) {
+        console.error("复制失败:", err);
+        // 回退方案
+        this.fallbackCopyToClipboard(text);
+      }
+    },
+
+    // 兼容性回退方案
+    fallbackCopyToClipboard(text) {
+      const textarea = document.createElement("textarea");
+      textarea.value = text;
+      textarea.style.position = "fixed"; // 防止页面滚动
+      document.body.appendChild(textarea);
+      textarea.select();
+
+      try {
+        const successful = document.execCommand("copy");
+        if (successful) {
+          this.$notify({
+            title: "复制成功",
+            message: "内容已复制到剪贴板",
+            type: "success",
+            duration: 2000,
+          });
+        } else {
+          throw new Error("复制命令执行失败");
+        }
+      } catch (err) {
+        console.error("回退复制方法失败:", err);
+        this.$notify.error({
+          title: "复制失败",
+          message: "请手动选择文本并复制",
+          duration: 2000,
+        });
+      } finally {
+        document.body.removeChild(textarea);
       }
     },
   },
