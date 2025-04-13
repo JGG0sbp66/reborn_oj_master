@@ -139,7 +139,7 @@
             </div>
             
             <div class="action-section">
-              <router-link to="/contest/problems" class="action-btn" target="_blank">
+              <router-link :to="`/contest/problems?uid=${competition.uid}`" class="action-btn" target="_blank">
                 <span>Let's go</span>
                 <i class="btn-arrow">→</i>
               </router-link>
@@ -234,6 +234,7 @@ interface Tag {
 }
 
 interface Competition {
+  uid: number;
   title: string;
   logos: string[];
   startTime: string;
@@ -354,9 +355,10 @@ const fetchCompetitions = async () => {
     
     if (data && data.race_info && Array.isArray(data.race_info)) {
       // 将获取到的竞赛数据赋值给competitionData
-      competitionData.value = data.race_info.map((race: any) => {
+      competitionData.value = data.race_info.map((race: any, index: number) => {
         // 转换API返回的数据格式为组件需要的格式
         return {
+          uid: race.uid || index + 1, // 使用API返回的uid或使用索引+1作为uid
           title: race.title,
           logos: race.logos || [],
           startTime: race.startTime,
