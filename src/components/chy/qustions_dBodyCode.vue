@@ -423,6 +423,9 @@ export default {
     selectAllCode() {
       // 先清除可能存在的旧监听器
       document.removeEventListener("click", this.handleGlobalClick);
+      this.$el
+        .querySelector(".codeBody")
+        .removeEventListener("click", this.handleCodeAreaClick);
 
       // 设置全选状态
       this.isAllSelected = true;
@@ -436,6 +439,10 @@ export default {
 
       // 添加全局点击事件监听器
       document.addEventListener("click", this.handleGlobalClick);
+      // 添加代码区域点击监听器
+      this.$el
+        .querySelector(".codeBody")
+        .addEventListener("click", this.handleCodeAreaClick);
 
       // 将焦点设置在第一行输入框
       this.$nextTick(() => {
@@ -520,7 +527,15 @@ export default {
       }
       this.saveHistory(); // 添加历史保存
     },
+    handleCodeAreaClick(e) {
+      // 检查点击是否在输入框上
+      const isClickOnInput = e.target.tagName === "INPUT";
 
+      // 如果点击的不是输入框，就取消全选状态
+      if (!isClickOnInput) {
+        this.clearSelection();
+      }
+    },
     // 处理粘贴事件
     handlePaste(event, index) {
       // 检查是否需要清空选择
@@ -904,6 +919,15 @@ export default {
       }
     },
     handleGlobalClick(e) {
+      // 检查点击是否在输入框上
+      const isClickOnInput = e.target.tagName === "INPUT";
+      // 如果点击的不是输入框，就取消全选状态
+      if (!isClickOnInput) {
+        this.clearSelection();
+      }
+
+      // 移除事件监听器（确保只执行一次）
+      document.removeEventListener("click", this.handleGlobalClick);
       // 检查点击是否在代码区域内
       const isClickInsideCode = this.$el.contains(e.target);
       if (!isClickInsideCode || e.target.tagName === "INPUT") {
@@ -1249,6 +1273,7 @@ export default {
     this.backspaceKeyInterval = null;
     document.removeEventListener("keyup", this.handleKeyUp);
     document.removeEventListener("click", this.handleGlobalClick); // 新增
+    this.$el.querySelector(".codeBody")?.removeEventListener("click", this.handleCodeAreaClick);
   },
 };
 </script>
