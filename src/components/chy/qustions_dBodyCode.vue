@@ -1182,18 +1182,18 @@ export default {
         // 只有在catch块中显示错误信息，不再显示"提交中"状态
         this.$emit("show-alert", {
           type: "error",
-          message: "提交失败，请先登录",
+          message: "提交失败，请先登录或检查网络连接",
         });
       }
     },
     // 辅助方法：从AI响应中提取状态
     getStatusFromAiResponse(response) {
-      if (response.includes("正确")) return "答案正确";
-      if (response.includes("错误")) return "答案错误";
-      if (response.includes("编译")) return "编译错误";
-      if (response.includes("内存")) return "内存超限";
-      if (response.includes("时间")) return "运行超时";
-      if (response.includes("运行")) return "运行错误";
+      if (response.includes("答案正确")) return "答案正确";
+      if (response.includes("答案错误")) return "答案错误";
+      if (response.includes("编译错误")) return "编译错误";
+      if (response.includes("内存超限")) return "内存超限";
+      if (response.includes("运行超时")) return "运行超时";
+      if (response.includes("运行错误")) return "运行错误";
       return "编译错误"; // 默认返回编译错误
     },
     getLanguageMode() {
