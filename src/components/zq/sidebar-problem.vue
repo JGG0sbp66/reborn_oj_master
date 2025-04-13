@@ -11,20 +11,34 @@
                     <div class="item-text">题目</div>
             </div>
             <div id="ranks-btn" class="sidebar-item">
-                <router-link to="/contest/ranks">
+                <div class="sidebar-link" @click="navigateToRanks">
                     <div class="item-icon rank-icon">
                         <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <path d="M6 20V10M12 20V4M18 20V14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                         </svg>
                     </div>
                     <div class="item-text">排名</div>
-                </router-link>
+                </div>
             </div>
         </div>
     </div>
 </template>
 
-<script lang="ts" setup></script>
+<script lang="ts" setup>
+import { useRoute, useRouter } from 'vue-router';
+
+const route = useRoute();
+const router = useRouter();
+
+const navigateToRanks = () => {
+    const uid = route.query.uid;
+    if (uid) {
+        router.push(`/contest/ranks?uid=${uid}`);
+    } else {
+        router.push('/contest/ranks');
+    }
+};
+</script>
 
 <style scoped>
 .sidebar-container {
@@ -56,7 +70,7 @@
     transition: all 0.3s ease;
 }
 
-.sidebar-item a {
+.sidebar-item a, .sidebar-link {
     display: flex;
     flex-direction: column;
     align-items: center;

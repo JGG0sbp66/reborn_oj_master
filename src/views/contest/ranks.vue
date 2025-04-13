@@ -25,18 +25,22 @@ import sidebarrank from "@/components/zq/sidebar-rank.vue";
 import rank from "@/components/zq/rank.vue";
 import axios from "axios";
 import { onMounted } from "vue";
+import { useRoute } from "vue-router";
 
 const raceInfo = ref({});
 const raceRank = ref({
     race_rank: []
 });
 
+const route = useRoute();
+const uid = route.query.uid;
+
 const get_race_info = async () => {
     try {
         const { data: raceData } = await axios({
             url: "http://localhost:5000/api/race-info",
             method: "post",
-            data: { uid: 1 },
+            data: { uid: uid },
         });
         console.log('比赛信息:', raceData);
         // 确保返回的数据格式正确
