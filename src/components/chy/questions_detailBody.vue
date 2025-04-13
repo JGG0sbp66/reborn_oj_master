@@ -137,7 +137,6 @@ export default {
         this.activeTab = "submissions";
       } catch (error) {
         console.error("提交失败:", error);
-        this.showAlertMessage("error", "提交失败，请稍后重试");
       }
     },
   },
