@@ -409,10 +409,26 @@ const formatDate = (date: Date): string => {
 // 获取用户信息
 const fetchUserProfile = async (): Promise<void> => {
   try {
-    // 这里应该从你的后端获取用户信息
-    // 为演示目的，先使用本地存储的数据
+    // 先使用本地存储的数据
     username.value = localStorage.getItem('username') || '用户';
     userRole.value = localStorage.getItem('userRole') || '普通用户';
+    
+    // 然后从API获取用户信息
+    try {
+      const response = await axios.get('http://localhost:5000/api/user/profile');
+      if (response.data.authenticated && response.data.user) {
+        // 使用后端返回的数据
+        const userData = response.data.user;
+        username.value = userData.username; // 使用正确的username字段
+        userRole.value = userData.role || '普通用户';
+        
+        // 保存到localStorage以便下次使用
+        localStorage.setItem('username', userData.username);
+        localStorage.setItem('userRole', userData.role);
+      }
+    } catch (apiError) {
+      console.error('API调用失败，使用本地数据:', apiError);
+    }
     
     // 假设这是从后端获取的其他用户数据
     userJoinDate.value = new Date('2023-01-15');
@@ -421,13 +437,6 @@ const fetchUserProfile = async (): Promise<void> => {
     rank.value = 128;
     email.value = 'user@example.com';
     bio.value = '热爱编程，喜欢解决复杂问题。正在学习算法和数据结构。';
-    
-    // 模拟从后端API获取数据
-    // const response = await axios.get('/api/user/profile');
-    // if (response.data.success) {
-    //   const userData = response.data.user;
-    //   // 更新用户信息...
-    // }
   } catch (error) {
     console.error('获取用户信息失败:', error);
   }
