@@ -38,18 +38,53 @@
             </div>
 
             <div class="advanced-search" v-if="showAdvancedSearch">
+                <div class="advanced-search-header">
+                    <h3 class="advanced-search-title">高级筛选</h3>
+                    <el-button type="text" @click="resetAdvancedSearch" class="reset-btn">
+                        <el-icon><Refresh /></el-icon> 重置筛选
+                    </el-button>
+                </div>
                 <div class="advanced-search-content">
-                    <div class="search-item">
-                        <span class="search-label">竞赛状态:</span>
-                        <el-select v-model="statusFilter" placeholder="竞赛状态" clearable @change="handleSearch" style="flex: 1;">
-                            <el-option label="全部" value="" />
-                            <el-option label="进行中" value="进行中" />
-                            <el-option label="报名中" value="报名中" />
-                            <el-option label="未开始" value="未开始" />
-                            <el-option label="已结束" value="已结束" />
-                        </el-select>
+                    <div class="search-row">
+                        <div class="search-item">
+                            <span class="search-label">竞赛状态:</span>
+                            <el-select v-model="statusFilter" placeholder="竞赛状态" clearable @change="handleSearch" style="flex: 1;">
+                                <el-option label="全部" value="" />
+                                <el-option label="进行中" value="进行中" />
+                                <el-option label="报名中" value="报名中" />
+                                <el-option label="未开始" value="未开始" />
+                                <el-option label="已结束" value="已结束" />
+                            </el-select>
+                        </div>
+                        <div class="search-item">
+                            <span class="search-label">竞赛时长:</span>
+                            <el-select v-model="durationFilter" placeholder="竞赛时长" clearable @change="handleSearch" style="flex: 1;">
+                                <el-option label="全部" value="" />
+                                <el-option label="1天以内" value="<1" />
+                                <el-option label="1-3天" value="1-3" />
+                                <el-option label="3天以上" value=">3" />
+                            </el-select>
+                        </div>
                     </div>
-                    <div class="search-item">
+                    <div class="search-row">
+                        <div class="search-item">
+                            <span class="search-label">竞赛类型:</span>
+                            <el-select v-model="competitionTypeFilter" placeholder="竞赛类型" clearable @change="handleSearch" style="flex: 1;">
+                                <el-option label="全部" value="" />
+                                <el-option label="个人赛" value="individual" />
+                                <el-option label="团队赛" value="team" />
+                            </el-select>
+                        </div>
+                        <div class="search-item">
+                            <span class="search-label">赛制类型:</span>
+                            <el-select v-model="competitionModeFilter" placeholder="赛制类型" clearable @change="handleSearch" style="flex: 1;">
+                                <el-option label="全部" value="" />
+                                <el-option label="ACM赛制" value="acm" />
+                                <el-option label="OI赛制" value="oi" />
+                            </el-select>
+                        </div>
+                    </div>
+                    <div class="search-item full-width">
                         <span class="search-label">日期范围:</span>
                         <el-date-picker
                             v-model="dateRange"
@@ -62,8 +97,8 @@
                             style="flex: 1;"
                         />
                     </div>
-                    <div class="search-item">
-                        <span class="search-label">参与人数范围:</span>
+                    <div class="search-item full-width">
+                        <span class="search-label">参与人数:</span>
                         <el-slider
                             v-model="participantsRange"
                             range
@@ -74,14 +109,11 @@
                             style="flex: 1;"
                         />
                     </div>
-                    <div class="search-item">
-                        <span class="search-label">竞赛时长:</span>
-                        <el-select v-model="durationFilter" placeholder="竞赛时长" clearable @change="handleSearch" style="flex: 1;">
-                            <el-option label="全部" value="" />
-                            <el-option label="1天以内" value="<1" />
-                            <el-option label="1-3天" value="1-3" />
-                            <el-option label="3天以上" value=">3" />
-                        </el-select>
+                </div>
+                <div class="advanced-search-footer">
+                    <div class="search-result-info">已筛选出 {{ totalCompetitions }} 场竞赛</div>
+                    <div class="search-actions">
+                        <el-button type="primary" @click="applyAdvancedSearch">应用</el-button>
                     </div>
                 </div>
             </div>
@@ -109,6 +141,27 @@
                         <template #default="scope">
                             <div class="competition-title">
                                 <span>{{ scope.row.title }}</span>
+                                <div class="competition-tags" v-if="scope.row.raw && scope.row.raw.tags">
+                                    <el-tag 
+                                        v-for="(tag, index) in scope.row.raw.tags" 
+                                        :key="index"
+                                        :type="getTagType(tag.type)"
+                                        size="small"
+                                        class="competition-tag"
+                                    >
+                                        {{ tag.name }}
+                                    </el-tag>
+                                </div>
+                                <div class="competition-meta" v-if="scope.row.raw">
+                                    <span class="meta-item" v-if="scope.row.raw.duration">
+                                        <el-icon><Timer /></el-icon> 
+                                        {{ scope.row.raw.duration }}
+                                    </span>
+                                    <span class="meta-item" v-if="scope.row.raw.problems_list">
+                                        <el-icon><Collection /></el-icon> 
+                                        {{ scope.row.raw.problems_list.length }}题
+                                    </span>
+                                </div>
                             </div>
                         </template>
                     </el-table-column>
@@ -162,7 +215,7 @@
                     </button>
                     <div class="page-numbers">
                         <button 
-                            v-for="num in totalPages" 
+                            v-for="num in displayedPages" 
                             :key="num"
                             class="page-number"
                             :class="{ active: currentPage === num }"
@@ -181,8 +234,52 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
-import { Plus, Search, ArrowUp, ArrowDown } from '@element-plus/icons-vue';
+import type { FormInstance, FormRules } from 'element-plus';
+import { Plus, Search, ArrowUp, ArrowDown, Timer, Collection, Refresh } from '@element-plus/icons-vue';
 import AlertBox from '../JGG/alertbox.vue';
+import axios from 'axios';
+
+// 定义竞赛标签类型
+interface CompetitionTag {
+  name: string;
+  type: string;
+}
+
+// 定义API返回的竞赛数据类型
+interface ApiCompetition {
+  uid: number;
+  title: string;
+  logos?: string[];
+  start_time: string;
+  end_time: string;
+  duration: string;
+  tags?: CompetitionTag[];
+  created_at: string;
+  updated_at: string;
+  problems_list?: number[];
+  user_list?: number[];
+  status: string;
+}
+
+// 定义新建竞赛对象类型
+interface NewCompetition {
+  title: string;
+  start_time: string;
+  end_time: string;
+  logos: string[];
+  problems_list: number[];
+}
+
+// 定义表格显示的竞赛数据类型
+interface FormattedCompetition {
+  id: string;
+  title: string;
+  participantsCount: number;
+  startTime: string;
+  endTime: string;
+  status: string;
+  raw?: ApiCompetition;
+}
 
 // AlertBox引用
 const alertBox = ref(null);
@@ -193,57 +290,125 @@ const searchQuery = ref('');
 const statusFilter = ref('');
 const dateRange = ref([]);
 const currentPage = ref(1);
-const pageSize = ref(10);
+const pageSize = ref(5);
 const totalCompetitions = ref(100);
 const showAdvancedSearch = ref(false);
 const participantsRange = ref([0, 200]);
 const durationFilter = ref('');
-const selectedCompetitions = ref([]);
-const searchTimeout = ref(null);
+const selectedCompetitions = ref<FormattedCompetition[]>([]);
+const searchTimeout = ref<number | null>(null);
+const competitionTypeFilter = ref('');
+const competitionModeFilter = ref('');
 
-// 模拟竞赛数据
-const competitions = ref([
-    { 
-        id: 'C-256', 
-        title: '周末算法挑战赛', 
-        participantsCount: 128, 
-        startTime: '2023-12-02 09:00:00', 
-        endTime: '2023-12-03 18:00:00',
-        status: '进行中'
-    },
-    { 
-        id: 'C-257', 
-        title: '高校编程大赛预选赛', 
-        participantsCount: 256, 
-        startTime: '2023-11-25 13:30:00', 
-        endTime: '2023-11-26 13:30:00',
-        status: '已结束'
-    },
-    { 
-        id: 'C-258', 
-        title: '新手入门编程竞赛', 
-        participantsCount: 85, 
-        startTime: '2023-12-10 10:00:00', 
-        endTime: '2023-12-10 18:00:00',
-        status: '报名中'
-    },
-    { 
-        id: 'C-259', 
-        title: '冬季算法竞赛', 
-        participantsCount: 0, 
-        startTime: '2023-12-15 09:30:00', 
-        endTime: '2023-12-17 18:00:00',
-        status: '未开始'
-    },
-    { 
-        id: 'C-260', 
-        title: '企业编程挑战赛', 
-        participantsCount: 156, 
-        startTime: '2023-11-18 14:00:00', 
-        endTime: '2023-11-19 14:00:00',
-        status: '已结束'
+// 创建竞赛相关
+const createDialogVisible = ref(false);
+const competitionForm = ref<FormInstance | null>(null);
+const creating = ref(false);
+const selectedStatus = ref('upcoming');
+const competitionType = ref('');
+const competitionMode = ref('');
+
+// 表单验证规则
+const competitionRules = ref<FormRules>({
+  title: [
+    { required: true, message: '请输入竞赛名称', trigger: 'blur' },
+    { min: 3, max: 50, message: '长度在 3 到 50 个字符', trigger: 'blur' }
+  ],
+  start_time: [
+    { required: true, message: '请选择开始时间', trigger: 'change' }
+  ],
+  end_time: [
+    { required: true, message: '请选择结束时间', trigger: 'change' }
+  ],
+  problems_list: [
+    { required: true, message: '请至少选择一道题目', trigger: 'change' }
+  ]
+});
+
+// 新竞赛默认值
+const newCompetition = ref<NewCompetition>({
+    title: '',
+    start_time: '',
+    end_time: '',
+    logos: [],
+    problems_list: [],
+});
+
+// 竞赛数据
+const competitions = ref<FormattedCompetition[]>([]);
+
+const get_race_info = async (): Promise<ApiCompetition[]> => {
+  const { data: userData } = await axios({
+    url: "http://localhost:5000/api/races",
+    method: "get",
+  });
+  return userData;
+};
+
+const formatCompetitionData = (data: ApiCompetition[]): FormattedCompetition[] => {
+  return data.map(item => {
+    // 处理状态映射
+    let status = '未开始';
+    if (item.status === 'upcoming') {
+      // 如果状态是未开始，但有团队赛标签，则显示为报名中
+      if (item.tags && item.tags.some(tag => tag.type === 'team')) {
+        status = '报名中';
+      } else {
+        status = '未开始';
+      }
+    } else if (item.status === 'in_progress') {
+      status = '进行中';
+    } else if (item.status === 'registration') {
+      status = '报名中';
+    } else if (item.status === 'ended') {
+      status = '已结束';
     }
-]);
+    
+    // 计算参与人数
+    const participantsCount = item.user_list ? item.user_list.length : 0;
+    
+    // 格式化时间
+    const startTime = new Date(item.start_time).toLocaleString('zh-CN');
+    const endTime = new Date(item.end_time).toLocaleString('zh-CN');
+    
+    // 复制原始数据以便修改
+    const rawCopy = {...item};
+    
+    // 确保标签和状态一致 - 如果有ended标签但状态不是已结束，则过滤掉该标签
+    if (rawCopy.tags && status !== '已结束') {
+      rawCopy.tags = rawCopy.tags.filter(tag => tag.type !== 'ended');
+    }
+    
+    return {
+      id: `C-${item.uid}`,
+      title: item.title,
+      participantsCount: participantsCount,
+      startTime: startTime,
+      endTime: endTime,
+      status: status,
+      // 保留修改后的原始数据
+      raw: rawCopy
+    };
+  });
+};
+
+const fetchData = async () => {
+  loading.value = true;
+  try {
+    const race_info_data = await get_race_info();
+    // 转换数据格式
+    competitions.value = formatCompetitionData(race_info_data);
+  } catch (error) {
+    console.error('获取竞赛数据失败:', error);
+    // 发生错误时显示提示
+    alertBox.value?.show('获取竞赛数据失败，请稍后重试', 1);
+  } finally {
+    loading.value = false;
+  }
+};
+
+onMounted(fetchData);
+console.log(competitions.value);
 
 // 处理延迟搜索，避免频繁过滤
 const handleSearch = () => {
@@ -252,13 +417,14 @@ const handleSearch = () => {
     }
     
     searchTimeout.value = setTimeout(() => {
-        // 在实际应用中，这里可能会发送API请求
         console.log('搜索条件:', {
             searchQuery: searchQuery.value,
             status: statusFilter.value,
             dateRange: dateRange.value,
             participantsRange: participantsRange.value,
-            durationFilter: durationFilter.value
+            durationFilter: durationFilter.value,
+            competitionTypeFilter: competitionTypeFilter.value,
+            competitionModeFilter: competitionModeFilter.value
         });
         
         // 触发过滤计算
@@ -274,13 +440,10 @@ const handleSelectionChange = (selection: any[]) => {
 // 批量操作方法
 const batchExport = () => {
     const ids = selectedCompetitions.value.map((competition: any) => competition.id).join(', ');
-    // ElMessage.success(`已导出竞赛: ${ids}`);
     alertBox.value.show(`已导出竞赛: ${ids}`, 0);
 };
 
 const batchChangeStatus = () => {
-    // 由于 ElMessageBox.prompt 的类型问题暂不好修复，可以使用 @ts-ignore 暂时忽略
-    // @ts-ignore - Element Plus type definition issue
     ElMessageBox.prompt('请选择新的竞赛状态', '批量修改状态', {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
@@ -322,13 +485,14 @@ const batchDelete = () => {
 };
 
 // 监听筛选条件变化，重置分页
-watch([searchQuery, statusFilter, dateRange, participantsRange, durationFilter], () => {
+watch([searchQuery, statusFilter, dateRange, participantsRange, durationFilter, competitionTypeFilter, competitionModeFilter], () => {
     currentPage.value = 1;
 });
 
 // 过滤后的竞赛数据
 const filteredCompetitions = computed(() => {
-    return competitions.value.filter((competition: any) => {
+    // 首先应用所有过滤条件
+    const filtered = competitions.value.filter((competition: any) => {
         // 搜索过滤
         const matchesSearch = searchQuery.value ? 
             competition.title.toLowerCase().includes(searchQuery.value.toLowerCase()) || 
@@ -377,9 +541,27 @@ const filteredCompetitions = computed(() => {
             }
         }
         
+        // 竞赛类型过滤
+        const matchesType = competitionTypeFilter.value ? 
+            competition.raw?.tags?.some((tag: CompetitionTag) => tag.type === competitionTypeFilter.value) : 
+            true;
+        
+        // 赛制类型过滤
+        const matchesMode = competitionModeFilter.value ? 
+            competition.raw?.tags?.some((tag: CompetitionTag) => tag.type === competitionModeFilter.value) : 
+            true;
+        
         return matchesSearch && matchesStatus && matchesDate && 
-               matchesParticipants && matchesDuration;
+               matchesParticipants && matchesDuration && matchesType && matchesMode;
     });
+    
+    // 更新总竞赛数量，用于计算分页
+    totalCompetitions.value = filtered.length;
+    
+    // 应用分页，只返回当前页的数据
+    const startIndex = (currentPage.value - 1) * pageSize.value;
+    const endIndex = startIndex + pageSize.value;
+    return filtered.slice(startIndex, endIndex);
 });
 
 // 表格行样式
@@ -397,8 +579,8 @@ const getStatusType = (status: string) => {
     switch (status) {
         case '进行中': return 'success';
         case '未开始': return 'info';
-        case '已结束': return 'info';
-        case '报名中': return 'success';
+        case '已结束': return 'danger';
+        case '报名中': return 'warning';
         default: return 'info';
     }
 };
@@ -430,8 +612,34 @@ const deleteCompetition = (id: string) => {
             type: 'warning',
         }
     )
-    .then(() => {
-        alertBox.value.show(`竞赛 ${id} 已成功删除`, 0);
+    .then(async () => {
+        try {
+            loading.value = true;
+            
+            // 从id中提取uid (格式为 "C-123" -> 提取 123)
+            const uid = parseInt(id.replace('C-', ''));
+            
+            // 发送删除请求到后端
+            await axios({
+                url: `http://localhost:5000/api/${uid}`,
+                method: "post",
+                data: { uid: uid },
+            });
+            
+            // 删除成功，从本地数据中移除该竞赛
+            competitions.value = competitions.value.filter(comp => comp.id !== id);
+            
+            // 显示成功提示
+            alertBox.value.show(`竞赛 ${id} 已成功删除`, 0);
+            
+            // 重新加载数据
+            await fetchData();
+        } catch (error) {
+            console.error('删除竞赛失败:', error);
+            alertBox.value.show(`删除竞赛失败: ${error.message || '服务器错误'}`, 1);
+        } finally {
+            loading.value = false;
+        }
     })
     .catch(() => {
         alertBox.value.show('已取消删除', 1);
@@ -451,6 +659,69 @@ onMounted(() => {
 const totalPages = computed(() => {
     return Math.ceil(totalCompetitions.value / pageSize.value);
 });
+
+// 计算要显示的页码（最多显示5个页码）
+const displayedPages = computed(() => {
+    const total = totalPages.value;
+    const current = currentPage.value;
+    const delta = 2; // 当前页前后最多显示的页数
+    
+    if (total <= 5) {
+        // 如果总页数小于等于5，则全部显示
+        return Array.from({ length: total }, (_, i) => i + 1);
+    }
+    
+    // 确保current前后都有delta个页码（如果可能）
+    let start = Math.max(1, current - delta);
+    let end = Math.min(total, current + delta);
+    
+    // 如果不够5个页码，则调整start或end
+    if (end - start + 1 < 5) {
+        if (start === 1) {
+            end = Math.min(5, total);
+        } else if (end === total) {
+            start = Math.max(1, total - 4);
+        }
+    }
+    
+    return Array.from({ length: end - start + 1 }, (_, i) => start + i);
+});
+
+// 获取标签类型
+const getTagType = (type: string) => {
+    switch (type) {
+        case 'pending': return 'info';       // 未开始
+        case 'registration': return 'info';  // 报名中
+        case 'ongoing': return 'success';    // 进行中
+        case 'ended': return 'warning';      // 已结束
+        case 'individual': return 'success'; // 个人赛
+        case 'team': return 'success';       // 团队赛
+        case 'oi': return 'primary';         // OI赛制
+        case 'acm': return 'primary';        // ACM赛制
+        case 'difficulty': return 'danger';  // 难度相关
+        case 'category': return 'warning';   // 分类相关
+        default: return 'info';
+    }
+};
+
+// 重置筛选条件
+const resetAdvancedSearch = () => {
+    searchQuery.value = '';
+    statusFilter.value = '';
+    dateRange.value = [];
+    participantsRange.value = [0, 200];
+    durationFilter.value = '';
+    competitionTypeFilter.value = '';
+    competitionModeFilter.value = '';
+    // 立即应用重置的筛选条件
+    handleSearch();
+};
+
+const applyAdvancedSearch = () => {
+    // 应用高级筛选条件
+    handleSearch();
+    showAdvancedSearch.value = false;
+};
 </script>
 
 <style scoped>
@@ -500,16 +771,51 @@ const totalPages = computed(() => {
 
 .advanced-search {
     background: #f8f9fa;
-    border-radius: 8px;
-    padding: 16px;
+    border-radius: 12px;
+    padding: 20px;
     margin-bottom: 24px;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
     border-left: 3px solid rgba(24, 160, 88, 0.3);
+    transition: all 0.3s ease;
+}
+
+.advanced-search-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.advanced-search-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #2c3e50;
+    margin: 0;
+    position: relative;
+}
+
+.advanced-search-title::before {
+    content: '';
+    position: absolute;
+    left: -20px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 4px;
+    height: 16px;
+    background-color: #18a058;
+    border-radius: 2px;
 }
 
 .advanced-search-content {
     display: flex;
-    flex-wrap: wrap;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.search-row {
+    display: flex;
     gap: 24px;
 }
 
@@ -517,16 +823,11 @@ const totalPages = computed(() => {
     display: flex;
     align-items: center;
     gap: 12px;
-    min-width: 300px;
+    flex: 1;
 }
 
-.search-item :deep(.el-slider) {
+.full-width {
     width: 100%;
-    margin-left: 0;
-}
-
-.search-item :deep(.el-slider__runway) {
-    margin: 16px 0;
 }
 
 .search-label {
@@ -534,6 +835,70 @@ const totalPages = computed(() => {
     color: #606266;
     white-space: nowrap;
     min-width: 80px;
+    font-weight: 500;
+}
+
+.search-item :deep(.el-slider) {
+    width: 100%;
+    margin: 8px 0;
+}
+
+.search-item :deep(.el-slider__bar) {
+    background-color: #18a058;
+}
+
+.search-item :deep(.el-slider__button) {
+    border-color: #18a058;
+}
+
+.search-item :deep(.el-select) {
+    width: 100%;
+}
+
+.search-item :deep(.el-date-editor) {
+    width: 100%;
+}
+
+.advanced-search-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.search-result-info {
+    font-size: 14px;
+    color: #606266;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.search-result-info::before {
+    content: '';
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    background-color: #18a058;
+    border-radius: 50%;
+}
+
+.search-actions {
+    display: flex;
+    gap: 12px;
+}
+
+.reset-btn {
+    color: #606266;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.reset-btn:hover {
+    color: #18a058;
 }
 
 .batch-operations {
@@ -594,8 +959,38 @@ const totalPages = computed(() => {
 
 .competition-title {
     display: flex;
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.competition-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 2px;
+}
+
+.competition-tag {
+    margin-right: 0;
+}
+
+.competition-meta {
+    display: flex;
+    gap: 12px;
+    font-size: 12px;
+    color: #909399;
+    margin-top: 2px;
+}
+
+.meta-item {
+    display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 4px;
+}
+
+.meta-item .el-icon {
+    font-size: 14px;
 }
 
 .action-buttons {
