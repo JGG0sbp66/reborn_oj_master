@@ -246,12 +246,12 @@ const verifyUserState = async () => {
     const { authenticated, user } = await checkAuth();
     isAuthenticated.value = authenticated;
     if (authenticated && user) {
-      username.value = user.uid ? String(user.uid) : '用户'; // 确保转为字符串
+      username.value = user.username || '用户'; // 使用username而不是uid
       userRole.value = user.role || '普通用户';
       
       // 更新localStorage
       localStorage.setItem('isLoggedIn', 'true');
-      localStorage.setItem('username', user.uid);
+      localStorage.setItem('username', user.username); // 保存正确的username
       localStorage.setItem('userRole', user.role);
     } else {
       // 如果API返回未认证，清除localStorage
