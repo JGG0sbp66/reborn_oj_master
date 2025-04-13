@@ -45,12 +45,12 @@ const fetchData = async () => {
 
 onMounted(fetchData); // 在组件挂载时调用 fetchData 函数
 
-// const link = document.querySelector('a') as HTMLAnchorElement | null;
+const link = document.querySelector('a') as HTMLAnchorElement | null;
 
-// if (link) {
-//   const url = new URL(link.href);
-//   const uid = parseInt(url.searchParams.get('uid') || '1'); // 将string转为number,如果为null则使用默认值1
-// }
+if (link) {
+  const url = new URL(link.href);
+  const uid = parseInt(url.searchParams.get('uid') || '1'); // 将string转为number,如果为null则使用默认值1
+}
 
 </script>
 

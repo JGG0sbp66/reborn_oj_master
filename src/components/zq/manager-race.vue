@@ -618,13 +618,15 @@ const deleteCompetition = (id: string) => {
             
             // 从id中提取uid (格式为 "C-123" -> 提取 123)
             const uid = parseInt(id.replace('C-', ''));
+            console.log('准备删除竞赛，ID:', id, '提取的UID:', uid);
             
-            // 发送删除请求到后端
-            await axios({
-                url: `http://localhost:5000/api/${uid}`,
-                method: "post",
-                data: { uid: uid },
+            // 发送删除请求到后端，使用正确的DELETE方法和路径
+            const response = await axios({
+                url: `http://localhost:5000/api/races/${uid}`,
+                method: "delete",
             });
+            
+            console.log('删除竞赛响应:', response);
             
             // 删除成功，从本地数据中移除该竞赛
             competitions.value = competitions.value.filter(comp => comp.id !== id);
@@ -634,9 +636,10 @@ const deleteCompetition = (id: string) => {
             
             // 重新加载数据
             await fetchData();
-        } catch (error) {
+        } catch (error: any) {
             console.error('删除竞赛失败:', error);
-            alertBox.value.show(`删除竞赛失败: ${error.message || '服务器错误'}`, 1);
+            console.error('错误详情:', error.response?.data || error.message || '未知错误');
+            alertBox.value.show(`删除竞赛失败: ${error.response?.data?.message || error.message || '服务器错误'}`, 1);
         } finally {
             loading.value = false;
         }
