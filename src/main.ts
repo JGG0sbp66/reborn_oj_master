@@ -3,6 +3,8 @@ import App from './App.vue';
 import router from './router';  // 导入路由配置
 import ElementPlus from 'element-plus'
 import 'element-plus/dist/index.css'
+// 引入自定义全局样式（放在Element Plus样式之后以便覆盖）
+import './assets/styles.css'
 import store from './utils/store'  // 导入 Vuex store
 
 const app = createApp(App)
