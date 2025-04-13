@@ -204,7 +204,7 @@ const handleSubmit = async () => {
         })
 
         if (userData.success) {
-            alertboxRef.value?.show('修改密码成功！', 0);
+            alertboxRef.value?.show('重置密码成功！', 0);
             setTimeout(() => {
                 router.push('/account/login');
             }, 1000);
