@@ -525,15 +525,34 @@ export default {
   font-size: 14px;
   color: #4a5568;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
   border: 1px solid transparent;
   position: relative;
   user-select: none;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.filter-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, rgba(24, 144, 255, 0.1), transparent);
+  transition: left 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+  z-index: -1;
 }
 
 .filter-button:hover {
   background-color: #ebf0f5;
   border-color: #d1dbe5;
+  transform: translateY(-2px);
+}
+
+.filter-button:hover::before {
+  left: 100%;
 }
 
 .filter-button.active-filter {
@@ -646,10 +665,23 @@ export default {
   width: 140px;
   background-color: white;
   border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 6px 30px rgba(0, 0, 0, 0.2);
   z-index: 100;
   top: 73px;
   margin-left: 8px;
+  transform-origin: top center;
+  animation: dropdownFadeIn 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+@keyframes dropdownFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 .tag-dropdown {
@@ -682,10 +714,29 @@ export default {
   color: #333;
   cursor: pointer;
   transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.dropdown-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, rgba(24, 144, 255, 0.1), transparent);
+  transition: left 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+  z-index: -1;
 }
 
 .dropdown-item:hover {
   background-color: #f5f7fa;
+  padding-left: 22px;
+}
+
+.dropdown-item:hover::before {
+  left: 100%;
 }
 
 .status-icon {
@@ -699,6 +750,7 @@ export default {
 .tag-item {
   position: relative;
   padding-left: 12px;
+  transition: padding-left 0.2s ease;
 }
 
 .tag-item::before {
@@ -710,6 +762,7 @@ export default {
   width: 4px;
   height: 16px;
   border-radius: 2px;
+  transition: left 0.2s ease;
 }
 
 .checkmark {
@@ -717,18 +770,6 @@ export default {
   height: 16px;
   margin-left: auto;
   flex-shrink: 0;
-}
-
-.dropdown-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
-  font-size: 14px;
-  line-height: 20px;
-  color: #333;
-  cursor: pointer;
-  transition: all 0.2s ease;
 }
 
 .tag-beginner::before {
@@ -784,5 +825,14 @@ export default {
 .tag-ctsc:hover {
   background-color: rgba(14, 29, 105, 0.1);
   color: #0e1d69;
+}
+
+/* 更新悬停时的动画行为 */
+.dropdown-item.tag-item:hover {
+  padding-left: 22px;
+}
+
+.dropdown-item.tag-item:hover::before {
+  left: 10px;
 }
 </style>
