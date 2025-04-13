@@ -26,14 +26,17 @@ import competitionheader from "@/components/zq/competitionheader.vue";
 import sidebarproblem from "@/components/zq/sidebar-problem.vue";
 import competitionshow from "@/components/zq/compotitionshow.vue";
 import competitioninformation from "@/components/zq/competitioninformation.vue";
+import { useRoute } from "vue-router";
 
 const raceInfo = reactive({}); // 定义一个响应式对象来存储比赛信息
+const route = useRoute();
+const uid = route.query.uid;
 
 const get_race_info = async () => {
   const { data: userData } = await axios({
     url: "http://localhost:5000/api/race-info",
     method: "post",
-    data: { uid: 1 },
+    data: { uid: uid },
   });
   return userData;
 };
@@ -44,13 +47,6 @@ const fetchData = async () => {
 };
 
 onMounted(fetchData); // 在组件挂载时调用 fetchData 函数
-
-const link = document.querySelector('a') as HTMLAnchorElement | null;
-
-if (link) {
-  const url = new URL(link.href);
-  const uid = parseInt(url.searchParams.get('uid') || '1'); // 将string转为number,如果为null则使用默认值1
-}
 
 </script>
 
