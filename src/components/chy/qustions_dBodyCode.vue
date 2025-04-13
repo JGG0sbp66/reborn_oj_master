@@ -384,9 +384,16 @@ export default {
         ) {
           this.codeLines = [""]; // 清空代码，只保留一个空行
           this.highlightAllLines();
-          this.shouldClearOnNextAction = false;
           this.isAllSelected = false;
           this.pendingClearAction = false;
+
+          // 将焦点设置在第一行
+          this.$nextTick(() => {
+            const inputRef = this.$refs["input_0"];
+            if (inputRef && inputRef[0]) {
+              inputRef[0].focus();
+            }
+          });
           return true;
         }
         // 如果是其他非修饰键操作，执行清空
@@ -397,9 +404,16 @@ export default {
         ) {
           this.codeLines = [""];
           this.highlightAllLines();
-          this.shouldClearOnNextAction = false;
           this.isAllSelected = false;
           this.pendingClearAction = false;
+
+          // 将焦点设置在第一行
+          this.$nextTick(() => {
+            const inputRef = this.$refs["input_0"];
+            if (inputRef && inputRef[0]) {
+              inputRef[0].focus();
+            }
+          });
           return true;
         }
       }
@@ -412,8 +426,8 @@ export default {
 
       // 设置全选状态
       this.isAllSelected = true;
-      this.shouldClearOnNextAction = true; // 标记下次操作需要清空
-      this.pendingClearAction = true; // 标记有待处理的清空操作
+      this.shouldClearOnNextAction = true;
+      this.pendingClearAction = true;
 
       // 高亮显示所有行
       this.$el.querySelectorAll(".AlineDiv").forEach((div) => {
@@ -422,6 +436,14 @@ export default {
 
       // 添加全局点击事件监听器
       document.addEventListener("click", this.handleGlobalClick);
+
+      // 将焦点设置在第一行输入框
+      this.$nextTick(() => {
+        const firstInput = this.$refs["input_0"];
+        if (firstInput && firstInput[0]) {
+          firstInput[0].focus();
+        }
+      });
     },
     closeLanguageSelection() {
       setTimeout(() => {
@@ -678,8 +700,7 @@ export default {
       // 添加 Ctrl+C 处理 - 复制选中内容
       if (event.key === "c" && (event.ctrlKey || event.metaKey)) {
         event.preventDefault();
-        this.pendingClearAction = false; // 复制时不执行清空
-
+        // 不再设置pendingClearAction为false，保持全选状态
         // 获取当前选中的内容
         let textToCopy = "";
 
@@ -699,11 +720,6 @@ export default {
               if (this.isAllSelected) {
                 this.$el.querySelectorAll(".AlineDiv").forEach((div) => {
                   div.style.backgroundColor = "rgba(3, 102, 214, 0.1)";
-                  setTimeout(() => {
-                    if (!this.isAllSelected) {
-                      div.style.backgroundColor = "";
-                    }
-                  }, 500);
                 });
               } else {
                 const lineDiv = this.$el.querySelectorAll(".AlineDiv")[index];
@@ -719,6 +735,41 @@ export default {
               console.error("复制失败:", err);
             });
         }
+        return;
+      }
+
+      // 修改后的Ctrl+V处理逻辑
+      // 修改 handleKeyDown 方法中的 Ctrl+V 部分
+      if (event.key === "v" && (event.ctrlKey || event.metaKey)) {
+        event.preventDefault();
+
+        // 如果是全选状态，先清空代码
+        if (this.isAllSelected) {
+          this.codeLines = [""];
+          this.isAllSelected = false;
+          this.highlightAllLines();
+        }
+
+        // 直接使用剪贴板 API
+        navigator.clipboard
+          .readText()
+          .then((text) => {
+            if (text) {
+              this.handlePasteContent(text, this.currentFocusIndex);
+            }
+          })
+          .catch((err) => {
+            console.error("读取剪贴板失败:", err);
+            // 回退到原始粘贴方式
+            const pasteEvent = new Event("paste", {
+              clipboardData: new DataTransfer(),
+              bubbles: true,
+            });
+            pasteEvent.clipboardData.setData("text/plain", "");
+            this.$refs[`input_${this.currentFocusIndex}`][0].dispatchEvent(
+              pasteEvent
+            );
+          });
         return;
       }
 
@@ -855,16 +906,69 @@ export default {
     handleGlobalClick(e) {
       // 检查点击是否在代码区域内
       const isClickInsideCode = this.$el.contains(e.target);
-      if (!isClickInsideCode) {
+      if (!isClickInsideCode || e.target.tagName === "INPUT") {
         this.clearSelection();
       }
       // 移除事件监听器（确保只执行一次）
       document.removeEventListener("click", this.handleGlobalClick);
     },
+    handlePasteContent(text, index) {
+      if (text.includes("\n")) {
+        // 处理多行粘贴
+        const lines = text.split("\n");
+        const currentLine = this.codeLines[index];
+        const inputElement = this.$refs[`input_${index}`][0];
+        const cursorPosition = inputElement.selectionStart;
 
+        const beforeCursor = currentLine.substring(0, cursorPosition);
+        const afterCursor = currentLine.substring(cursorPosition);
+
+        const newLines = [];
+        newLines.push(beforeCursor + lines[0]);
+
+        for (let i = 1; i < lines.length - 1; i++) {
+          newLines.push(lines[i]);
+        }
+
+        newLines.push(lines[lines.length - 1] + afterCursor);
+
+        this.codeLines.splice(index, 1, ...newLines);
+
+        this.$nextTick(() => {
+          const newIndex = index + newLines.length - 1;
+          const inputRef = this.$refs[`input_${newIndex}`];
+          if (inputRef && inputRef[0]) {
+            inputRef[0].focus();
+            const cursorPos = lines[lines.length - 1].length;
+            inputRef[0].setSelectionRange(cursorPos, cursorPos);
+          }
+        });
+      } else {
+        // 单行文本
+        const currentLine = this.codeLines[index];
+        const inputElement = this.$refs[`input_${index}`][0];
+        const cursorPosition = inputElement.selectionStart;
+
+        this.codeLines[index] =
+          currentLine.substring(0, cursorPosition) +
+          text +
+          currentLine.substring(cursorPosition);
+
+        this.$nextTick(() => {
+          inputElement.setSelectionRange(
+            cursorPosition + text.length,
+            cursorPosition + text.length
+          );
+        });
+      }
+
+      this.highlightAllLines();
+      this.saveHistory();
+    },
     clearSelection() {
       this.isAllSelected = false;
       this.shouldClearOnNextAction = false;
+      this.pendingClearAction = false; // 新增
       this.$el.querySelectorAll(".AlineDiv").forEach((div) => {
         div.style.backgroundColor = "";
       });
@@ -996,15 +1100,6 @@ export default {
         return;
       }
 
-      // 显示提交中状态
-      this.$emit("show-alert", {
-        type: "info",
-        message: "代码提交成功，正在评测中...",
-      });
-
-      console.log(JSON.stringify(this.questionDetail));
-      console.log(JSON.stringify(this.id));
-      console.log(this.codeLines.join("\n")); // 用户代码
       try {
         const formData = new FormData();
         formData.append("question_uid", this.id); // 题目ID
@@ -1014,6 +1109,12 @@ export default {
         for (let [key, value] of formData.entries()) {
           console.log(key, value);
         }
+
+        // 只有在没有错误的情况下才显示"提交中"状态
+        this.$emit("show-alert", {
+          type: "info",
+          message: "代码提交成功，正在评测中...",
+        });
 
         const { data: response } = await axios({
           url: "http://localhost:5000/api/askAi-question",
@@ -1054,9 +1155,10 @@ export default {
         this.codeLines = [""];
       } catch (error) {
         console.error("提交失败:", error);
+        // 只有在catch块中显示错误信息，不再显示"提交中"状态
         this.$emit("show-alert", {
           type: "error",
-          message: "提交失败，请稍后重试",
+          message: "提交失败，请先登录",
         });
       }
     },
@@ -1122,6 +1224,14 @@ export default {
     },
   },
   mounted() {
+    // 请求剪贴板权限
+    if (navigator.permissions) {
+      navigator.permissions.query({ name: "clipboard-read" }).then((result) => {
+        if (result.state === "denied") {
+          console.warn("剪贴板权限被拒绝");
+        }
+      });
+    }
     this.highlightAllLines();
     document.addEventListener("keyup", this.handleKeyUp);
     this.saveHistory(); // 保存初始状态
