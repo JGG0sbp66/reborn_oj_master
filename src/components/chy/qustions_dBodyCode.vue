@@ -1643,7 +1643,7 @@ export default {
   height: 34px;
   font-size: 14px;
   font-weight: 500;
-  background: linear-gradient(90deg, #42b983, #00c4ff);
+  background: #42b983;
   border: none;
   border-radius: 6px;
   color: white;

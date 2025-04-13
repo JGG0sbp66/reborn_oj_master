@@ -667,7 +667,7 @@ export default {
   border-radius: 8px;
   box-shadow: 0 6px 30px rgba(0, 0, 0, 0.2);
   z-index: 100;
-  top: 73px;
+  top: 76px;
   margin-left: 8px;
   transform-origin: top center;
   animation: dropdownFadeIn 0.3s cubic-bezier(0.25, 1, 0.5, 1);
