@@ -484,8 +484,8 @@ skeleton-container {
 }
 
 .headerSpan.active {
-  --gradient-start: #3aa876;
-  --gradient-end: #00b3e6;
+  --gradient-start: #42b983;
+  --gradient-end: #42b983;
   font-weight: 600;
 }
 
