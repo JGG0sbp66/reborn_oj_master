@@ -6,35 +6,50 @@
       <div class="user-profile-sidebar">
         <div class="user-card">
           <div class="user-avatar-container">
-            <div class="user-avatar">
+            <div class="user-avatar" @click="triggerFileUpload">
               <div v-if="avatarUrl || defaultAvatarUrl" class="avatar-img">
                 <img :src="avatarUrl || defaultAvatarUrl" alt="用户头像" />
+                <div class="avatar-upload-overlay">
+                  <el-icon><Upload /></el-icon>
+                  <span>更换头像</span>
+                </div>
+              </div>
+              <div v-else class="avatar-placeholder">
+                {{ userInitials }}
+                <div class="avatar-upload-overlay">
+                  <el-icon><Upload /></el-icon>
+                  <span>上传头像</span>
+                </div>
+              </div>
+              <input
+                type="file"
+                ref="fileInput"
+                accept="image/*"
+                style="display: none"
+                @change="onFileChange"
+              />
+            </div>
           </div>
-          <div v-else class="avatar-placeholder">
-            {{ userInitials }}
-          </div>
-        </div>
-        </div>
           <h2 class="user-name">{{ username }}</h2>
           <div class="user-role">{{ userRole }}</div>
           <div class="user-joined">
             加入时间: {{ formatDate(userJoinDate) }}
-          </div>
+      </div>
           <div class="user-stats">
             <div class="stat-item">
               <div class="stat-value">{{ problemSolved }}</div>
               <div class="stat-label">已解题目</div>
-            </div>
+    </div>
             <div class="stat-item">
               <div class="stat-value">{{ competitionsJoined }}</div>
               <div class="stat-label">参与比赛</div>
-            </div>
+          </div>
             <div class="stat-item">
               <div class="stat-value">{{ rank }}</div>
               <div class="stat-label">当前排名</div>
             </div>
-          </div>
-        </div>
+            </div>
+            </div>
 
         <!-- 侧边导航菜单 -->
         <div class="user-nav">
@@ -45,7 +60,7 @@
           >
             <el-icon><UserFilled /></el-icon>
             <span>个人资料</span>
-          </div>
+            </div>
           
           <div 
             class="nav-item"
@@ -63,8 +78,8 @@
           >
             <el-icon><Trophy /></el-icon>
             <span>参赛记录</span>
-          </div>
-          
+        </div>
+
           <div 
             class="nav-item"
             :class="{ active: activeSection === 'settings' }"
@@ -73,8 +88,8 @@
             <el-icon><Setting /></el-icon>
             <span>账户设置</span>
           </div>
-        </div>
-      </div>
+            </div>
+            </div>
 
       <!-- 右侧内容区域 -->
       <div class="profile-main-content">
@@ -82,180 +97,75 @@
         <div v-if="isHeatmapVisible" class="profile-section">
           <h3 class="section-title">编程活动</h3>
           <ActivityHeatmap />
-        </div>
+            </div>
         <div v-else class="profile-section heatmap-placeholder">
           <h3 class="section-title">编程活动</h3>
           <div class="loading-indicator">
             <div class="loading-spinner"></div>
             <span>加载中...</span>
+            </div>
           </div>
-        </div>
         
         <transition name="fade" mode="out-in">
           <div v-if="activeSection === 'profile'" class="section-container" key="profile">
             <!-- 用户资料 -->
-            <div class="profile-section">
-              <h3 class="section-title">基本资料</h3>
-              <div class="profile-form">
-                <el-form label-position="top">
-                  <el-form-item label="用户名">
-                    <el-input v-model="username" disabled />
-                  </el-form-item>
-                  <el-form-item label="电子邮箱">
-                    <el-input v-model="email" placeholder="请输入电子邮箱" />
-                  </el-form-item>
-                  <el-form-item label="个人简介">
-                    <el-input v-model="bio" type="textarea" :rows="4" placeholder="介绍一下自己吧..." />
-                  </el-form-item>
-                  <el-form-item label="所在学校/单位">
-                    <el-input v-model="organization" placeholder="请输入您的学校或单位" />
-                  </el-form-item>
-                  <el-form-item label="个人主页">
-                    <el-input v-model="website" placeholder="https://" />
-                  </el-form-item>
-                  <el-form-item>
-                    <el-button type="primary" class="save-btn" @click="saveProfile">保存更改</el-button>
-                  </el-form-item>
-                </el-form>
-              </div>
-            </div>
-
-            <!-- 最近解题 -->
-            <div class="profile-section">
-              <h3 class="section-title">最近解题</h3>
-              <div class="recent-problems">
-                <div v-if="recentProblems.length > 0" class="problem-list">
-                  <div v-for="(problem, index) in recentProblems" :key="index" class="problem-item">
-                    <div class="problem-info">
-                      <div class="problem-title">{{ problem.title }}</div>
-                      <div class="problem-difficulty" :class="problem.difficulty">{{ problem.difficultyText }}</div>
-                    </div>
-                    <div class="problem-date">{{ formatDate(problem.solvedAt) }}</div>
-                  </div>
-                </div>
-                <div v-else class="empty-state">
-                  <div class="empty-icon">📝</div>
-                  <div class="empty-text">暂无解题记录，开始刷题吧！</div>
-                </div>
-              </div>
-            </div>
-          </div>
+            <UserProfile 
+              :user-profile="{ 
+                username, 
+                email, 
+                bio
+              }" 
+              @profile-updated="handleProfileUpdated" 
+            />
+        </div>
 
           <div v-else-if="activeSection === 'solved-problems'" class="section-container" key="solved-problems">
             <!-- 解题记录 -->
-            <div class="profile-section">
-              <h3 class="section-title">解题记录</h3>
-              <div class="solved-problems-container">
-                <div v-if="recentProblems.length > 0" class="problem-list full-list">
-                  <div v-for="(problem, index) in recentProblems" :key="index" class="problem-item">
-                    <div class="problem-info">
-                      <div class="problem-title">{{ problem.title }}</div>
-                      <div class="problem-difficulty" :class="problem.difficulty">{{ problem.difficultyText }}</div>
-                    </div>
-                    <div class="problem-date">{{ formatDate(problem.solvedAt) }}</div>
-                  </div>
-                </div>
-                <div v-else class="empty-state">
-                  <div class="empty-icon">📝</div>
-                  <div class="empty-text">暂无解题记录，开始刷题吧！</div>
-                </div>
-              </div>
-            </div>
-          </div>
+            <SolvedProblems :problems="recentProblems" />
+      </div>
 
           <div v-else-if="activeSection === 'competitions'" class="section-container" key="competitions">
             <!-- 比赛记录 -->
-            <div class="profile-section">
-              <h3 class="section-title">参赛记录</h3>
-              <div class="competitions-container">
-                <!-- 示例比赛记录 -->
-                <div v-if="competitions.length > 0" class="competition-list">
-                  <div v-for="(competition, index) in competitions" :key="index" class="competition-item">
-                    <div class="competition-info">
-                      <div class="competition-title">{{ competition.title }}</div>
-                      <div class="competition-date">
-                        {{ formatDate(competition.startDate) }} - {{ formatDate(competition.endDate) }}
-                      </div>
-                    </div>
-                    <div class="competition-result" :class="competition.result">
-                      {{ competition.rank }}
-                    </div>
-                  </div>
-                </div>
-                <div v-else class="empty-state">
-                  <div class="empty-icon">🏆</div>
-                  <div class="empty-text">暂无参赛记录，快来参加比赛吧！</div>
-                </div>
-              </div>
-            </div>
+            <CompetitionRecords :competitions="competitions" />
           </div>
 
           <div v-else-if="activeSection === 'settings'" class="section-container" key="settings">
             <!-- 账户设置 -->
-            <div class="profile-section">
-              <h3 class="section-title">账户设置</h3>
-              <div class="settings-container">
-                <div class="profile-form">
-                  <el-form label-position="top">
-                    <el-form-item label="修改密码">
-                      <el-input type="password" v-model="oldPassword" placeholder="当前密码" />
-                    </el-form-item>
-                    <el-form-item>
-                      <el-input type="password" v-model="newPassword" placeholder="新密码" />
-                    </el-form-item>
-                    <el-form-item>
-                      <el-input type="password" v-model="confirmPassword" placeholder="确认新密码" />
-                    </el-form-item>
-                    <el-form-item>
-                      <el-button type="primary" class="save-btn" @click="changePassword">修改密码</el-button>
-                    </el-form-item>
-                  </el-form>
-                </div>
-                
-                <div class="settings-section">
-                  <h4 class="settings-subtitle">账户安全</h4>
-                  <div class="settings-option">
-                    <div class="option-label">两步验证</div>
-                    <el-switch v-model="twoFactorEnabled" />
-                  </div>
-                  <div class="settings-option">
-                    <div class="option-label">登录通知</div>
-                    <el-switch v-model="loginNotificationsEnabled" />
-        </div>
-      </div>
-
-                <div class="settings-section">
-                  <h4 class="settings-subtitle">隐私设置</h4>
-                  <div class="settings-option">
-                    <div class="option-label">公开我的解题记录</div>
-                    <el-switch v-model="publicSolvedProblems" />
-                  </div>
-                  <div class="settings-option">
-                    <div class="option-label">公开我的排名</div>
-                    <el-switch v-model="publicRanking" />
-          </div>
+            <AccountSettings 
+              :security-settings="{ 
+                twoFactorEnabled, 
+                loginNotificationsEnabled 
+              }"
+              :privacy-settings="{
+                publicSolvedProblems,
+                publicRanking
+              }"
+              @security-settings-updated="handleSecuritySettingsUpdated"
+              @privacy-settings-updated="handlePrivacySettingsUpdated"
+              @password-changed="handlePasswordChanged"
+            />
               </div>
+        </transition>
               </div>
             </div>
           </div>
-        </transition>
-      </div>
-    </div>
-  </div>
   <foot class="page-footer" />
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch, defineAsyncComponent } from 'vue';
-import type { Ref } from 'vue';
+import { ref, computed, onMounted, watch, defineAsyncComponent, defineExpose } from 'vue';
 import { useRoute } from 'vue-router';
 import headerheader from '@/components/headerheader.vue';
 import foot from '@/components/foot.vue';
+import UserProfile from '@/components/yao/UserProfile.vue';
+import SolvedProblems from '@/components/yao/SolvedProblems.vue';
+import CompetitionRecords from '@/components/yao/CompetitionRecords.vue';
+import AccountSettings from '@/components/yao/AccountSettings.vue';
 // 使用异步组件延迟加载热力图组件
 const ActivityHeatmap = defineAsyncComponent(() => 
   import('@/components/ActivityHeatmap.vue')
 );
-import { UserFilled, List, Trophy, Setting } from '@element-plus/icons-vue';
+import { UserFilled, List, Trophy, Setting, Upload } from '@element-plus/icons-vue';
 import axios from 'axios';
 import { ElMessage } from 'element-plus';
 
@@ -276,23 +186,24 @@ const activeComponent = computed(() => {
 });
 
 // 用户基本信息
-const username = ref('');
-const userRole = ref('普通用户');
-const avatarUrl = ref('');
-const userJoinDate = ref(new Date());
-const email = ref('');
-const bio = ref('');
-const organization = ref('');
-const website = ref('');
+const username = ref<string>('');
+const userRole = ref<string>('普通用户');
+const avatarUrl = ref<string>('');
+const userJoinDate = ref<Date>(new Date());
+const email = ref<string>('');
+const bio = ref<string>('');
+const organization = ref<string>('');
+const website = ref<string>('');
+const fileInput = ref<HTMLInputElement | null>(null);
 
 // 账户设置相关数据
-const oldPassword = ref('');
-const newPassword = ref('');
-const confirmPassword = ref('');
-const twoFactorEnabled = ref(false);
-const loginNotificationsEnabled = ref(true);
-const publicSolvedProblems = ref(true);
-const publicRanking = ref(true);
+const oldPassword = ref<string>('');
+const newPassword = ref<string>('');
+const confirmPassword = ref<string>('');
+const twoFactorEnabled = ref<boolean>(false);
+const loginNotificationsEnabled = ref<boolean>(true);
+const publicSolvedProblems = ref<boolean>(true);
+const publicRanking = ref<boolean>(true);
 
 // 比赛记录
 interface Competition {
@@ -333,7 +244,7 @@ const userInitials = computed(() => {
     return cachedInitials;
   }
   
-  if (!username.value || typeof username.value !== 'string') {
+  if (!username.value) {
     cachedUsername = '';
     cachedInitials = '?';
     return '?';
@@ -345,11 +256,11 @@ const userInitials = computed(() => {
 });
 
 // 生成随机矢量图头像 - 添加缓存避免重复生成
-const avatarCache = new Map();
+const avatarCache = new Map<string, string>();
 const generateAvatarSvg = (username: string): string => {
   // 检查缓存
   if (avatarCache.has(username)) {
-    return avatarCache.get(username);
+    return avatarCache.get(username) || '';
   }
   
   // 从用户名生成一个稳定的哈希值，确保同一用户名总是生成相同的图案
@@ -470,7 +381,7 @@ const recentProblems = ref<ProblemRecord[]>([
 ]);
 
 // 格式化日期 - 添加缓存避免重复计算
-const dateFormatCache = new Map();
+const dateFormatCache = new Map<number, string>();
 const formatDate = (date: Date): string => {
   if (!date) return '';
   
@@ -479,7 +390,7 @@ const formatDate = (date: Date): string => {
   
   // 检查缓存
   if (dateFormatCache.has(cacheKey)) {
-    return dateFormatCache.get(cacheKey);
+    return dateFormatCache.get(cacheKey) || '';
   }
   
   // 格式化日期
@@ -510,8 +421,6 @@ const fetchUserProfile = async (): Promise<void> => {
     rank.value = 128;
     email.value = 'user@example.com';
     bio.value = '热爱编程，喜欢解决复杂问题。正在学习算法和数据结构。';
-    organization.value = '示例大学';
-    website.value = 'https://github.com/username';
     
     // 模拟从后端API获取数据
     // const response = await axios.get('/api/user/profile');
@@ -525,7 +434,7 @@ const fetchUserProfile = async (): Promise<void> => {
 };
 
 // 延迟显示热力图
-const showHeatmapAfterDelay = () => {
+const showHeatmapAfterDelay = (): void => {
   // 使用 requestAnimationFrame 确保UI绘制完成后再加载热力图
   requestAnimationFrame(() => {
     // 200ms延迟，让基本内容先显示
@@ -550,14 +459,14 @@ const saveProfile = async (): Promise<void> => {
     setTimeout(() => {
       ElMessage({
         message: '个人资料已更新',
-        type: 'success'
+        type: 'success' as const
       });
     }, 500);
-  } catch (error) {
+      } catch (error) {
     console.error('保存用户资料失败:', error);
     ElMessage({
       message: '保存失败，请稍后重试',
-      type: 'error'
+      type: 'error' as const
     });
   }
 };
@@ -567,7 +476,7 @@ const changePassword = async (): Promise<void> => {
   if (!oldPassword.value || !newPassword.value || !confirmPassword.value) {
     ElMessage({
       message: '请填写所有密码字段',
-      type: 'warning'
+      type: 'warning' as const
     });
     return;
   }
@@ -575,7 +484,7 @@ const changePassword = async (): Promise<void> => {
   if (newPassword.value !== confirmPassword.value) {
     ElMessage({
       message: '两次输入的新密码不一致',
-      type: 'error'
+      type: 'error' as const
     });
     return;
   }
@@ -591,7 +500,7 @@ const changePassword = async (): Promise<void> => {
     setTimeout(() => {
       ElMessage({
         message: '密码已成功修改',
-        type: 'success'
+        type: 'success' as const
       });
       // 清空表单
       oldPassword.value = '';
@@ -602,9 +511,59 @@ const changePassword = async (): Promise<void> => {
     console.error('修改密码失败:', error);
     ElMessage({
       message: '修改密码失败，请稍后重试',
-      type: 'error'
+      type: 'error' as const
     });
   }
+};
+
+// 处理从UserProfile组件传来的更新事件
+interface UserProfileData {
+  username: string;
+  email: string;
+  bio: string;
+}
+
+const handleProfileUpdated = (updatedProfile: UserProfileData) => {
+  // 更新本地状态
+  email.value = updatedProfile.email;
+  bio.value = updatedProfile.bio;
+  
+  // 可以在这里做一些其他操作，比如保存到localStorage或其他状态管理
+  console.log('Profile updated:', updatedProfile);
+};
+
+// 处理从AccountSettings组件传来的事件
+interface SecuritySettings {
+  twoFactorEnabled: boolean;
+  loginNotificationsEnabled: boolean;
+}
+
+interface PrivacySettings {
+  publicSolvedProblems: boolean;
+  publicRanking: boolean;
+}
+
+const handleSecuritySettingsUpdated = (settings: SecuritySettings) => {
+  // 更新本地状态
+  twoFactorEnabled.value = settings.twoFactorEnabled;
+  loginNotificationsEnabled.value = settings.loginNotificationsEnabled;
+  
+  // 可以在这里做一些其他操作，比如保存到后端
+  console.log('Security settings updated:', settings);
+};
+
+const handlePrivacySettingsUpdated = (settings: PrivacySettings) => {
+  // 更新本地状态
+  publicSolvedProblems.value = settings.publicSolvedProblems;
+  publicRanking.value = settings.publicRanking;
+  
+  // 可以在这里做一些其他操作，比如保存到后端
+  console.log('Privacy settings updated:', settings);
+};
+
+const handlePasswordChanged = () => {
+  console.log('Password has been changed');
+  // 这里可以做一些额外的操作，比如显示全局通知等
 };
 
 // 组件挂载时获取用户信息
@@ -614,6 +573,69 @@ onMounted(() => {
   
   // 延迟显示热力图
   showHeatmapAfterDelay();
+});
+
+// 处理头像上传
+const triggerFileUpload = (): void => {
+  if (fileInput.value) {
+    fileInput.value.click();
+  }
+};
+
+const onFileChange = (event: Event): void => {
+  const input = event.target as HTMLInputElement;
+  if (input.files && input.files.length > 0) {
+    const file = input.files[0];
+    // 检查文件类型
+    if (!file.type.startsWith('image/')) {
+      ElMessage({
+        message: '请上传图片文件',
+        type: 'warning' as const
+      });
+      return;
+    }
+    
+    // 检查文件大小 (限制为 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      ElMessage({
+        message: '图片大小不能超过 2MB',
+        type: 'warning' as const
+      });
+      return;
+    }
+    
+    // 创建临时URL用于预览
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      if (e.target && typeof e.target.result === 'string') {
+        avatarUrl.value = e.target.result;
+        
+        // 这里应该将头像上传到服务器
+        // 模拟上传成功
+        setTimeout(() => {
+          ElMessage({
+            message: '头像更新成功',
+            type: 'success' as const
+          });
+        }, 800);
+      }
+    };
+    reader.readAsDataURL(file);
+  }
+  
+  // 重置文件输入，以便同一文件可以再次选择
+  if (input) {
+    input.value = '';
+  }
+};
+
+// 导出组件方法和属性，使其可以被父组件访问
+defineExpose({
+  triggerFileUpload,
+  avatarUrl,
+  defaultAvatarUrl,
+  userInitials,
+  onFileChange
 });
 </script>
 
@@ -689,6 +711,38 @@ onMounted(() => {
   box-shadow: 0 8px 20px rgba(66, 185, 131, 0.2);
   transform: translateZ(0); /* 触发GPU加速 */
   transition: all 0.3s ease;
+  position: relative;
+  cursor: pointer;
+}
+
+.user-avatar:hover .avatar-upload-overlay {
+  opacity: 1;
+}
+
+.avatar-upload-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  color: white;
+}
+
+.avatar-upload-overlay .el-icon {
+  font-size: 24px;
+  margin-bottom: 5px;
+}
+
+.avatar-upload-overlay span {
+  font-size: 12px;
+  font-weight: 500;
 }
 
 .user-avatar:hover {
