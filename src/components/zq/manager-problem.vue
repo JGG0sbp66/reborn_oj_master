@@ -38,30 +38,38 @@
             </div>
 
             <div class="advanced-search" v-if="showAdvancedSearch">
+                <div class="advanced-search-header">
+                    <h3 class="advanced-search-title">高级筛选</h3>
+                    <el-button type="text" @click="resetAdvancedSearch" class="reset-btn">
+                        <el-icon><Refresh /></el-icon> 重置筛选
+                    </el-button>
+                </div>
                 <div class="advanced-search-content">
-                    <div class="search-item">
-                        <span class="search-label">难度等级:</span>
-                        <el-select v-model="difficultyFilter" placeholder="难度等级" clearable @change="handleSearch">
-                            <el-option label="全部" value="" />
-                            <el-option label="入门" value="入门" />
-                            <el-option label="普及" value="普及" />
-                            <el-option label="提高" value="提高" />
-                            <el-option label="省选" value="省选" />
-                            <el-option label="NOI" value="NOI" />
-                        </el-select>
+                    <div class="search-row">
+                        <div class="search-item">
+                            <span class="search-label">难度等级:</span>
+                            <el-select v-model="difficultyFilter" placeholder="难度等级" clearable @change="handleSearch" style="flex: 1;">
+                                <el-option label="全部" value="" />
+                                <el-option label="入门" value="入门" />
+                                <el-option label="普及" value="普及" />
+                                <el-option label="提高" value="提高" />
+                                <el-option label="省选" value="省选" />
+                                <el-option label="NOI" value="NOI" />
+                            </el-select>
+                        </div>
+                        <div class="search-item">
+                            <span class="search-label">题目分类:</span>
+                            <el-select v-model="categoryFilter" placeholder="题目分类" clearable @change="handleSearch" style="flex: 1;">
+                                <el-option label="全部" value="" />
+                                <el-option label="算法" value="算法" />
+                                <el-option label="数据结构" value="数据结构" />
+                                <el-option label="数学" value="数学" />
+                                <el-option label="字符串" value="字符串" />
+                                <el-option label="动态规划" value="动态规划" />
+                            </el-select>
+                        </div>
                     </div>
-                    <div class="search-item">
-                        <span class="search-label">题目分类:</span>
-                        <el-select v-model="categoryFilter" placeholder="题目分类" clearable @change="handleSearch">
-                            <el-option label="全部" value="" />
-                            <el-option label="算法" value="算法" />
-                            <el-option label="数据结构" value="数据结构" />
-                            <el-option label="数学" value="数学" />
-                            <el-option label="字符串" value="字符串" />
-                            <el-option label="动态规划" value="动态规划" />
-                        </el-select>
-                    </div>
-                    <div class="search-item">
+                    <div class="search-item full-width">
                         <span class="search-label">通过率范围:</span>
                         <el-slider
                             v-model="passRateRange"
@@ -70,28 +78,39 @@
                             :max="100"
                             :marks="{0: '0%', 25: '25%', 50: '50%', 75: '75%', 100: '100%'}"
                             @change="handleSearch"
+                            style="flex: 1;"
                         />
                     </div>
-                    <div class="search-item">
-                        <span class="search-label">提交次数:</span>
-                        <el-select v-model="submissionCountFilter" placeholder="提交次数" clearable @change="handleSearch">
-                            <el-option label="全部" value="" />
-                            <el-option label="1000以下" value="<1000" />
-                            <el-option label="1000-5000" value="1000-5000" />
-                            <el-option label="5000-10000" value="5000-10000" />
-                            <el-option label="10000以上" value=">10000" />
-                        </el-select>
+                    <div class="search-row">
+                        <div class="search-item">
+                            <span class="search-label">提交次数:</span>
+                            <el-select v-model="submissionCountFilter" placeholder="提交次数" clearable @change="handleSearch" style="flex: 1;">
+                                <el-option label="全部" value="" />
+                                <el-option label="1000以下" value="<1000" />
+                                <el-option label="1000-5000" value="1000-5000" />
+                                <el-option label="5000-10000" value="5000-10000" />
+                                <el-option label="10000以上" value=">10000" />
+                            </el-select>
+                        </div>
+                        <div class="search-item">
+                            <span class="search-label">创建时间:</span>
+                            <el-date-picker
+                                v-model="createTimeRange"
+                                type="daterange"
+                                range-separator="至"
+                                start-placeholder="开始日期"
+                                end-placeholder="结束日期"
+                                format="YYYY-MM-DD"
+                                @change="handleSearch"
+                                style="flex: 1;"
+                            />
+                        </div>
                     </div>
-                    <div class="search-item">
-                        <span class="search-label">创建时间:</span>
-                        <el-date-picker
-                            v-model="createTimeRange"
-                            type="daterange"
-                            range-separator="至"
-                            start-placeholder="开始日期"
-                            end-placeholder="结束日期"
-                            @change="handleSearch"
-                        />
+                </div>
+                <div class="advanced-search-footer">
+                    <div class="search-result-info">已筛选出 {{ totalProblems }} 道题目</div>
+                    <div class="search-actions">
+                        <el-button type="primary" @click="applyAdvancedSearch">应用</el-button>
                     </div>
                 </div>
             </div>
@@ -114,16 +133,44 @@
                     @selection-change="handleSelectionChange"
                 >
                     <el-table-column type="selection" width="55" />
-                    <el-table-column prop="id" label="ID" width="80" />
+                    <el-table-column prop="id" label="ID" width="80" sortable />
                     <el-table-column prop="title" label="题目名称" min-width="200">
+                        <template #header>
+                            <div class="table-header" @click="toggleSort('title')">
+                                题目名称
+                                <span class="sort-icon" v-if="sortBy === 'title'">
+                                    <el-icon v-if="sortOrder === 'ascending'"><ArrowUp /></el-icon>
+                                    <el-icon v-else><ArrowDown /></el-icon>
+                                </span>
+                            </div>
+                        </template>
                         <template #default="scope">
                             <div class="problem-title">
                                 <span>{{ scope.row.title }}</span>
                             </div>
                         </template>
                     </el-table-column>
-                    <el-table-column prop="category" label="分类" width="120" />
+                    <el-table-column prop="category" label="分类" width="120">
+                        <template #header>
+                            <div class="table-header" @click="toggleSort('category')">
+                                分类
+                                <span class="sort-icon" v-if="sortBy === 'category'">
+                                    <el-icon v-if="sortOrder === 'ascending'"><ArrowUp /></el-icon>
+                                    <el-icon v-else><ArrowDown /></el-icon>
+                                </span>
+                            </div>
+                        </template>
+                    </el-table-column>
                     <el-table-column prop="difficulty" label="难度" width="100">
+                        <template #header>
+                            <div class="table-header" @click="toggleSort('difficulty')">
+                                难度
+                                <span class="sort-icon" v-if="sortBy === 'difficulty'">
+                                    <el-icon v-if="sortOrder === 'ascending'"><ArrowUp /></el-icon>
+                                    <el-icon v-else><ArrowDown /></el-icon>
+                                </span>
+                            </div>
+                        </template>
                         <template #default="scope">
                             <el-tag :type="getDifficultyType(scope.row.difficulty)" size="small">
                                 {{ scope.row.difficulty }}
@@ -131,6 +178,15 @@
                         </template>
                     </el-table-column>
                     <el-table-column prop="passRate" label="通过率" width="100">
+                        <template #header>
+                            <div class="table-header" @click="toggleSort('passRate')">
+                                通过率
+                                <span class="sort-icon" v-if="sortBy === 'passRate'">
+                                    <el-icon v-if="sortOrder === 'ascending'"><ArrowUp /></el-icon>
+                                    <el-icon v-else><ArrowDown /></el-icon>
+                                </span>
+                            </div>
+                        </template>
                         <template #default="scope">
                             <div class="pass-rate">
                                 {{ scope.row.passRate }}%
@@ -140,8 +196,28 @@
                             </div>
                         </template>
                     </el-table-column>
-                    <el-table-column prop="submissionCount" label="提交次数" width="120" />
-                    <el-table-column prop="createTime" label="创建时间" width="180" />
+                    <el-table-column prop="submissionCount" label="提交次数" width="120">
+                        <template #header>
+                            <div class="table-header" @click="toggleSort('submissionCount')">
+                                提交次数
+                                <span class="sort-icon" v-if="sortBy === 'submissionCount'">
+                                    <el-icon v-if="sortOrder === 'ascending'"><ArrowUp /></el-icon>
+                                    <el-icon v-else><ArrowDown /></el-icon>
+                                </span>
+                            </div>
+                        </template>
+                    </el-table-column>
+                    <el-table-column prop="createTime" label="创建时间" width="180">
+                        <template #header>
+                            <div class="table-header" @click="toggleSort('createTime')">
+                                创建时间
+                                <span class="sort-icon" v-if="sortBy === 'createTime'">
+                                    <el-icon v-if="sortOrder === 'ascending'"><ArrowUp /></el-icon>
+                                    <el-icon v-else><ArrowDown /></el-icon>
+                                </span>
+                            </div>
+                        </template>
+                    </el-table-column>
                     <el-table-column label="操作" width="200" fixed="right">
                         <template #default="scope">
                             <div class="action-buttons">
@@ -182,7 +258,7 @@
                     </button>
                     <div class="page-numbers">
                         <button 
-                            v-for="num in totalPages" 
+                            v-for="num in displayedPages" 
                             :key="num"
                             class="page-number"
                             :class="{ active: currentPage === num }"
@@ -201,8 +277,32 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
-import { Plus, Search, ArrowUp, ArrowDown } from '@element-plus/icons-vue';
+import { Plus, Search, ArrowUp, ArrowDown, Refresh } from '@element-plus/icons-vue';
 import AlertBox from '../JGG/alertbox.vue';
+import axios from 'axios';
+
+// 定义题目类型接口
+interface Example {
+  input: string;
+  output: string;
+  explanation: string;
+}
+
+interface QuestionData {
+  title: string;
+  description: string;
+  time_limit: number;
+  memory_limit: number;
+  input_format: string;
+  output_format: string;
+  constraints: string[];
+  examples: Example[];
+}
+
+interface ApiProblem {
+  question: QuestionData;
+  topic: string;
+}
 
 // AlertBox引用
 const alertBox = ref(null);
@@ -213,7 +313,7 @@ const searchQuery = ref('');
 const difficultyFilter = ref('');
 const categoryFilter = ref('');
 const currentPage = ref(1);
-const pageSize = ref(10);
+const pageSize = ref(8);
 const totalProblems = ref(120);
 const showAdvancedSearch = ref(false);
 const passRateRange = ref([0, 100]);
@@ -223,53 +323,14 @@ const selectedProblems = ref([]);
 const searchTimeout = ref(null);
 
 // 模拟题目数据
-const problems = ref([
-    { 
-        id: 'P-101', 
-        title: '两数之和', 
-        category: '算法', 
-        difficulty: '入门',
-        passRate: 75,
-        submissionCount: 12543,
-        createTime: '2023-01-10 10:20:30'
-    },
-    { 
-        id: 'P-102', 
-        title: '三数之和', 
-        category: '算法', 
-        difficulty: '普及',
-        passRate: 45,
-        submissionCount: 8765,
-        createTime: '2023-02-15 14:30:00'
-    },
-    { 
-        id: 'P-103', 
-        title: '最长回文子串', 
-        category: '字符串', 
-        difficulty: '提高',
-        passRate: 38,
-        submissionCount: 7651,
-        createTime: '2023-03-05 09:15:45'
-    },
-    { 
-        id: 'P-104', 
-        title: '接雨水', 
-        category: '动态规划', 
-        difficulty: '省选',
-        passRate: 22,
-        submissionCount: 4532,
-        createTime: '2023-04-12 16:40:20'
-    },
-    { 
-        id: 'P-105', 
-        title: '二叉树的最大深度', 
-        category: '数据结构', 
-        difficulty: 'NOI',
-        passRate: 82,
-        submissionCount: 9876,
-        createTime: '2023-05-20 11:25:00'
-    }
-]);
+const problems = ref([]);
+const get_problem_info = async (): Promise<ApiProblem[]> => {
+  const { data: userData } = await axios({
+    url: "http://localhost:5000/api/",
+    method: "get",
+  });
+  return userData;
+};
 
 // 处理延迟搜索，避免频繁过滤
 const handleSearch = () => {
@@ -346,65 +407,190 @@ watch([searchQuery, difficultyFilter, categoryFilter, passRateRange, submissionC
     currentPage.value = 1;
 });
 
+// 获取题目数据
+const fetchData = async () => {
+  loading.value = true;
+  try {
+    // 从API获取数据
+    const apiData = await get_problem_info();
+    
+    // 处理API返回的数据，转换为组件需要的格式
+    const formattedProblems = apiData.map((item, index) => {
+      // 生成一个随机的通过率和提交次数（实际应用中这些应该从API获取）
+      const passRate = Math.floor(Math.random() * 100);
+      const submissionCount = Math.floor(Math.random() * 10000) + 1000;
+      
+      return {
+        id: `P${1001 + index}`, // 生成ID，从P1001开始
+        title: item.question.title,
+        category: item.topic || '未分类',
+        difficulty: getDifficultyByComplexity(item.question), // 根据题目复杂度推断难度
+        passRate: passRate,
+        submissionCount: submissionCount,
+        createTime: new Date().toISOString().split('T')[0], // 使用当前日期
+        question: item.question,
+        topic: item.topic
+      };
+    });
+    
+    // 对题目按ID排序
+    formattedProblems.sort((a, b) => {
+      const numA = parseInt(a.id.replace('P', ''));
+      const numB = parseInt(b.id.replace('P', ''));
+      return numA - numB;
+    });
+    
+    problems.value = formattedProblems;
+    
+  } catch (error) {
+    console.error('获取题目数据失败:', error);
+    // 发生错误时显示提示
+    alertBox.value?.show('获取题目数据失败，请稍后重试', 1);
+    
+    // 如果API调用失败，使用空数组
+    problems.value = [];
+  } finally {
+    // 延迟关闭loading，提升用户体验
+    setTimeout(() => {
+      loading.value = false;
+    }, 500);
+  }
+};
+
+// 根据题目复杂度推断难度
+const getDifficultyByComplexity = (question: QuestionData): string => {
+  // 基于题目的约束条件、时间和内存限制等推断难度
+  const constraints = question.constraints || [];
+  const timeLimit = question.time_limit || 1000;
+  const memoryLimit = question.memory_limit || 128;
+  
+  // 简单的难度判断逻辑（实际应用中可能需要更复杂的判断）
+  if (timeLimit <= 500 && memoryLimit <= 64) {
+    return '入门';
+  } else if (timeLimit <= 1000 && memoryLimit <= 128) {
+    return '普及';
+  } else if (timeLimit <= 2000 && memoryLimit <= 256) {
+    return '提高';
+  } else if (timeLimit <= 5000 && memoryLimit <= 512) {
+    return '省选';
+  } else {
+    return 'NOI';
+  }
+};
+
+// 页面加载时获取数据
+onMounted(fetchData);
+
+// 排序相关变量
+const sortBy = ref('id');
+const sortOrder = ref('ascending');
+
+// 切换排序
+const toggleSort = (column: string) => {
+  if (sortBy.value === column) {
+    // 如果已经按这个列排序，则切换排序方向
+    sortOrder.value = sortOrder.value === 'ascending' ? 'descending' : 'ascending';
+  } else {
+    // 否则，设置新的排序列并默认使用降序
+    sortBy.value = column;
+    sortOrder.value = 'ascending';
+  }
+};
+
 // 过滤后的题目数据
 const filteredProblems = computed(() => {
-    return problems.value.filter((problem: any) => {
-        // 搜索过滤
-        const matchesSearch = searchQuery.value ? 
-            problem.title.toLowerCase().includes(searchQuery.value.toLowerCase()) || 
-            problem.id.toLowerCase().includes(searchQuery.value.toLowerCase()) : 
-            true;
+  // 先应用所有过滤条件
+  const filtered = problems.value.filter((problem: any) => {
+    // 搜索过滤
+    const matchesSearch = searchQuery.value ? 
+        problem.title.toLowerCase().includes(searchQuery.value.toLowerCase()) || 
+        problem.id.toLowerCase().includes(searchQuery.value.toLowerCase()) : 
+        true;
+    
+    // 难度过滤
+    const matchesDifficulty = difficultyFilter.value ? 
+        problem.difficulty === difficultyFilter.value : 
+        true;
         
-        // 难度过滤
-        const matchesDifficulty = difficultyFilter.value ? 
-            problem.difficulty === difficultyFilter.value : 
-            true;
-            
-        // 分类过滤
-        const matchesCategory = categoryFilter.value ? 
-            problem.category === categoryFilter.value : 
-            true;
-            
-        // 通过率范围过滤
-        const matchesPassRate = problem.passRate >= passRateRange.value[0] && 
-                                problem.passRate <= passRateRange.value[1];
-                                
-        // 提交次数过滤
-        let matchesSubmissionCount = true;
-        if (submissionCountFilter.value) {
-            const count = problem.submissionCount;
-            switch (submissionCountFilter.value) {
-                case '<1000':
-                    matchesSubmissionCount = count < 1000;
-                    break;
-                case '1000-5000':
-                    matchesSubmissionCount = count >= 1000 && count <= 5000;
-                    break;
-                case '5000-10000':
-                    matchesSubmissionCount = count > 5000 && count <= 10000;
-                    break;
-                case '>10000':
-                    matchesSubmissionCount = count > 10000;
-                    break;
-            }
+    // 分类过滤
+    const matchesCategory = categoryFilter.value ? 
+        problem.category === categoryFilter.value : 
+        true;
+        
+    // 通过率范围过滤
+    const matchesPassRate = problem.passRate >= passRateRange.value[0] && 
+                            problem.passRate <= passRateRange.value[1];
+                            
+    // 提交次数过滤
+    let matchesSubmissionCount = true;
+    if (submissionCountFilter.value) {
+        const count = problem.submissionCount;
+        switch (submissionCountFilter.value) {
+            case '<1000':
+                matchesSubmissionCount = count < 1000;
+                break;
+            case '1000-5000':
+                matchesSubmissionCount = count >= 1000 && count <= 5000;
+                break;
+            case '5000-10000':
+                matchesSubmissionCount = count > 5000 && count <= 10000;
+                break;
+            case '>10000':
+                matchesSubmissionCount = count > 10000;
+                break;
         }
+    }
+    
+    // 创建时间范围过滤
+    let matchesCreateTime = true;
+    if (createTimeRange.value && createTimeRange.value.length === 2) {
+        const createDate = new Date(problem.createTime);
+        const startDate = new Date(createTimeRange.value[0]);
+        const endDate = new Date(createTimeRange.value[1]);
         
-        // 创建时间范围过滤
-        let matchesCreateTime = true;
-        if (createTimeRange.value && createTimeRange.value.length === 2) {
-            const createDate = new Date(problem.createTime);
-            const startDate = new Date(createTimeRange.value[0]);
-            const endDate = new Date(createTimeRange.value[1]);
-            
-            // 设置结束日期为当天最后一刻，以包含整个选择的日期
-            endDate.setHours(23, 59, 59, 999);
-            
-            matchesCreateTime = createDate >= startDate && createDate <= endDate;
-        }
+        // 设置结束日期为当天最后一刻，以包含整个选择的日期
+        endDate.setHours(23, 59, 59, 999);
         
-        return matchesSearch && matchesDifficulty && matchesCategory && 
-               matchesPassRate && matchesSubmissionCount && matchesCreateTime;
-    });
+        matchesCreateTime = createDate >= startDate && createDate <= endDate;
+    }
+    
+    return matchesSearch && matchesDifficulty && matchesCategory && 
+           matchesPassRate && matchesSubmissionCount && matchesCreateTime;
+  });
+  
+  // 更新总题目数量，用于计算分页
+  totalProblems.value = filtered.length;
+  
+  // 对过滤后的数据进行排序
+  const sorted = [...filtered].sort((a, b) => {
+    // 特殊处理ID排序
+    if (sortBy.value === 'id') {
+      const numA = parseInt(a.id.replace('P', ''));
+      const numB = parseInt(b.id.replace('P', ''));
+      return sortOrder.value === 'ascending' ? numA - numB : numB - numA;
+    }
+    
+    let aValue = a[sortBy.value];
+    let bValue = b[sortBy.value];
+    
+    // 特殊处理日期类型
+    if (sortBy.value === 'createTime') {
+      aValue = new Date(aValue).getTime();
+      bValue = new Date(bValue).getTime();
+    }
+    
+    // 根据排序方向返回比较结果
+    if (sortOrder.value === 'ascending') {
+      return aValue > bValue ? 1 : -1;
+    } else {
+      return aValue < bValue ? 1 : -1;
+    }
+  });
+  
+  // 应用分页，只返回当前页的数据
+  const startIndex = (currentPage.value - 1) * pageSize.value;
+  const endIndex = startIndex + pageSize.value;
+  return sorted.slice(startIndex, endIndex);
 });
 
 // 表格行样式
@@ -471,19 +657,55 @@ const deleteProblem = (id: string) => {
     });
 };
 
-// 页面加载时模拟获取数据
-onMounted(() => {
-    loading.value = true;
-    // 模拟异步加载
-    setTimeout(() => {
-        loading.value = false;
-    }, 500);
-});
-
 // 计算总页数
 const totalPages = computed(() => {
     return Math.ceil(totalProblems.value / pageSize.value);
 });
+
+// 计算要显示的页码（最多显示5个页码）
+const displayedPages = computed(() => {
+    const total = totalPages.value;
+    const current = currentPage.value;
+    const delta = 2; // 当前页前后最多显示的页数
+    
+    if (total <= 5) {
+        // 如果总页数小于等于5，则全部显示
+        return Array.from({ length: total }, (_, i) => i + 1);
+    }
+    
+    // 确保current前后都有delta个页码（如果可能）
+    let start = Math.max(1, current - delta);
+    let end = Math.min(total, current + delta);
+    
+    // 如果不够5个页码，则调整start或end
+    if (end - start + 1 < 5) {
+        if (start === 1) {
+            end = Math.min(5, total);
+        } else if (end === total) {
+            start = Math.max(1, total - 4);
+        }
+    }
+    
+    return Array.from({ length: end - start + 1 }, (_, i) => start + i);
+});
+
+// 重置筛选条件
+const resetAdvancedSearch = () => {
+    searchQuery.value = '';
+    difficultyFilter.value = '';
+    categoryFilter.value = '';
+    passRateRange.value = [0, 100];
+    submissionCountFilter.value = '';
+    createTimeRange.value = [];
+    // 立即应用重置的筛选条件
+    handleSearch();
+};
+
+const applyAdvancedSearch = () => {
+    // 应用高级筛选条件
+    handleSearch();
+    showAdvancedSearch.value = false;
+};
 </script>
 
 <style scoped>
@@ -533,16 +755,52 @@ const totalPages = computed(() => {
 
 .advanced-search {
     background: #f8f9fa;
-    border-radius: 8px;
-    padding: 16px;
+    border-radius: 12px;
+    padding: 20px;
     margin-bottom: 24px;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
     border-left: 3px solid rgba(24, 160, 88, 0.3);
+    transition: all 0.3s ease;
+}
+
+.advanced-search-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.advanced-search-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #2c3e50;
+    margin: 0;
+    position: relative;
+}
+
+.reset-btn {
+    color: #18a058;
+    font-size: 14px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.reset-btn:hover {
+    color: #35b371;
 }
 
 .advanced-search-content {
     display: flex;
-    flex-wrap: wrap;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.search-row {
+    display: flex;
     gap: 24px;
 }
 
@@ -550,7 +808,11 @@ const totalPages = computed(() => {
     display: flex;
     align-items: center;
     gap: 12px;
-    min-width: 300px;
+    flex: 1;
+}
+
+.search-item.full-width {
+    width: 100%;
 }
 
 .search-label {
@@ -558,6 +820,25 @@ const totalPages = computed(() => {
     color: #606266;
     white-space: nowrap;
     min-width: 80px;
+}
+
+.advanced-search-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.search-result-info {
+    font-size: 14px;
+    color: #909399;
+}
+
+.search-actions {
+    display: flex;
+    gap: 8px;
 }
 
 .batch-operations {
@@ -968,6 +1249,24 @@ const totalPages = computed(() => {
 :deep(.el-message-box__btns .el-button--primary:hover) {
     background-color: #35b371 !important;
     border-color: #35b371 !important;
+}
+
+.table-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.table-header:hover {
+    color: #18a058;
+}
+
+.sort-icon {
+    display: inline-flex;
+    margin-left: 4px;
+    color: #18a058;
 }
 </style>
 
