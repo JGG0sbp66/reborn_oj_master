@@ -58,7 +58,7 @@ onMounted(fetchData); // 在组件挂载时调用 fetchData 函数
   animation: fadeIn 0.6s ease-out;
   position: relative;
   top: 70px;
-  overflow: hidden;
+  overflow: auto; /* 改为auto允许滚动 */
 }
 
 .page-title {
@@ -95,7 +95,6 @@ onMounted(fetchData); // 在组件挂载时调用 fetchData 函数
   z-index: 10;
 }
 
-
 .content-area {
   flex: 1;
   display: flex;
@@ -104,26 +103,20 @@ onMounted(fetchData); // 在组件挂载时调用 fetchData 函数
   justify-content: center;
   position: relative;
   z-index: 1;
+  min-width: 0; /* 防止内容溢出 */
 }
 
 .content-wrapper {
   display: flex;
-  max-width: 1280px;
   width: 100%;
   gap: 24px;
-}
-
-.medium-main {
-  max-width: 1200px;
+  max-width: 1440px; /* 增加最大宽度 */
   margin: 0 auto;
-  margin-top: 15px;
-  display: flex;
-  position: relative;
 }
 
 .left-main {
-  flex: 2;
-  max-width: 860px;
+  flex: 1;
+  min-width: 0; /* 防止内容溢出 */
   background-color: #fff;
   border-radius: 12px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
@@ -136,28 +129,10 @@ onMounted(fetchData); // 在组件挂载时调用 fetchData 函数
   background: rgba(255, 255, 255, 0.95);
 }
 
-.left-main:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.08);
+.right-main {
+  width: 300px; /* 固定宽度 */
+  flex-shrink: 0; /* 防止收缩 */
 }
-
-.left-main::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 3px;
-  background: linear-gradient(90deg, #10b981, #3b82f6);
-  transform: scaleX(0);
-  transform-origin: left;
-  transition: transform 0.4s ease;
-}
-
-.left-main:hover::after {
-  transform: scaleX(1);
-}
-
 
 /* 动画定义 */
 @keyframes fadeIn {
@@ -230,36 +205,40 @@ main::before {
   z-index: 1;
 }
 
-/* 媒体查询适配不同屏幕尺寸 */
+/* 响应式布局优化 */
+@media (max-width: 1440px) {
+  .content-wrapper {
+    max-width: 1200px;
+  }
+}
+
+@media (max-width: 1200px) {
+  .content-wrapper {
+    max-width: 960px;
+  }
+}
+
 @media (max-width: 1024px) {
   .content-wrapper {
     flex-direction: column;
   }
   
   .right-main {
-    max-width: 100%;
+    width: 100%;
     margin-top: 20px;
   }
 }
 
 @media (max-width: 768px) {
   .main-content {
-    flex-direction: column;
-  }
-  
-  .left-panel {
-    width: 100%;
-    height: auto;
-    flex-direction: row;
-    padding: 10px;
-    justify-content: center;
+    padding: 16px;
   }
   
   .content-area {
     padding: 16px;
   }
   
-  .left-main, .right-main {
+  .left-main {
     padding: 16px;
   }
 }
