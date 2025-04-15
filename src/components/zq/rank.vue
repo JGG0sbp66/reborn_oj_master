@@ -319,21 +319,21 @@ console.log('Rank组件接收到的数据:', raceRank.value);
 }
 
 .solved-count {
-    font-family: 'Inter', 'Roboto Mono', monospace, sans-serif;
+    /* font-family: 'Inter', 'Roboto Mono', monospace, sans-serif; */
     font-weight: 600;
-    font-size: 16px;
+    font-size: 15px;
     color: #10b981;
 }
 
 .total-time {
-    font-family: 'Inter', 'Roboto Mono', monospace, sans-serif;
+    /* font-family: 'Inter', 'Roboto Mono', monospace, sans-serif; */
     font-weight: 500;
     color: #6b7280;
 }
 
 /* 问题状态样式 */
 .problem-status {
-    font-family: 'Inter', 'Roboto Mono', monospace, sans-serif;
+    /* font-family: 'Inter', 'Roboto Mono', monospace, sans-serif; */
     text-align: center;
     min-height: 48px;
     display: flex;
@@ -350,13 +350,13 @@ console.log('Rank组件接收到的数据:', raceRank.value);
 .status-solved {
     background-color: #67e56d; /* 图片中的绿色 */
     color: #000; /* 黑色文字 */
-    font-weight: 600;
+    /* font-weight: 600; */
 }
 
 .status-attempted {
     background-color: #ff7c7c; /* 图片中的红色 */
     color: #000; /* 黑色文字 */
-    font-weight: 600;
+    /* font-weight: 600; */
 }
 
 .status-unattempted, .status-none {
@@ -370,7 +370,7 @@ console.log('Rank组件接收到的数据:', raceRank.value);
 }
 
 .penalty-time {
-    font-size: 16px;
+    font-size: 13px;
     font-weight: 600;
     margin-bottom: 2px;
 }

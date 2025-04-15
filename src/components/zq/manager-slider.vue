@@ -167,7 +167,7 @@ defineExpose({
   overflow: hidden;
   z-index: 999; /* 确保在大多数内容之上，但在头部之下 */
   border-radius: var(--border-radius);
-  font-family: 'Open Sans', sans-serif;
+  /* font-family: 'Open Sans', sans-serif; */
 }
 
 .manager-sidebar.collapsed {

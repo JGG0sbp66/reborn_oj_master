@@ -73,7 +73,7 @@
                             </div>
                         </td>
                         <td class="column-rate">
-                            <div class="rate-info">{{ formatPassRate(problem.solve_num || 0, problem.submit_num || 0) }}</div>
+                            <div class="rate-info">{{ formatPassRate(problem.solve_num || 0, problem.submit_num || 0) }} %</div>
                         </td>
                     </tr>
                 </tbody>
@@ -120,8 +120,8 @@ const getStatusClass = (status: string) => {
 
 // 格式化通过率
 const formatPassRate = (solveNum: number, submitNum: number) => {
-  if (submitNum === 0) return '0.00%';
-  return ((solveNum / submitNum) * 100).toFixed(2) + '%';
+  if (submitNum === 0) return '0.00';
+  return ((solveNum / submitNum) * 100).toFixed(2);
 };
 
 console.log('props:', props.raceInfo);
@@ -144,6 +144,7 @@ console.log('props:', props.raceInfo);
     display: flex;
     flex-direction: column;
     width: 100%;
+    font-size: 14px;
 }
 
 .problems-list {
@@ -320,9 +321,10 @@ console.log('props:', props.raceInfo);
     display: flex;
     align-items: center;
     gap: 4px;
-    font-family: 'Roboto Mono', monospace;
+    /* font-family: 'Roboto Mono', monospace; */
     height: 24px;
     transition: all 0.3s ease;
+    margin-left: 20px;
 }
 
 .submit-info:hover {
@@ -340,13 +342,14 @@ console.log('props:', props.raceInfo);
 }
 
 .rate-info {
-    font-family: 'Roboto Mono', monospace;
+    /* font-family: 'Roboto Mono', monospace; */
     font-weight: 500;
     color: #42b983;
     height: 24px;
     display: flex;
     align-items: center;
     transition: all 0.3s ease;
+    margin-left: 10px;
 }
 
 .rate-info:hover {
