@@ -4,6 +4,9 @@
     <div style="margin-bottom: 20px;">
       <LoginForm @login-success="handleLoginSuccess" />
     </div>
+    <div class="footer-wrapper">
+      <foot />
+    </div>
   </div>
 </template>
 
@@ -54,9 +57,20 @@ onMounted(() => {
 
 
 <style scoped>
-footer {
-  position: absolute;
+.footer-wrapper {
+  position: fixed;
   bottom: 0;
+  left: 0;
+  right: 0;
+  clip-path: inset(calc(100% - 60px) 0 0 0);
+  transition: clip-path 0.3s ease-in-out;
+}
+
+.footer-wrapper:hover {
+  clip-path: inset(0 0 0 0);
+}
+
+.footer-wrapper > * {
   width: 100%;
 }
 </style>
