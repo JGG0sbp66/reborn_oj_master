@@ -189,7 +189,7 @@ onMounted(() => {
 <style scoped>
 .competition-info {
     width: 100%;
-    padding: 16px;
+    padding: 0 16px 16px 16px;
 }
 
 .info-card {

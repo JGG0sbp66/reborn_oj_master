@@ -174,7 +174,7 @@ console.log('props:', props.raceInfo);
 }
 
 .problem-row:last-child {
-    border-bottom: none;
+    /* border-bottom: none; */
 }
 
 .problem-row:hover {

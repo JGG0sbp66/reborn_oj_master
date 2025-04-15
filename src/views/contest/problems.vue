@@ -53,11 +53,11 @@ onMounted(fetchData); // 在组件挂载时调用 fetchData 函数
 <style scoped>
 .main-content {
   display: flex;
-  height: calc(100vh - 52px);
-  background-color: #f8fafc;
+  /* height: calc(100vh - 52px); */
+  background-color: #ffffff;
   animation: fadeIn 0.6s ease-out;
   position: relative;
-  top: 70px;
+  /* top: 70px; */
   overflow: auto; /* 改为auto允许滚动 */
 }
 
@@ -104,6 +104,7 @@ onMounted(fetchData); // 在组件挂载时调用 fetchData 函数
   position: relative;
   z-index: 1;
   min-width: 0; /* 防止内容溢出 */
+  margin-top: 70px;
 }
 
 .content-wrapper {
