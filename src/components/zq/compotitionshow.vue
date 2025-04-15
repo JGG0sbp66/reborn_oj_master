@@ -67,13 +67,13 @@
                         </td>
                         <td class="column-submit">
                             <div class="submit-info">
-                                <span class="solve-count">{{ problem.solve_num }}</span>
+                                <span class="solve-count">{{ problem.solve_num || 0 }}</span>
                                 <span class="submit-divider">/</span>
-                                <span class="submit-count">{{ problem.submit_num }}</span>
+                                <span class="submit-count">{{ problem.submit_num || 0 }}</span>
                             </div>
                         </td>
                         <td class="column-rate">
-                            <div class="rate-info">{{ formatPassRate(problem.solve_num, problem.submit_num) }}</div>
+                            <div class="rate-info">{{ formatPassRate(problem.solve_num || 0, problem.submit_num || 0) }}</div>
                         </td>
                     </tr>
                 </tbody>
@@ -83,12 +83,20 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { Document, Edit, Trophy, DataLine, TrendCharts, User } from '@element-plus/icons-vue';
 import axios from 'axios';
 
 const props = defineProps({
-  raceInfo: Object,
+  raceInfo: {
+    type: Object,
+    required: true
+  }
+});
+
+// 计算属性获取题目列表
+const problems = computed(() => {
+  return props.raceInfo?.race_info?.problems || [];
 });
 
 // 获取字母索引（A, B, C...）
@@ -122,87 +130,46 @@ console.log('props:', props.raceInfo);
 <style scoped>
 .competition-problems {
     width: 100%;
-    padding: 16px;
-    box-sizing: border-box;
-    height: auto;
-    min-height: 400px;
+    height: 100%;
+    min-height: 600px;
     display: flex;
     flex-direction: column;
+    padding: 0;
 }
 
 .problems-card {
-    background: #ffffff;
-    border-radius: 12px;
-    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+    border-radius: 16px;
     overflow: hidden;
     flex: 1;
     display: flex;
     flex-direction: column;
-    padding-bottom: 16px;
+    width: 100%;
 }
 
 .problems-list {
     width: 100%;
     border-collapse: separate;
     border-spacing: 0;
+    table-layout: fixed;
 }
 
 .problems-head {
-    background: linear-gradient(to right, #f8fafc, #f1f5f9);
+    background: linear-gradient(to right, rgba(248, 250, 252, 0.8), rgba(241, 245, 249, 0.8));
     border-bottom: 1px solid #e2e8f0;
     position: sticky;
     top: 0;
     z-index: 10;
+    backdrop-filter: blur(8px);
 }
 
 .problems-body {
-    overflow-y: auto;
-    flex: 1;
-}
-
-/* 自定义滚动条样式 */
-.problems-body::-webkit-scrollbar {
-    width: 8px;
-}
-
-.problems-body::-webkit-scrollbar-track {
-    background: #f1f5f9;
-    border-radius: 4px;
-}
-
-.problems-body::-webkit-scrollbar-thumb {
-    background: #cbd5e1;
-    border-radius: 4px;
-}
-
-.problems-body::-webkit-scrollbar-thumb:hover {
-    background: #94a3b8;
-}
-
-.problems-head th {
-    padding: 20px 24px;
-    font-weight: 500;
-    color: #475569;
-    font-size: 14px;
-    text-align: left;
-    white-space: nowrap;
-}
-
-.th-content {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    height: 24px;
-}
-
-.th-content .el-icon {
-    font-size: 16px;
-    color: #64748b;
+    background: transparent;
 }
 
 .problem-row {
-    border-bottom: 1px solid #e2e8f0;
-    transition: all 0.2s ease;
+    border-bottom: 1px solid rgba(226, 232, 240, 0.6);
+    transition: all 0.3s ease;
+    position: relative;
 }
 
 .problem-row:last-child {
@@ -210,13 +177,18 @@ console.log('props:', props.raceInfo);
 }
 
 .problem-row:hover {
-    background-color: #f8fafc;
+    background-color: rgba(248, 250, 252, 0.8);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
-.problem-row td {
-    padding: 20px 24px;
-    font-size: 14px;
-    vertical-align: middle;
+.problem-row:hover .problem-link {
+    color: #42b983;
+}
+
+.problem-row:hover .problem-id {
+    background: rgba(66, 185, 131, 0.2);
+    transform: scale(1.05);
 }
 
 .column-status {
@@ -225,11 +197,10 @@ console.log('props:', props.raceInfo);
 
 .column-title {
     width: auto;
-    min-width: 250px;
 }
 
 .column-first {
-    width: 180px;
+    width: 160px;
 }
 
 .column-submit {
@@ -240,70 +211,96 @@ console.log('props:', props.raceInfo);
     width: 100px;
 }
 
-.status-tag {
-    display: inline-flex;
-    align-items: center;
-    padding: 6px 12px;
-    border-radius: 6px;
-    font-size: 13px;
+.problems-head th {
+    padding: 16px;
+    text-align: left;
     font-weight: 500;
-    min-width: 60px;
-    justify-content: center;
+    color: #475569;
+    font-size: 14px;
+    white-space: nowrap;
 }
 
-.status-accepted {
-    background-color: #ecfdf5;
-    color: #10b981;
+.th-content {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s ease;
 }
 
-.status-wrong {
-    background-color: #fef2f2;
-    color: #ef4444;
+.th-content:hover {
+    color: #42b983;
 }
 
-.status-pending {
-    background-color: #f3f4f6;
-    color: #6b7280;
+.th-content:hover .el-icon {
+    color: #42b983;
+    transform: scale(1.1);
 }
 
-.status-default {
-    background-color: #f3f4f6;
-    color: #6b7280;
+.problem-row td {
+    padding: 16px;
+    vertical-align: middle;
+    line-height: 1.5;
 }
 
 .problem-link {
     display: flex;
     align-items: center;
-    color: #1f2937;
+    gap: 12px;
     text-decoration: none;
-    transition: all 0.2s ease;
-    height: 32px;
-}
-
-.problem-link:hover {
-    color: #42b983;
+    color: #1f2937;
+    padding: 4px 0;
+    transition: all 0.3s ease;
 }
 
 .problem-id {
     font-weight: 600;
     color: #42b983;
-    font-family: 'Roboto Mono', monospace;
-    padding: 4px 8px;
     background: rgba(66, 185, 131, 0.1);
-    border-radius: 4px;
-    margin-right: 8px;
+    padding: 4px 12px;
+    border-radius: 6px;
     min-width: 28px;
     text-align: center;
-    display: inline-block;
+    transition: all 0.3s ease;
 }
 
 .problem-name {
-    color: #1f2937;
-    transition: color 0.2s ease;
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    transition: color 0.3s ease;
 }
 
-.problem-link:hover .problem-name {
-    color: #42b983;
+.status-tag {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    min-width: 72px;
+    transition: all 0.3s ease;
+}
+
+.status-accepted {
+    background-color: rgba(236, 253, 245, 0.8);
+    color: #10b981;
+}
+
+.status-wrong {
+    background-color: rgba(254, 242, 242, 0.8);
+    color: #ef4444;
+}
+
+.status-pending {
+    background-color: rgba(243, 244, 246, 0.8);
+    color: #6b7280;
+}
+
+.status-default {
+    background-color: rgba(243, 244, 246, 0.8);
+    color: #6b7280;
 }
 
 .first-blood {
@@ -312,6 +309,11 @@ console.log('props:', props.raceInfo);
     gap: 8px;
     color: #6b7280;
     height: 24px;
+    transition: all 0.3s ease;
+}
+
+.first-blood:hover {
+    color: #42b983;
 }
 
 .submit-info {
@@ -320,6 +322,11 @@ console.log('props:', props.raceInfo);
     gap: 4px;
     font-family: 'Roboto Mono', monospace;
     height: 24px;
+    transition: all 0.3s ease;
+}
+
+.submit-info:hover {
+    color: #42b983;
 }
 
 .solve-count,
@@ -336,10 +343,14 @@ console.log('props:', props.raceInfo);
     font-family: 'Roboto Mono', monospace;
     font-weight: 500;
     color: #42b983;
-    transition: color 0.2s ease;
     height: 24px;
     display: flex;
     align-items: center;
+    transition: all 0.3s ease;
+}
+
+.rate-info:hover {
+    transform: scale(1.05);
 }
 
 .rate-info.low {
@@ -355,38 +366,13 @@ console.log('props:', props.raceInfo);
 }
 
 @media (max-width: 768px) {
-    .competition-problems {
-        padding: 12px;
-    }
-
     .problems-head th,
     .problem-row td {
         padding: 12px;
-        font-size: 13px;
     }
 
-    .th-content {
-        gap: 6px;
-    }
-
-    .th-content .el-icon {
-        font-size: 14px;
-    }
-
-    .status-tag {
-        font-size: 12px;
-        padding: 3px 6px;
-    }
-}
-
-@media (max-width: 480px) {
-    .competition-problems {
-        padding: 8px;
-    }
-
-    .problems-head th,
-    .problem-row td {
-        padding: 8px;
+    .column-first {
+        display: none;
     }
 }
 </style>

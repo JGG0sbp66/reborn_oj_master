@@ -1,12 +1,22 @@
 <template>
     <div class="competition-status">
         <div class="status-card" :class="competitionStatusClass">
-            <div class="status-icon">
-                <el-icon><Timer /></el-icon>
+            <div class="card-content">
+                <div class="status-icon">
+                    <el-icon><Timer /></el-icon>
+                </div>
+                <div class="status-content">
+                    <div class="status-title">{{ competitionStatus.title }}</div>
+                    <div class="status-subtitle">{{ competitionStatus.subtitle }}</div>
+                </div>
             </div>
-            <div class="status-content">
-                <div class="status-title">{{ competitionStatus.title }}</div>
-                <div class="status-subtitle">{{ competitionStatus.subtitle }}</div>
+            
+            <!-- 报名按钮 -->
+            <div v-if="competitionStatus.status === 'signup'" class="signup-button-container">
+                <button class="signup-button" @click="handleSignup">
+                    <el-icon class="button-icon"><Plus /></el-icon>
+                    <span>立即报名</span>
+                </button>
             </div>
         </div>
     </div>
@@ -15,7 +25,7 @@
 <script lang="ts" setup>
 import { ref, computed, onMounted } from 'vue';
 import type { ComputedRef } from 'vue';
-import { Timer } from '@element-plus/icons-vue';  
+import { Timer, Plus } from '@element-plus/icons-vue';  
 
 // 定义类型
 interface RaceInfo {
@@ -36,6 +46,17 @@ const props = defineProps({
     }
 });
 console.log(props.raceInfo);
+
+// 处理报名点击事件
+const handleSignup = () => {
+    // 在这里添加报名逻辑
+    console.log('用户点击了报名按钮');
+    // 可以触发事件通知父组件
+    emit('signup-clicked');
+};
+
+// 定义emit
+const emit = defineEmits(['signup-clicked']);
 
 // 格式化日期时间
 const formatDateTime = (dateStr: string): string => {
@@ -122,9 +143,15 @@ const competitionStatusClass = computed(() => ({
     box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
     padding: 20px;
     display: flex;
+    flex-direction: column;
+    gap: 20px;
+    transition: all 0.3s ease;
+}
+
+.card-content {
+    display: flex;
     align-items: center;
     gap: 16px;
-    transition: all 0.3s ease;
 }
 
 .status-card:hover {
@@ -155,6 +182,37 @@ const competitionStatusClass = computed(() => ({
 .status-subtitle {
     font-size: 14px;
     color: #6b7280;
+}
+
+/* 报名按钮样式 */
+.signup-button-container {
+    text-align: center;
+}
+
+.signup-button {
+    background: #d97706; /* 橙色背景，与图片一致 */
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 12px 24px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+    width: 100%;
+    max-width: 220px;
+}
+
+.signup-button:hover {
+    background: #b45309;
+}
+
+.button-icon {
+    font-size: 18px;
 }
 
 /* 未开始状态 */
@@ -228,6 +286,11 @@ const competitionStatusClass = computed(() => ({
     .status-subtitle {
         font-size: 13px;
     }
+    
+    .signup-button {
+        padding: 10px 20px;
+        font-size: 14px;
+    }
 }
 
 @media (max-width: 480px) {
@@ -237,9 +300,12 @@ const competitionStatusClass = computed(() => ({
 
     .status-card {
         padding: 12px;
-        gap: 12px;
     }
 
+    .card-content {
+        gap: 12px;
+    }
+    
     .status-icon {
         width: 36px;
         height: 36px;
