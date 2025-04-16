@@ -230,8 +230,9 @@
             </thead>
             <tbody>
               <tr
-                v-for="(submission, index) in submissions"
-                :key="index"
+                v-for="submission in submissions"
+                :key="submission.index"
+                :class="{ 'pending-row': submission.isPending }"
               >
                 <td v-html="submission.status"></td>
                 <td>{{ submission.language }}</td>
@@ -366,6 +367,12 @@ export default {
         localStorage.setItem("currentQuestionId", newId);
         this.fetchQuestionDetail();
       }
+    },
+    submissions: {
+      deep: true,
+      handler(newVal) {
+        console.log("Submissions updated:", newVal);
+      },
     },
   },
 };
@@ -711,7 +718,6 @@ td {
   padding: 12px 16px;
   border-bottom: 1px solid #f1f5f9;
   color: #334155;
-  vertical-align: middle;
   transition: background-color 0.2s ease;
   white-space: nowrap;
   text-align: center;
@@ -727,6 +733,28 @@ td:first-child {
 
 td:first-child svg {
   margin-right: 6px;
+}
+
+.loading-spinner {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(0, 0, 0, 0.1);
+  border-radius: 50%;
+  border-top-color: #18a058;
+  animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* 调整表格行的最小高度，确保加载动画有足够空间 */
+.tableBox tbody tr td {
+  min-height: 40px;
+  vertical-align: middle;
 }
 
 /* 动画效果 */

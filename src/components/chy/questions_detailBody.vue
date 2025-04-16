@@ -22,8 +22,12 @@
       <qustions_dBodyCode
         :questionDetail="questionDetail"
         :id="id"
+        :race_uid="raceUid"
         @show-alert="handleCodeAlert"
         @submit-code="handleCodeSubmit"
+        @add-pending-submission="handleAddPendingSubmission"
+        @remove-pending-submission="handleAddPendingSubmission"
+        @update-submission="handleUpdateSubmission"
       ></qustions_dBodyCode>
     </div>
 
@@ -43,6 +47,12 @@ import qustions_dBodyCode from "./qustions_dBodyCode.vue";
 import questions_detailCue from "./questions_detailCue.vue";
 import questions_detailResizeBar from "./questions_detailResizeBar.vue";
 export default {
+  props: {
+    raceUid: {
+      type: Object, // 指定类型
+      required: true, 
+    },
+  },
   components: {
     questions_dBodyIntroduce,
     qustions_dBodyCode,
@@ -104,7 +114,10 @@ export default {
     },
     handleCodeAlert(payload) {
       // 显示错误提示
-      this.showAlertMessage(payload.type, payload.message || "提交的代码不能为空");
+      this.showAlertMessage(
+        payload.type,
+        payload.message || "提交的代码不能为空"
+      );
     },
     showAlertMessage(type, message) {
       this.alertType = type;
@@ -124,20 +137,36 @@ export default {
     handleQuestionId(detail) {
       this.id = detail;
     },
+    // 添加待处理提交
+    handleAddPendingSubmission(pendingSubmission) {
+      // 使用unshift添加到数组开头
+      this.submissions.unshift({
+        ...pendingSubmission,
+        id: pendingSubmission.index, // 使用唯一标识
+      });
+    },
+
+    // 更新提交状态
+    handleUpdateSubmission({ index, submission }) {
+      // 根据唯一标识找到对应的提交记录
+      const submissionIndex = this.submissions.findIndex(
+        (s) => s.index === index
+      );
+      if (submissionIndex !== -1) {
+        // 直接修改数组元素
+        this.submissions[submissionIndex] = {
+          ...submission,
+          index: index, // 保持相同的唯一标识
+        };
+        // 强制更新视图
+        this.submissions = [...this.submissions];
+      }
+    },
+
     // 修改提交处理逻辑
     async handleCodeSubmit(submission) {
-      try {
-        // 显示提交中状态
-        this.showAlertMessage("success", "代码测评完成");
-
-        // 添加提交记录
-        this.submissions.unshift(submission);
-
-        // 切换到提交记录标签页
-        this.activeTab = "submissions";
-      } catch (error) {
-        console.error("提交失败:", error);
-      }
+      // 自动切换到提交记录标签页
+      this.activeTab = "submissions";
     },
   },
 };

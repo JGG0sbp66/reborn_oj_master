@@ -8,7 +8,7 @@
       <div class="content-area">
         <div class="content-wrapper">
           <div class="left-main">
-            <competitionshow :raceInfo="raceInfo"/>
+            <competitionshow :raceInfo="raceInfo" :uid="uid"/>
           </div>
           <div class="right-main">
             <competitioninformation :raceInfo="raceInfo"/>
@@ -30,13 +30,14 @@ import { useRoute } from "vue-router";
 
 const raceInfo = reactive({}); // 定义一个响应式对象来存储比赛信息
 const route = useRoute();
-const uid = route.query.uid;
+const uid = ref(route.query.uid);
+console.log("uid", uid); // 打印 uid 以调试
 
 const get_race_info = async () => {
   const { data: userData } = await axios({
     url: "http://localhost:5000/api/race-info",
     method: "post",
-    data: { uid: uid },
+    data: { uid: uid.value },
   });
   return userData;
 };
