@@ -10,6 +10,8 @@
                         <span>创建竞赛</span>
                     </el-button>
                     <race-create @refreshData="fetchData" :alertBoxRef="alertBox" ref="raceCreateRef" />
+                    <race-edit @refreshData="fetchData" :alertBoxRef="alertBox" ref="raceEditRef" />
+                    <race-detail @refreshData="fetchData" @editRace="handleEditFromDetail" :alertBoxRef="alertBox" ref="raceDetailRef" />
                 </div>
             </div>
 
@@ -190,7 +192,7 @@
                                     type="primary" 
                                     size="small" 
                                     text
-                                    @click="viewCompetitionDetails(scope.row.id)"
+                                    @click="viewCompetitionDetails(scope.row)"
                                 >
                                     查看
                                 </el-button>
@@ -198,7 +200,7 @@
                                     type="primary" 
                                     size="small" 
                                     text
-                                    @click="editCompetition(scope.row.id)"
+                                    @click="editCompetition(scope.row)"
                                 >
                                     编辑
                                 </el-button>
@@ -247,6 +249,8 @@ import { Plus, Search, ArrowUp, ArrowDown, Timer, Collection, Refresh } from '@e
 import AlertBox from '../JGG/alertbox.vue';
 import axios from 'axios';
 import RaceCreate from './race-create.vue';
+import RaceEdit from './race-edit.vue';
+import RaceDetail from './race-detail.vue';
 
 // 定义竞赛标签类型
 interface CompetitionTag {
@@ -268,6 +272,7 @@ interface ApiCompetition {
   problems_list?: number[];
   user_list?: number[];
   status: string;
+  description?: string;
 }
 
 // 定义示例数据类型
@@ -291,6 +296,8 @@ interface FormattedCompetition {
 // AlertBox引用
 const alertBox = ref<any>(null);
 const raceCreateRef = ref<any>(null);
+const raceEditRef = ref<any>(null);
+const raceDetailRef = ref<any>(null);
 
 // 页面状态
 const loading = ref(false);
@@ -383,7 +390,19 @@ const fetchData = async () => {
   }
 };
 
-onMounted(fetchData);
+onMounted(async () => {
+  // 获取竞赛数据
+  await fetchData();
+  
+  // 告知子组件预加载题目数据
+  if (raceCreateRef.value) {
+    raceCreateRef.value.loadAvailableProblems();
+  }
+  
+  if (raceEditRef.value) {
+    raceEditRef.value.loadAvailableProblems();
+  }
+});
 
 // 处理延迟搜索，避免频繁过滤
 const handleSearch = () => {
@@ -563,14 +582,58 @@ const handleCurrentChange = (page: number) => {
 };
 
 // 操作方法
-const viewCompetitionDetails = (id: string) => {
-    alertBox.value.show(`查看竞赛ID: ${id}`, 0);
-    // 实际应用中跳转到竞赛详情页
+const viewCompetitionDetails = (competition: FormattedCompetition) => {
+    if (!competition.raw) {
+        alertBox.value.show(`无法查看竞赛，缺少原始数据`, 1);
+        return;
+    }
+    
+    // 从id中提取uid (格式为 "C-123" -> 提取 123)
+    const uid = parseInt(competition.id.replace('C-', ''));
+    
+    // 打开竞赛详情对话框
+    if (raceDetailRef.value) {
+        raceDetailRef.value.openDetailDialog(uid);
+    } else {
+        alertBox.value.show(`详情组件未初始化`, 1);
+    }
 };
 
-const editCompetition = (id: string) => {
-    alertBox.value.show(`编辑竞赛ID: ${id}`, 1);
-    // 实际应用中跳转到竞赛编辑页
+// 从详情页跳转到编辑页
+const handleEditFromDetail = (raceData: any) => {
+    if (raceEditRef.value) {
+        raceEditRef.value.openEditDialog(raceData);
+    } else {
+        alertBox.value.show(`编辑组件未初始化`, 1);
+    }
+};
+
+const editCompetition = (competition: FormattedCompetition) => {
+    if (!competition.raw) {
+        alertBox.value.show(`无法编辑竞赛，缺少原始数据`, 1);
+        return;
+    }
+    
+    // 从表格行数据中提取需要编辑的竞赛信息
+    const editData = {
+        uid: competition.raw.uid,
+        title: competition.raw.title,
+        logos: competition.raw.logos || [],
+        start_time: competition.raw.start_time,
+        end_time: competition.raw.end_time,
+        tags: competition.raw.tags || [],
+        problems_list: competition.raw.problems_list || [],
+        user_list: competition.raw.user_list || [],
+        status: competition.raw.status,
+        description: competition.raw.description || ''
+    };
+    
+    // 打开编辑对话框
+    if (raceEditRef.value) {
+        raceEditRef.value.openEditDialog(editData);
+    } else {
+        alertBox.value.show(`编辑组件未初始化`, 1);
+    }
 };
 
 const deleteCompetition = (id: string) => {
