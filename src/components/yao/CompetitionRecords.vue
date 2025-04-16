@@ -2,17 +2,24 @@
   <div class="profile-section">
     <h3 class="section-title">参赛记录</h3>
     <div class="competitions-container">
-      <!-- 示例比赛记录 -->
-      <div v-if="competitions.length > 0" class="competition-list">
+      <!-- 比赛记录列表 -->
+      <div v-if="loading" class="loading-state">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">加载中...</div>
+      </div>
+      <div v-else-if="competitions.length > 0" class="competition-list">
         <div v-for="(competition, index) in competitions" :key="index" class="competition-item">
           <div class="competition-info">
             <div class="competition-title">{{ competition.title }}</div>
             <div class="competition-date">
-              {{ formatDate(competition.startDate) }} - {{ formatDate(competition.endDate) }}
+              {{ formatDate(competition.start_time) }} - {{ formatDate(competition.end_time) }}
+            </div>
+            <div class="competition-registration" v-if="competition.register_time">
+              注册时间: {{ formatDate(competition.register_time) }}
             </div>
           </div>
-          <div class="competition-result" :class="competition.result">
-            {{ competition.rank }}
+          <div class="competition-result" :class="getResultClass(competition)">
+            {{ getResultText(competition) }}
           </div>
         </div>
       </div>
@@ -25,38 +32,110 @@
 </template>
 
 <script setup lang="ts">
-import { defineProps } from 'vue';
+import { defineProps, ref, computed, onMounted } from 'vue';
+import axios from 'axios';
+
+// 定义接口数据结构，与API返回格式匹配
+interface ProblemStat {
+  solved: boolean;
+  submit_count: number;
+  penalty_time?: number;
+  first_solve_time?: string;
+}
+
+interface Ranking {
+  rank: number;
+  total_solved: number;
+  total_penalty: number;
+  problem_stats: Record<string, ProblemStat>;
+  total_participants: number;
+}
 
 interface Competition {
+  register_time: string;
   title: string;
-  startDate: Date;
-  endDate: Date;
-  rank: string;
-  result: string; // 'good', 'average', 'poor'
+  start_time: string;
+  end_time: string;
+  race_uid: string;
+  status: string;  // 'active', 'pending', 'ended'
+  ranking?: Ranking;
 }
 
 const props = defineProps<{
-  competitions: Competition[];
+  competitions?: Competition[];  // 可选参数，允许从父组件传入数据
+  loading?: boolean;           // 加载状态
 }>();
+
+// 本地存储比赛列表
+const localCompetitions = ref<Competition[]>([]);
+
+// 合并本地和传入的比赛列表
+const competitions = computed(() => {
+  return props.competitions || localCompetitions.value;
+});
+
+// 在组件挂载时，如果没有传入competitions，则从API获取
+onMounted(async () => {
+  if (!props.competitions) {
+    try {
+      const response = await axios.get('http://localhost:5000/api/user-race');
+      if (response.data && Array.isArray(response.data)) {
+        localCompetitions.value = response.data;
+      }
+    } catch (error) {
+      console.error('获取参赛记录失败:', error);
+    }
+  }
+});
+
+// 根据比赛状态和排名确定结果样式类
+const getResultClass = (competition: Competition): string => {
+  if (!competition.ranking) return 'poor';
+  
+  const { rank, total_participants } = competition.ranking;
+  
+  // 计算百分比排名
+  const percentile = rank / total_participants;
+  
+  if (percentile <= 0.2) return 'good';      // 前20%
+  if (percentile <= 0.5) return 'average';   // 前50%
+  return 'poor';                             // 后50%
+};
+
+// 获取结果文本
+const getResultText = (competition: Competition): string => {
+  if (competition.status === 'pending') return '未开始';
+  if (competition.status === 'active') return '进行中';
+  
+  if (!competition.ranking) return '未参与';
+  
+  const { rank, total_participants } = competition.ranking;
+  return `第${rank}名 / 共${total_participants}人`;
+};
 
 // 格式化日期函数
 const dateFormatCache = new Map();
-const formatDate = (date: Date): string => {
-  if (!date) return '';
+const formatDate = (dateString: string): string => {
+  if (!dateString) return '';
   
   // 创建缓存键
-  const cacheKey = date.getTime();
+  const cacheKey = dateString;
   
   // 检查缓存
   if (dateFormatCache.has(cacheKey)) {
     return dateFormatCache.get(cacheKey);
   }
   
+  // 解析日期字符串
+  const date = new Date(dateString);
+  
   // 格式化日期
-  const formatted = new Date(date).toLocaleDateString('zh-CN', {
+  const formatted = date.toLocaleDateString('zh-CN', {
     year: 'numeric',
     month: 'long',
-    day: 'numeric'
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
   });
   
   // 存入缓存
@@ -164,6 +243,12 @@ const formatDate = (date: Date): string => {
   color: #888;
 }
 
+.competition-registration {
+  font-size: 12px;
+  color: #999;
+  font-style: italic;
+}
+
 .competition-result {
   font-weight: 600;
   padding: 4px 10px;
@@ -203,5 +288,34 @@ const formatDate = (date: Date): string => {
 
 .empty-text {
   font-size: 15px;
+}
+
+/* 加载状态 */
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  color: #888;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  margin-bottom: 15px;
+  border: 3px solid rgba(66, 185, 131, 0.2);
+  border-top-color: #42b983;
+  border-radius: 50%;
+  animation: spin 1s ease-in-out infinite;
+}
+
+.loading-text {
+  font-size: 15px;
+  color: #888;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 </style> 

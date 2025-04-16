@@ -4,7 +4,11 @@
     <div class="profile-form">
       <el-form label-position="top">
         <el-form-item label="用户名">
-          <el-input v-model="username" disabled />
+          <el-input 
+            v-model="username" 
+            placeholder="请输入用户名"
+            class="username-input"
+          />
         </el-form-item>
         <el-form-item label="电子邮箱">
           <el-input v-model="email" placeholder="请输入电子邮箱" />
@@ -58,6 +62,15 @@ const updateLocalData = () => {
 // 保存用户资料
 const saveProfile = async (): Promise<void> => {
   try {
+    // 验证用户名
+    if (!username.value.trim()) {
+      ElMessage({
+        message: '用户名不能为空',
+        type: 'warning'
+      });
+      return;
+    }
+    
     // 创建更新后的用户数据
     const updatedProfile: UserProfileData = {
       username: username.value,
@@ -70,6 +83,9 @@ const saveProfile = async (): Promise<void> => {
     
     // 通知父组件数据已更新
     emit('profile-updated', updatedProfile);
+    
+    // 更新本地存储中的用户名
+    localStorage.setItem('username', username.value);
     
     // 模拟成功响应
     setTimeout(() => {
@@ -184,5 +200,17 @@ const saveProfile = async (): Promise<void> => {
   border-radius: 8px;
   font-weight: 500;
   letter-spacing: 0.5px;
+}
+
+.input-tip {
+  font-size: 12px;
+  color: #999;
+  margin-top: 5px;
+  margin-left: 2px;
+}
+
+.username-input :deep(.el-input__inner) {
+  background-color: transparent;
+  cursor: text;
 }
 </style> 
