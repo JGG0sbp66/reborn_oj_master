@@ -34,22 +34,22 @@
           <div class="user-role">{{ userRole }}</div>
           <div class="user-joined">
             加入时间: {{ formatDate(userJoinDate) }}
-      </div>
+          </div>
           <div class="user-stats">
             <div class="stat-item">
               <div class="stat-value">{{ problemSolved }}</div>
               <div class="stat-label">已解题目</div>
-    </div>
+            </div>
             <div class="stat-item">
               <div class="stat-value">{{ competitionsJoined }}</div>
               <div class="stat-label">参与比赛</div>
-          </div>
+            </div>
             <div class="stat-item">
               <div class="stat-value">{{ rank }}</div>
               <div class="stat-label">当前排名</div>
             </div>
-            </div>
-            </div>
+          </div>
+        </div>
 
         <!-- 侧边导航菜单 -->
         <div class="user-nav">
@@ -60,7 +60,7 @@
           >
             <el-icon><UserFilled /></el-icon>
             <span>个人资料</span>
-            </div>
+          </div>
           
           <div 
             class="nav-item"
@@ -78,7 +78,7 @@
           >
             <el-icon><Trophy /></el-icon>
             <span>参赛记录</span>
-        </div>
+          </div>
 
           <div 
             class="nav-item"
@@ -88,8 +88,19 @@
             <el-icon><Setting /></el-icon>
             <span>账户设置</span>
           </div>
-            </div>
-            </div>
+          
+          <!-- 管理员后台入口按钮, 只对admin角色可见 -->
+          <router-link 
+            v-if="userRole === 'admin'"
+            to="/user/manager" 
+            class="nav-item admin-nav-item"
+            target="_blank"
+          >
+            <el-icon><Monitor /></el-icon>
+            <span>后台管理</span>
+          </router-link>
+        </div>
+      </div>
 
       <!-- 右侧内容区域 -->
       <div class="profile-main-content">
@@ -97,14 +108,14 @@
         <div v-if="isHeatmapVisible" class="profile-section">
           <h3 class="section-title">编程活动</h3>
           <ActivityHeatmap />
-            </div>
+        </div>
         <div v-else class="profile-section heatmap-placeholder">
           <h3 class="section-title">编程活动</h3>
           <div class="loading-indicator">
             <div class="loading-spinner"></div>
             <span>加载中...</span>
-            </div>
           </div>
+        </div>
         
         <transition name="fade" mode="out-in">
           <div v-if="activeSection === 'profile'" class="section-container" key="profile">
@@ -117,12 +128,12 @@
               }" 
               @profile-updated="handleProfileUpdated" 
             />
-        </div>
+          </div>
 
           <div v-else-if="activeSection === 'solved-problems'" class="section-container" key="solved-problems">
             <!-- 解题记录 -->
             <SolvedProblems :problems="recentProblems" />
-      </div>
+          </div>
 
           <div v-else-if="activeSection === 'competitions'" class="section-container" key="competitions">
             <!-- 比赛记录 -->
@@ -144,11 +155,11 @@
               @privacy-settings-updated="handlePrivacySettingsUpdated"
               @password-changed="handlePasswordChanged"
             />
-              </div>
-        </transition>
-              </div>
-            </div>
           </div>
+        </transition>
+      </div>
+    </div>
+  </div>
   <foot class="page-footer" />
 </template>
 
@@ -165,7 +176,7 @@ import AccountSettings from '@/components/yao/AccountSettings.vue';
 const ActivityHeatmap = defineAsyncComponent(() => 
   import('@/components/ActivityHeatmap.vue')
 );
-import { UserFilled, List, Trophy, Setting, Upload } from '@element-plus/icons-vue';
+import { UserFilled, List, Trophy, Setting, Upload, Monitor } from '@element-plus/icons-vue';
 import axios from 'axios';
 import { ElMessage } from 'element-plus';
 
@@ -419,15 +430,33 @@ const fetchUserProfile = async (): Promise<void> => {
       if (response.data.authenticated && response.data.user) {
         // 使用后端返回的数据
         const userData = response.data.user;
-        username.value = userData.username; // 使用正确的username字段
+        
+        // 确保使用正确的username字段，而不是uid
+        if (userData.username) {
+          username.value = userData.username; // 优先使用username
+        } else if (userData.uid && typeof userData.uid === 'string') {
+          // 如果没有username字段但有uid字段且为字符串，可能是老数据结构
+          username.value = userData.uid;
+        }
+        
         userRole.value = userData.role || '普通用户';
         
         // 保存到localStorage以便下次使用
-        localStorage.setItem('username', userData.username);
-        localStorage.setItem('userRole', userData.role);
+        localStorage.setItem('username', username.value); // 保存正确的username
+        localStorage.setItem('userRole', userData.role || '普通用户');
       }
     } catch (apiError) {
       console.error('API调用失败，使用本地数据:', apiError);
+      
+      // 如果API调用失败，确保从localStorage获取的用户名也是正确的格式
+      // 如果用户名像是数字ID，可能是之前保存错了，尝试修正
+      if (username.value && !isNaN(Number(username.value))) {
+        // 尝试从本地存储获取其他可能保存了正确username的位置
+        const possibleUsername = localStorage.getItem('user_name') || 
+                               localStorage.getItem('displayName') || 
+                               'user' + username.value; // 格式化为"userN"
+        username.value = possibleUsername;
+      }
     }
     
     // 假设这是从后端获取的其他用户数据
@@ -1455,5 +1484,77 @@ defineExpose({
     width: 100px;
     height: 100px;
   }
+}
+
+/* Admin navigation item styling */
+.admin-nav-item {
+  margin-top: 12px;
+  background: linear-gradient(to right, #42b983, #33c6aa);
+  color: white !important;
+  border-radius: 8px;
+  transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+  box-shadow: 0 4px 12px rgba(66, 185, 131, 0.2);
+  position: relative;
+  overflow: hidden;
+}
+
+.admin-nav-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+  z-index: 0;
+}
+
+.admin-nav-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 15px rgba(66, 185, 131, 0.25);
+}
+
+.admin-nav-item:hover::before {
+  left: 100%;
+}
+
+.admin-nav-item .el-icon {
+  color: white;
+  z-index: 1;
+  position: relative;
+  transition: transform 0.3s ease;
+}
+
+.admin-nav-item span {
+  position: relative;
+  z-index: 1;
+  transition: transform 0.3s ease;
+}
+
+.admin-nav-item:hover .el-icon {
+  transform: translateY(-2px);
+}
+
+.admin-nav-item:hover span {
+  transform: translateX(2px);
+}
+
+.admin-nav-item::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.6);
+  transform: scaleX(0);
+  transform-origin: right;
+  transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.admin-nav-item:hover::after {
+  transform: scaleX(1);
+  transform-origin: left;
 }
 </style> 
