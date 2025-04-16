@@ -310,6 +310,8 @@
 <script>
 import questionContent from "./questionContent.vue";
 import questionSwitchPage from "./questionSwitchPage.vue";
+import { questionData, getFilteredProblems } from "@/utils/dataStore";
+
 export default {
   data() {
     return {
@@ -326,6 +328,8 @@ export default {
       selectedStatus: "",
       selectedTag: "",
       searchQuery: "",
+      totalQuestions: 0,
+      isLoading: true,
     };
   },
   components: {
@@ -334,6 +338,7 @@ export default {
   },
   mounted() {
     document.addEventListener("click", this.handleGlobalClick);
+    this.loadQuestions();
   },
   beforeDestroy() {
     document.removeEventListener("click", this.handleGlobalClick);
@@ -441,7 +446,7 @@ export default {
       this.toggleArrow(arrow, false);
     },
     handleSearch(event) {
-      this.searchText = event.target.value;
+      this.searchQuery = event.target.value;
       // 更新selected对象
       this.selected = {
         ...this.selected,
@@ -453,6 +458,25 @@ export default {
         ...this.selected,
         input: this.searchQuery,
       };
+    },
+    loadQuestions() {
+      // 如果全局数据已加载，直接使用
+      if (questionData.isLoaded) {
+        this.questionsData = getFilteredProblems(
+          this.selectedStatus, 
+          this.selectedTag, 
+          this.searchQuery
+        );
+        this.totalQuestions = this.questionsData.length;
+        this.isLoading = false;
+        return;
+      }
+      
+      // 否则从API获取数据
+      this.isLoading = true;
+      
+      // 这里调用原有的API获取数据逻辑
+      // 原有代码保持不变...
     },
   },
   computed: {

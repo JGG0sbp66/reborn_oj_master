@@ -7,7 +7,6 @@
                 <!-- 欢迎信息 -->
                 <managerwelcome />
 
-
                 <!-- 数据统计和图表 -->
                 <div class="data-section">
                     <manageractive />
@@ -36,10 +35,10 @@ import {
     User, Document, TrendCharts,
     Monitor, Connection, Timer
 } from '@element-plus/icons-vue';
-
+import axios from 'axios';
 
 // 获取侧边栏折叠状态
-const isCollapsed = ref(false);
+const isCollapsed = ref<boolean>(false);
 
 // 当前日期
 const currentDate = ref(new Date().toLocaleDateString('zh-CN', {
@@ -49,45 +48,6 @@ const currentDate = ref(new Date().toLocaleDateString('zh-CN', {
     weekday: 'long'
 }));
 
-
-// 颜色计算
-const getCpuColor = computed(() => {
-    if (cpuUsage.value < 60) return '#42b983';
-    if (cpuUsage.value < 80) return '#e6a23c';
-    return '#f56c6c';
-});
-
-const getMemoryColor = computed(() => {
-    if (memoryUsage.value < 60) return '#42b983';
-    if (memoryUsage.value < 80) return '#e6a23c';
-    return '#f56c6c';
-});
-
-const getDiskColor = computed(() => {
-    if (diskUsage.value < 70) return '#42b983';
-    if (diskUsage.value < 90) return '#e6a23c';
-    return '#f56c6c';
-});
-
-
-// 最近题目数据
-const recentQuestions = ref([
-    { id: 'Q-1024', title: '两数之和的高效算法', difficulty: '入门', createdAt: '2023-12-01 10:30:45' },
-    { id: 'Q-1025', title: '二叉树的中序遍历', difficulty: '普及', createdAt: '2023-12-02 14:22:10' },
-    { id: 'Q-1026', title: '最长回文子串', difficulty: '提高', createdAt: '2023-12-03 09:15:33' },
-    { id: 'Q-1027', title: '高级动态规划问题', difficulty: '省选', createdAt: '2023-12-04 16:40:27' },
-    { id: 'Q-1028', title: '字符串匹配算法', difficulty: 'NOI', createdAt: '2023-12-05 11:05:19' }
-]);
-
-// 最近竞赛数据
-const recentCompetitions = ref([
-    { id: 'C-256', title: '周末算法挑战赛', status: '进行中', startTime: '2023-12-02 09:00:00' },
-    { id: 'C-257', title: '高校编程大赛预选赛', status: '已结束', startTime: '2023-11-25 13:30:00' },
-    { id: 'C-258', title: '新手入门编程竞赛', status: '未开始', startTime: '2023-12-10 10:00:00' },
-    { id: 'C-259', title: '冬季算法竞赛', status: '未开始', startTime: '2023-12-15 09:30:00' },
-    { id: 'C-260', title: '企业编程挑战赛', status: '已结束', startTime: '2023-11-18 14:00:00' }
-]);
-
 // 获取难度标签类型
 const getDifficultyType = (difficulty: string) => {
     switch (difficulty) {
@@ -96,17 +56,31 @@ const getDifficultyType = (difficulty: string) => {
         case '提高': return 'danger';
         case '省选': return 'primary';
         case 'NOI': return 'danger';
+        case 'CTSC': return 'danger';
         default: return 'info';
     }
 };
 
-// 获取状态标签类型
-const getStatusType = (status: string) => {
-    switch (status) {
-        case '进行中': return 'success';
-        case '未开始': return 'info';
-        case '已结束': return 'danger';
-        default: return 'info';
+// 根据题目复杂度推断难度
+const getDifficultyByComplexity = (question: any): string => {
+    // 基于题目的约束条件、时间和内存限制等推断难度
+    const constraints = question?.constraints || [];
+    const timeLimit = question?.time_limit || 1000;
+    const memoryLimit = question?.memory_limit || 128;
+
+    // 简单的难度判断逻辑
+    if (timeLimit <= 500 && memoryLimit <= 64) {
+        return '入门';
+    } else if (timeLimit <= 1000 && memoryLimit <= 128) {
+        return '普及';
+    } else if (timeLimit <= 2000 && memoryLimit <= 256) {
+        return '提高';
+    } else if (timeLimit <= 5000 && memoryLimit <= 512) {
+        return '省选';
+    } else if (timeLimit <= 10000 && memoryLimit <= 1024) {
+        return 'NOI';
+    } else {
+        return 'CTSC';
     }
 };
 
@@ -122,19 +96,7 @@ onMounted(() => {
     document.addEventListener('sliderToggle', (e: any) => {
         isCollapsed.value = e.detail.collapsed;
     });
-
-    // 模拟获取数据
-    fetchDashboardData();
 });
-
-// 模拟获取仪表盘数据
-const fetchDashboardData = () => {
-    // 实际项目中，这里会通过API获取真实数据
-    // 这里只是模拟数据加载
-    setTimeout(() => {
-        // 数据已经在上面初始化了
-    }, 1000);
-};
 
 const router = useRouter();
 const route = useRoute();
@@ -184,11 +146,48 @@ verifyAuth();
     display: grid;
     grid-template-columns: 1fr;
     gap: 24px;
+    margin-bottom: 24px;
 }
 
 @media (min-width: 992px) {
     .data-section {
         grid-template-columns: 1fr 1fr;
     }
+}
+
+/* 最近数据样式 */
+.recent-data-section {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 24px;
+    margin-top: 24px;
+}
+
+@media (min-width: 992px) {
+    .recent-data-section {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+.recent-card {
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+    padding: 16px;
+}
+
+.recent-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #ebeef5;
+}
+
+.recent-header h3 {
+    font-size: 16px;
+    margin: 0;
+    color: #303133;
 }
 </style>

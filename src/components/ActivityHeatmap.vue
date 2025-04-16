@@ -265,99 +265,102 @@ const hideTooltip = () => {
 
 // 生成日历网格数据
 function generateCalendarGrid(year: number): void {
-  // 创建一个数组来存储所有周
-  const weeks: DayData[][] = [];
-  let currentWeek: DayData[] = [];
+  // 预分配数组大小，减少扩容操作
+  const weeks: DayData[][] = new Array(53); // 一年最多53周
+  const positions: number[] = new Array(12); // 12个月
   
-  // 计算每个月的起始位置
-  const positions: number[] = [];
-  let currentPosition = 0;
-  
-  // 获取该年1月1日是星期几 (0 = 周日, 1 = 周一, ...)
-  const firstDayOfYear = new Date(year, 0, 1).getDay();
-  currentPosition = firstDayOfYear; // 1月1日的位置
-  positions.push(0); // 1月的起始位置
-  
-  // 添加上一年的日期占位符
-  for (let i = 0; i < firstDayOfYear; i++) {
-    currentWeek.push({
+  // 计算块操作
+  setTimeout(() => {
+    // 创建一个数组来存储所有周
+    let currentWeek: DayData[] = [];
+    let currentPosition = 0;
+    
+    // 获取该年1月1日是星期几 (0 = 周日, 1 = 周一, ...)
+    const firstDayOfYear = new Date(year, 0, 1).getDay();
+    currentPosition = firstDayOfYear; // 1月1日的位置
+    positions[0] = 0; // 1月的起始位置
+    
+    // 添加上一年的日期占位符
+    currentWeek = new Array(firstDayOfYear).fill(null).map(() => ({
       date: '',
       count: 0,
       level: 0
-    });
-  }
-  
-  // 循环遍历整年的每一天
-  const daysInYear = (year % 4 === 0 && year % 100 !== 0) || (year % 400 === 0) ? 366 : 365;
-  let prevMonth = 0;
-  
-  // 获取当前日期，用于比较
-  const now = new Date();
-  // 设置为当天的 23:59:59，确保当天的数据能正确显示
-  now.setHours(23, 59, 59, 999);
-  
-  for (let dayOfYear = 1; dayOfYear <= daysInYear; dayOfYear++) {
-    const loopDate = new Date(year, 0, dayOfYear);
+    }));
     
-    // 确保我们仍在当前年份内
-    if (loopDate.getFullYear() !== year) continue;
+    // 循环遍历整年的每一天
+    const daysInYear = (year % 4 === 0 && year % 100 !== 0) || (year % 400 === 0) ? 366 : 365;
+    let prevMonth = 0;
+    let weekIndex = 0;
     
-    // 检查月份变化，记录新月份的起始位置
-    const currentMonth = loopDate.getMonth();
-    if (currentMonth !== prevMonth) {
-      // 格子宽度 + 间距 = 11px + 3px = 14px
-      positions.push(Math.floor(currentPosition / 7) * 14);
-      prevMonth = currentMonth;
-    }
+    // 获取当前日期，用于比较
+    const now = new Date();
+    now.setHours(23, 59, 59, 999);
     
-    // 判断是否是未来日期 - 直接使用Date对象比较
-    const isFutureDate = loopDate > now;
-    
-    // 创建日期数据
-    const dateStr = `${year}-${loopDate.getMonth() + 1}-${loopDate.getDate()}`;
-    
-    // 如果是未来日期，则不显示数据
-    let count = 0;
-    let level = 0;
-    
-    if (!isFutureDate) {
-      // 随机生成题目数量 - 在实际应用中，这里应该从API获取真实数据
-      count = Math.floor(Math.random() * 10);
-      level = count === 0 ? 0 : 
-              count < 2 ? 1 : 
-              count < 4 ? 2 : 
-              count < 6 ? 3 : 4;
-    }
-    
-    const dayData: DayData = {
-      date: dateStr,
-      count,
-      level
-    };
-    
-    // 添加到当前周
-    currentWeek.push(dayData);
-    currentPosition++;
-    
-    // 如果是周六或最后一天，完成当前周并开始新的一周
-    if (loopDate.getDay() === 6 || dayOfYear === daysInYear) {
-      // 如果当前周不足7天，添加空白填充
-      while (currentWeek.length < 7) {
-        currentWeek.push({
-          date: '',
-          count: 0,
-          level: 0
-        });
-        currentPosition++;
+    for (let dayOfYear = 1; dayOfYear <= daysInYear; dayOfYear++) {
+      const loopDate = new Date(year, 0, dayOfYear);
+      
+      // 确保我们仍在当前年份内
+      if (loopDate.getFullYear() !== year) continue;
+      
+      // 检查月份变化，记录新月份的起始位置
+      const currentMonth = loopDate.getMonth();
+      if (currentMonth !== prevMonth) {
+        // 格子宽度 + 间距 = 11px + 3px = 14px
+        positions[currentMonth] = Math.floor(currentPosition / 7) * 14;
+        prevMonth = currentMonth;
       }
       
-      weeks.push([...currentWeek]);
-      currentWeek = [];
+      // 判断是否是未来日期 - 直接使用Date对象比较
+      const isFutureDate = loopDate > now;
+      
+      // 创建日期数据
+      const dateStr = `${year}-${loopDate.getMonth() + 1}-${loopDate.getDate()}`;
+      
+      // 如果是未来日期，则不显示数据
+      let count = 0;
+      let level = 0;
+      
+      if (!isFutureDate) {
+        // 随机生成题目数量 - 在实际应用中，这里应该从API获取真实数据
+        count = Math.floor(Math.random() * 10);
+        level = count === 0 ? 0 : 
+                count < 2 ? 1 : 
+                count < 4 ? 2 : 
+                count < 6 ? 3 : 4;
+      }
+      
+      const dayData: DayData = {
+        date: dateStr,
+        count,
+        level
+      };
+      
+      // 添加到当前周
+      currentWeek.push(dayData);
+      currentPosition++;
+      
+      // 如果是周六或最后一天，完成当前周并开始新的一周
+      if (loopDate.getDay() === 6 || dayOfYear === daysInYear) {
+        // 如果当前周不足7天，添加空白填充
+        while (currentWeek.length < 7) {
+          currentWeek.push({
+            date: '',
+            count: 0,
+            level: 0
+          });
+          currentPosition++;
+        }
+        
+        weeks[weekIndex] = [...currentWeek];
+        weekIndex++;
+        currentWeek = [];
+      }
     }
-  }
-  
-  calendarData.value = weeks;
-  monthPositions.value = positions;
+    
+    // 更新数据，触发一次性重新渲染
+    calendarData.value = weeks.filter(Boolean); // 过滤掉未使用的空槽位
+    monthPositions.value = positions;
+  }, 0);
 }
 
 // 计算总题目数
@@ -436,11 +439,26 @@ onMounted(() => {
   // 获取tooltip元素引用
   tooltip.value = document.querySelector('.custom-tooltip') as HTMLElement;
   
-  // 生成初始日历数据
-  generateCalendarGrid(selectedYear.value);
+  // 使用requestIdleCallback或setTimeout更高效地初始化
+  const initializeHeatmap = () => {
+    // 渲染优先级较低的组件
+    // 生成初始日历数据
+    generateCalendarGrid(selectedYear.value);
+    
+    // 使用RAF保证在下一帧之前不会渲染(优先处理其他UI渲染)
+    requestAnimationFrame(() => {
+      // 启动数字增长动画，优先级更低
+      setTimeout(animateTotal, 50);
+    });
+  };
   
-  // 启动数字增长动画
-  setTimeout(animateTotal, 300);
+  // 使用requestIdleCallback在浏览器空闲时执行
+  if ('requestIdleCallback' in window) {
+    (window as any).requestIdleCallback(initializeHeatmap, { timeout: 100 });
+  } else {
+    // 兼容性方案
+    setTimeout(initializeHeatmap, 0);
+  }
 });
 </script>
 

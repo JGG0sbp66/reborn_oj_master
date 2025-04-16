@@ -5,7 +5,7 @@
   <questions_detailHeader></questions_detailHeader>
   <!-- 题目详情组件 -->
   <div class="content">
-    <questions_detailBody></questions_detailBody>
+    <questions_detailBody :raceUid="race_uid"></questions_detailBody>
   </div>
   <!-- 页脚组件 -->
   <foot></foot>
@@ -20,6 +20,12 @@ import navlinks from "@/components/test/navlinks.vue";
 import questions_detailHeader from "@/components/chy/questions_detailHeader.vue";
 import questions_detailBody from "@/components/chy/questions_detailBody.vue";
 import foot from "@/components/foot.vue";
+import { useRoute } from "vue-router";
+
+const route = useRoute();
+const race_uid = route.query.race_uid; // 从 query 获取
+
+console.log("接收到的参数:", {race_uid});
 </script>
   
   

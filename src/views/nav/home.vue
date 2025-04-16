@@ -148,6 +148,7 @@ import foot from "@/components/foot.vue";
 import AIAgent from "@/components/AI-Agent.vue";
 import { Trophy } from "@element-plus/icons-vue";
 import axios from "axios";
+import { loadQuestionData } from "@/utils/dataStore";
 
 // 轮播图数据
 const bannerSlides = [
@@ -312,6 +313,9 @@ const fetchCompetitions = async () => {
 onMounted(async () => {
   // 启动轮播图自动切换
   startSlideshow();
+
+  // 预加载题库数据
+  loadQuestionData();
 
   // 获取竞赛数据
   fetchCompetitions();

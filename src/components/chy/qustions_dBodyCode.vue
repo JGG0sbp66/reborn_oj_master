@@ -198,10 +198,11 @@
 import hljs from "highlight.js";
 import "highlight.js/styles/github-dark.css";
 import axios from "axios";
+import { checkAuth } from "@/utils/auth";
 
 export default {
   name: "CodeComponent",
-  props: ["questionDetail", "id"],
+  props: ["questionDetail", "id", "race_uid"],
   data() {
     return {
       selectedLanguage: "C++",
@@ -1125,20 +1126,44 @@ export default {
       }
 
       try {
-        const formData = new FormData();
-        formData.append("question_uid", this.id); // 题目ID
-        formData.append("question", JSON.stringify(this.questionDetail));
-        formData.append("prompt", this.codeLines.join("\n"));
-
-        for (let [key, value] of formData.entries()) {
-          console.log(key, value);
+        // 验证用户状态函数，可用于检查用户是否已登录
+        const { authenticated, user } = await checkAuth();
+        console.log("用户认证状态:", authenticated);
+        if (!authenticated) {
+          throw new Error("用户未登录");
         }
 
-        // 只有在没有错误的情况下才显示"提交中"状态
-        this.$emit("show-alert", {
-          type: "info",
-          message: "代码提交成功，正在评测中...",
-        });
+        // 如果已登录，继续提交流程
+        const pendingSubmission = {
+          status: `
+    <div style="display: inline-flex; align-items: center;">
+      <span>评测中</span>
+        <div class="spinner" style="
+        width: 12px;
+        height: 12px;
+        border: 2px solid #ccc;
+        border-top-color: #18a058;
+        border-radius: 50%;
+        margin-left: 5px;
+        margin-top: 3px;
+        animation: spin 1s linear infinite;
+      "></div>
+    </div>
+  `,
+          language: this.selectedLanguage,
+          runTime: "-",
+          memoryUsage: "-",
+          submitTime: this.getSubmitTime(),
+          isPending: true,
+          index: Date.now(), // 添加唯一标识
+        };
+        this.$emit("add-pending-submission", pendingSubmission);
+
+        const formData = new FormData();
+        formData.append("question_uid", this.id);
+        formData.append("question", JSON.stringify(this.questionDetail));
+        formData.append("prompt", this.codeLines.join("\n"));
+        formData.append("race_uid", this.race_uid);
 
         const { data: response } = await axios({
           url: "http://localhost:5000/api/askAi-question",
@@ -1150,18 +1175,14 @@ export default {
         });
 
         // 解析AI返回的结果
-        console.log("AI返回的结果:", response);
         const aiResponse = response.message;
         console.log(aiResponse);
-
-        // 根据AI返回的结果确定状态
         let statusOption = this.stateOptions.find((option) =>
           option.status.includes(this.getStatusFromAiResponse(aiResponse))
         );
 
-        // 如果没有匹配的状态，使用默认状态
         if (!statusOption) {
-          statusOption = this.stateOptions[0]; // 默认使用第一个状态
+          statusOption = this.stateOptions[0];
         }
 
         const submission = {
@@ -1170,24 +1191,55 @@ export default {
           runTime: this.getRunTime(),
           memoryUsage: this.getMemoryUsage(),
           submitTime: this.getSubmitTime(),
-          aiFeedback: aiResponse, // 可选：存储AI反馈
+          aiFeedback: aiResponse,
+          isPending: false,
+          index: pendingSubmission.index, // 保持相同的唯一标识
         };
 
-        this.$emit("submit-code", submission);
+        // 确保传递正确的index
+        this.$emit("update-submission", {
+          index: pendingSubmission.index,
+          submission: submission,
+        });
 
-        // 清空代码输入
         this.codeLines = [""];
       } catch (error) {
         console.error("提交失败:", error);
-        // 只有在catch块中显示错误信息，不再显示"提交中"状态
-        this.$emit("show-alert", {
-          type: "error",
-          message: "提交失败，请先登录或检查网络连接",
-        });
+
+        // 如果是未登录错误，直接显示提示，不添加任何提交记录
+        if (error.message === "用户未登录") {
+          this.$emit("show-alert", {
+            type: "error",
+            message: "请先登录后再提交代码",
+          });
+          return;
+        }
+
+        // 如果已经开始评测但失败了，更新为错误状态
+        if (this.submissions.some((s) => s.isPending)) {
+          const errorSubmission = {
+            status: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="width: 18px; height: 18px; position: relative; top: 4px; color: #F53F3F;">
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" fill="currentColor"/>
+        </svg>
+        <span style="margin-left: 5px;color: #F53F3F;">提交失败</span>`,
+            language: this.selectedLanguage,
+            runTime: "-",
+            memoryUsage: "-",
+            submitTime: this.getSubmitTime(),
+            isPending: false,
+            index: Date.now(),
+          };
+
+          this.$emit("update-submission", {
+            index: errorSubmission.index,
+            submission: errorSubmission,
+          });
+        }
       }
     },
     // 辅助方法：从AI响应中提取状态
     getStatusFromAiResponse(response) {
+      response = response.toLowerCase();
       if (response.includes("答案正确")) return "答案正确";
       if (response.includes("答案错误")) return "答案错误";
       if (response.includes("编译错误")) return "编译错误";
@@ -1273,7 +1325,9 @@ export default {
     this.backspaceKeyInterval = null;
     document.removeEventListener("keyup", this.handleKeyUp);
     document.removeEventListener("click", this.handleGlobalClick); // 新增
-    this.$el.querySelector(".codeBody")?.removeEventListener("click", this.handleCodeAreaClick);
+    this.$el
+      .querySelector(".codeBody")
+      ?.removeEventListener("click", this.handleCodeAreaClick);
   },
 };
 </script>
@@ -1684,5 +1738,18 @@ export default {
 
 .format-button svg {
   margin-right: 6px;
+}
+
+.spinner {
+  animation: spin 1s linear infinite;
+}
+
+</style>
+
+<style>
+/* 非 scoped 样式 */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 </style>

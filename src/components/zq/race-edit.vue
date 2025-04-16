@@ -1,10 +1,10 @@
 <template>
   <div>
-    <!-- 创建竞赛表单弹窗 -->
+    <!-- 编辑竞赛表单弹窗 -->
     <el-dialog
       v-model="dialogVisible"
-      title="创建新竞赛"
-      width="80%"
+      title="编辑竞赛"
+      width="600px"
       :close-on-click-modal="false"
       :close-on-press-escape="false"
     >
@@ -12,7 +12,8 @@
         ref="competitionFormRef" 
         :model="competition" 
         :rules="competitionRules" 
-        label-width="100px"
+        label-width="120px"
+        label-position="top"
       >
         <el-form-item label="竞赛名称" prop="title">
           <el-input v-model="competition.title" placeholder="请输入竞赛名称"></el-input>
@@ -98,6 +99,12 @@
           </el-select>
           <div class="tip-text">* 可以输入题目ID或标题进行搜索</div>
         </el-form-item>
+
+        <el-form-item label="参赛用户列表" prop="user_list">
+          <el-select v-model="competition.user_list" multiple placeholder="选择参赛用户">
+            <el-option v-for="id in availableUsers" :key="id" :label="`用户 ${id}`" :value="id"></el-option>
+          </el-select>
+        </el-form-item>
         
         <el-form-item label="竞赛描述" prop="description">
           <el-input 
@@ -112,7 +119,7 @@
       <template #footer>
         <span class="dialog-footer">
           <el-button @click="dialogVisible = false">取消</el-button>
-          <el-button type="primary" @click="submitCompetition" :loading="creating">创建</el-button>
+          <el-button type="primary" @click="updateCompetition" :loading="updating">保存</el-button>
         </span>
       </template>
     </el-dialog>
@@ -120,11 +127,24 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue';
+import { ref, defineExpose, reactive, defineProps, defineEmits } from 'vue';
 import { ElMessage } from 'element-plus';
 import type { FormInstance, FormRules } from 'element-plus';
-import { Plus, Delete } from '@element-plus/icons-vue';
 import axios from 'axios';
+
+// 定义组件的props和emits
+const props = defineProps({
+  alertBoxRef: {
+    type: Object,
+    default: null
+  },
+  raceId: {
+    type: [Number, String],
+    default: null
+  }
+});
+
+const emits = defineEmits(['refreshData']);
 
 // 定义竞赛标签类型
 interface CompetitionTag {
@@ -132,30 +152,18 @@ interface CompetitionTag {
   type: string;
 }
 
-// 定义新建竞赛中示例类型
-interface ExampleItem {
-  input: string;
-  output: string;
-  explanation: string;
-}
-
-// 定义新建竞赛数据结构
-interface CreateCompetitionData {
+// 定义竞赛数据结构
+interface CompetitionData {
   title: string;
   logos: string[];
   start_time: string;
   end_time: string;
   tags: CompetitionTag[];
   problems_list: number[];
+  user_list: number[];
   status?: string;
   description?: string;
-  time_limit?: number;
-  memory_limit?: number;
-  input_format?: string;
-  output_format?: string;
-  constraints?: string[];
-  examples?: ExampleItem[];
-  topic?: string;
+  uid?: number;
 }
 
 // 题目信息缓存
@@ -164,37 +172,44 @@ interface QuestionInfo {
   title: string;
 }
 
-// 新标签类型
-interface NewTag {
-  name: string;
-  type: string;
-}
-
-// 当前示例类型
-interface CurrentExample {
-  input: string;
-  output: string;
-  explanation: string;
-}
-
-// 定义组件的props和emits
-const props = defineProps<{
-  alertBoxRef?: {
-    show: (message: string, type: number) => void;
-  } | null;
-}>();
-
-const emits = defineEmits<{
-  (e: 'refreshData'): void;
-}>();
-
 // 表单和对话框状态
 const dialogVisible = ref(false);
 const competitionFormRef = ref<FormInstance | null>(null);
-const creating = ref(false);
+const updating = ref(false);
 
-// 新竞赛数据
-const competition = reactive<CreateCompetitionData>({
+// 创建标签相关
+const showTagInput = ref(false);
+const newTag = ref({
+  name: '',
+  type: 'pending'
+});
+
+// 题目数据
+const problemsInfo = ref<QuestionInfo[]>([]);
+const filteredProblems = ref<QuestionInfo[]>([]);
+const problemsLoading = ref(false);
+const allProblems = ref<QuestionInfo[]>([]);
+
+// 可选题目和用户列表（示例数据，实际应该从API获取）
+const availableProblems = ref([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+const availableUsers = ref([101, 102, 103, 104, 105, 106, 107, 108, 109, 110]);
+
+// 表单验证规则
+const competitionRules = reactive({
+  'title': [
+    { required: true, message: '请输入竞赛名称', trigger: 'blur' },
+    { min: 3, max: 50, message: '长度在 3 到 50 个字符', trigger: 'blur' }
+  ],
+  'start_time': [
+    { required: true, message: '请设置开始时间', trigger: 'blur' }
+  ],
+  'end_time': [
+    { required: true, message: '请设置结束时间', trigger: 'blur' }
+  ]
+}) as FormRules;
+
+// 竞赛数据
+const competition = reactive<CompetitionData>({
   title: '',
   logos: [],
   start_time: '',
@@ -206,51 +221,10 @@ const competition = reactive<CreateCompetitionData>({
     }
   ],
   problems_list: [],
+  user_list: [],
   status: 'upcoming',
-  description: '',
-  time_limit: 1000,
-  memory_limit: 128,
-  input_format: '',
-  output_format: '',
-  constraints: [],
-  examples: [],
-  topic: '入门'
+  description: ''
 });
-
-// 表单验证规则
-const competitionRules = reactive<FormRules>({
-  'title': [
-    { required: true, message: '请输入竞赛名称', trigger: 'blur' },
-    { min: 3, max: 50, message: '长度在 3 到 50 个字符', trigger: 'blur' }
-  ],
-  'start_time': [
-    { required: true, message: '请设置开始时间', trigger: 'blur' }
-  ],
-  'end_time': [
-    { required: true, message: '请设置结束时间', trigger: 'blur' }
-  ]
-});
-
-// 当前正在编辑的约束条件和示例
-const constraint = ref('');
-const currentExample = reactive<CurrentExample>({
-  input: '',
-  output: '',
-  explanation: ''
-});
-
-// 创建标签相关
-const showTagInput = ref(false);
-const newTag = reactive<NewTag>({
-  name: '',
-  type: 'pending'
-});
-
-// 题目数据
-const problemsInfo = ref<QuestionInfo[]>([]);
-const filteredProblems = ref<QuestionInfo[]>([]);
-const problemsLoading = ref(false);
-const allProblems = ref<QuestionInfo[]>([]);
 
 // 获取标签类型
 const getTagType = (type: string): string => {
@@ -261,16 +235,35 @@ const getTagType = (type: string): string => {
     case 'ended': return 'warning';      // 已结束
     case 'individual': return 'success'; // 个人赛
     case 'team': return 'success';       // 团队赛
-    case 'oi': return 'primary';         // OI赛制
-    case 'acm': return 'primary';        // ACM赛制
-    case 'difficulty': return 'danger';  // 难度相关
-    case 'category': return 'warning';   // 分类相关
     default: return 'info';
   }
 };
 
+// 添加标签
+const addTag = () => {
+  if (newTag.value.name.trim() === '') {
+    ElMessage.warning('标签名称不能为空');
+    return;
+  }
+  
+  competition.tags.push({
+    name: newTag.value.name,
+    type: newTag.value.type
+  });
+  
+  // 重置并隐藏标签输入
+  newTag.value.name = '';
+  newTag.value.type = 'pending';
+  showTagInput.value = false;
+};
+
+// 移除标签
+const removeTag = (index: number) => {
+  competition.tags.splice(index, 1);
+};
+
 // 搜索题目
-const searchProblems = (query: string): void => {
+const searchProblems = (query: string) => {
   if (query === '') {
     filteredProblems.value = allProblems.value;
     return;
@@ -278,7 +271,7 @@ const searchProblems = (query: string): void => {
   
   // 搜索逻辑：匹配ID或标题
   const searchText = query.toLowerCase();
-  filteredProblems.value = allProblems.value.filter((problem: QuestionInfo) => {
+  filteredProblems.value = allProblems.value.filter(problem => {
     const idMatch = problem.id.toString().includes(searchText);
     const titleMatch = problem.title.toLowerCase().includes(searchText);
     return idMatch || titleMatch;
@@ -286,7 +279,7 @@ const searchProblems = (query: string): void => {
 };
 
 // 获取题目标题信息
-const fetchQuestionsInfo = async (problemIds: number[] = []): Promise<void> => {
+const fetchQuestionsInfo = async (problemIds: number[] = []) => {
   problemsLoading.value = true;
   
   try {
@@ -302,9 +295,9 @@ const fetchQuestionsInfo = async (problemIds: number[] = []): Promise<void> => {
     const apiData = response.data;
     
     // 处理API返回的数据
-    const results = apiData.map(item => ({
-      id: item.id || apiData.indexOf(item) + 1,
-      title: item.question?.title || `题目 ${apiData.indexOf(item) + 1}`
+    const results = apiData.map((item, index) => ({
+      id: index + 1,
+      title: item.question?.title || `题目 ${index + 1}`
     }));
     
     allProblems.value = results;
@@ -318,81 +311,36 @@ const fetchQuestionsInfo = async (problemIds: number[] = []): Promise<void> => {
   }
 };
 
-// 打开创建竞赛对话框
-const openCreateDialog = async (): Promise<void> => {
-  console.log('openCreateDialog被调用，正在打开创建竞赛对话框');
+// 打开编辑竞赛对话框
+const openEditDialog = async (competitionData: CompetitionData) => {
   // 重置表单
-  Object.assign(competition, {
-    title: '',
-    logos: [],
-    start_time: '',
-    end_time: '',
-    tags: [
-      {
-        name: '未开始',
-        type: 'pending'
-      }
-    ],
-    problems_list: [],
-    status: 'upcoming',
-    description: '',
-    time_limit: 1000,
-    memory_limit: 128
-  });
-  
-  // 获取题目数据
-  await fetchQuestionsInfo();
-  
-  // 显示对话框
-  dialogVisible.value = true;
-  
-  // 重置其他表单状态
-  constraint.value = '';
-  Object.assign(currentExample, {
-    input: '',
-    output: '',
-    explanation: ''
-  });
-  showTagInput.value = false;
-  Object.assign(newTag, {
-    name: '',
-    type: 'pending'
-  });
-};
-
-// 添加标签
-const addTag = (): void => {
-  if (newTag.name.trim() === '') {
-    ElMessage.warning('标签名称不能为空');
-    return;
+  if (competitionFormRef.value) {
+    competitionFormRef.value.resetFields();
   }
   
-  competition.tags.push({
-    name: newTag.name,
-    type: newTag.type
-  });
+  // 填充竞赛数据
+  Object.assign(competition, competitionData);
   
-  // 重置新标签
-  newTag.name = '';
-  showTagInput.value = false;
+  // 获取题目详细信息
+  if (competition.problems_list && competition.problems_list.length > 0) {
+    await fetchQuestionsInfo(competition.problems_list);
+  }
+  
+  // 打开对话框
+  dialogVisible.value = true;
 };
 
-// 删除标签
-const removeTag = (index: number): void => {
-  competition.tags.splice(index, 1);
-};
-
-// 提交创建竞赛表单
-const submitCompetition = async (): Promise<void> => {
+// 提交更新的竞赛信息
+const updateCompetition = async () => {
   if (!competitionFormRef.value) return;
   
   try {
     // 表单验证
     await competitionFormRef.value.validate();
     
-    creating.value = true;
+    updating.value = true;
     
-    // 确保开始时间和结束时间是ISO格式
+    // 确保开始时间和结束时间是合法格式
     if (typeof competition.start_time !== 'string' || competition.start_time === '') {
       competition.start_time = new Date().toISOString();
     }
@@ -404,20 +352,20 @@ const submitCompetition = async (): Promise<void> => {
       competition.end_time = endDate.toISOString();
     }
     
-    console.log('提交竞赛数据:', JSON.stringify(competition));
+    console.log('提交竞赛更新数据:', JSON.stringify(competition));
     
-    // 发送创建竞赛请求
+    // 发送更新竞赛请求
     const response = await axios({
-      url: 'http://localhost:5000/api/races',
-      method: 'post',
+      url: `http://localhost:5000/api/races/${competition.uid}`,
+      method: 'put',
       data: competition
     });
     
-    // 创建成功
+    // 更新成功
     if (props.alertBoxRef) {
-      props.alertBoxRef.show('竞赛创建成功!', 0);
+      props.alertBoxRef.show('竞赛更新成功!', 0);
     } else {
-      ElMessage.success('竞赛创建成功!');
+      ElMessage.success('竞赛更新成功!');
     }
     
     dialogVisible.value = false;
@@ -429,21 +377,45 @@ const submitCompetition = async (): Promise<void> => {
     if (error.message?.includes('validate')) {
       ElMessage.error('请填写所有必填字段');
     } else {
-      console.error('创建竞赛失败:', error);
+      console.error('更新竞赛失败:', error);
       if (props.alertBoxRef) {
-        props.alertBoxRef.show(`创建竞赛失败: ${error.response?.data?.message || error.message || '未知错误'}`, 1);
+        props.alertBoxRef.show(`更新竞赛失败: ${error.response?.data?.message || error.message || '未知错误'}`, 1);
       } else {
-        ElMessage.error(`创建竞赛失败: ${error.response?.data?.message || error.message || '未知错误'}`);
+        ElMessage.error(`更新竞赛失败: ${error.response?.data?.message || error.message || '未知错误'}`);
       }
     }
   } finally {
-    creating.value = false;
+    updating.value = false;
+  }
+};
+
+// 获取特定竞赛的详细信息
+const fetchRaceDetails = async (uid: number) => {
+  try {
+    const response = await axios({
+      url: `http://localhost:5000/api/races/${uid}`,
+      method: 'get'
+    });
+    
+    // 填充竞赛数据
+    Object.assign(competition, response.data);
+    
+    return response.data;
+  } catch (error) {
+    console.error('获取竞赛详情失败:', error);
+    if (props.alertBoxRef) {
+      props.alertBoxRef.show('获取竞赛详情失败，请稍后重试', 1);
+    } else {
+      ElMessage.error('获取竞赛详情失败，请稍后重试');
+    }
+    return null;
   }
 };
 
 // 暴露方法给父组件
 defineExpose({
-  openCreateDialog
+  openEditDialog,
+  fetchRaceDetails
 });
 </script>
 
@@ -453,86 +425,21 @@ defineExpose({
   gap: 24px;
 }
 
-.form-row .el-form-item {
-  flex: 1;
-}
-
-.constraints-list, .examples-list {
-  margin-top: 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.constraint-item, .example-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 8px 12px;
-  background-color: #f8f9fa;
-  border-radius: 6px;
-  font-size: 14px;
-}
-
-.constraint-item .el-icon, .example-item .el-icon {
-  cursor: pointer;
-  color: #909399;
-}
-
-.constraint-item .el-icon:hover, .example-item .el-icon:hover {
-  color: #f56c6c;
-}
-
-.example-inputs {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  margin-bottom: 16px;
-}
-
-.example-content {
-  font-size: 13px;
-  color: #606266;
-  margin: 4px 0;
-  flex: 1;
-}
-
-.create-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background-color: #18a058;
-  border-color: #18a058;
-}
-
-.button-icon {
-  margin-right: 4px;
-  display: flex;
-}
-
 .competition-tag {
   margin-right: 8px;
   margin-bottom: 8px;
 }
 
 .tag-input {
-  margin-top: 8px;
   display: flex;
-  gap: 8px;
   flex-wrap: wrap;
-}
-
-.tag-input .el-select {
-  width: 120px;
-}
-
-.tag-input .el-input {
-  width: 150px;
+  gap: 8px;
+  margin-top: 8px;
 }
 
 .tip-text {
   font-size: 12px;
-  color: #909399;
+  color: #999;
   margin-top: 4px;
 }
 
@@ -544,12 +451,11 @@ defineExpose({
 
 .problem-id {
   font-size: 12px;
-  color: #909399;
+  color: #999;
 }
 
 .problem-title {
   font-size: 14px;
-  color: #606266;
-  margin-left: 8px;
+  font-weight: bold;
 }
 </style>
