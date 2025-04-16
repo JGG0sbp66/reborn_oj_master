@@ -62,16 +62,16 @@
                             <td v-for="problem in problemColumns" :key="problem.index" class="column-problem">
                                 <div 
                                     class="problem-status" 
-                                    :class="getProblemStatusClass(rank.problem_stats['problem_' + problem.problemId])">
+                                    :class="getProblemStatusClass(rank.problem_stats[problem.problemId])">
                                     <!-- 已解决状态 -->
-                                    <template v-if="rank.problem_stats['problem_' + problem.problemId]?.solved">
-                                        <div class="penalty-time">{{ rank.problem_stats['problem_' + problem.problemId].penalty_time }}</div>
-                                        <div class="submit-count">{{ rank.problem_stats['problem_' + problem.problemId].submit_count }} {{ rank.problem_stats['problem_' + problem.problemId].submit_count > 1 ? 'trys' : 'try' }}</div>
+                                    <template v-if="rank.problem_stats[problem.problemId]?.solved">
+                                        <div class="penalty-time">{{ rank.problem_stats[problem.problemId].penalty_time }}</div>
+                                        <div class="submit-count">{{ rank.problem_stats[problem.problemId].submit_count }} {{ rank.problem_stats[problem.problemId].submit_count > 1 ? 'trys' : 'try' }}</div>
                                     </template>
                                     
                                     <!-- 尝试未解决状态 -->
-                                    <template v-else-if="rank.problem_stats['problem_' + problem.problemId]?.submit_count > 0">
-                                        <div class="submit-count">{{ rank.problem_stats['problem_' + problem.problemId].submit_count }} {{ rank.problem_stats['problem_' + problem.problemId].submit_count > 1 ? 'trys' : 'try' }}</div>
+                                    <template v-else-if="rank.problem_stats[problem.problemId]?.submit_count > 0">
+                                        <div class="submit-count">{{ rank.problem_stats[problem.problemId].submit_count }} {{ rank.problem_stats[problem.problemId].submit_count > 1 ? 'trys' : 'try' }}</div>
                                     </template>
                                     
                                     <!-- 未尝试状态 -->
@@ -112,7 +112,7 @@ const problemColumns = computed(() => {
     return Array.from({ length: problemCount }, (_, i) => ({
         index: i,
         label: ALPHABET[i],
-        problemId: i + 1 // 用于匹配API返回的problem_1, problem_2等键名
+        problemId: ALPHABET[i] // 直接使用字母作为键名
     }));
 });
 
@@ -167,6 +167,7 @@ console.log('Rank组件接收到的数据:', raceRank.value);
 </script>
 
 <style scoped>
+/* 样式部分保持不变 */
 .competition-rank {
     width: 100%;
     padding: 16px;
@@ -319,21 +320,17 @@ console.log('Rank组件接收到的数据:', raceRank.value);
 }
 
 .solved-count {
-    /* font-family: 'Inter', 'Roboto Mono', monospace, sans-serif; */
     font-weight: 600;
     font-size: 15px;
     color: #10b981;
 }
 
 .total-time {
-    /* font-family: 'Inter', 'Roboto Mono', monospace, sans-serif; */
     font-weight: 500;
     color: #6b7280;
 }
 
-/* 问题状态样式 */
 .problem-status {
-    /* font-family: 'Inter', 'Roboto Mono', monospace, sans-serif; */
     text-align: center;
     min-height: 48px;
     display: flex;
@@ -348,20 +345,18 @@ console.log('Rank组件接收到的数据:', raceRank.value);
 }
 
 .status-solved {
-    background-color: #67e56d; /* 图片中的绿色 */
-    color: #000; /* 黑色文字 */
-    /* font-weight: 600; */
+    background-color: #67e56d;
+    color: #000;
 }
 
 .status-attempted {
-    background-color: #ff7c7c; /* 图片中的红色 */
-    color: #000; /* 黑色文字 */
-    /* font-weight: 600; */
+    background-color: #ff7c7c;
+    color: #000;
 }
 
 .status-unattempted, .status-none {
     color: #000;
-    background-color: #f1f1f1; /* 图片中的浅灰色 */
+    background-color: #f1f1f1;
 }
 
 .no-attempt {
@@ -379,7 +374,6 @@ console.log('Rank组件接收到的数据:', raceRank.value);
     font-size: 12px;
 }
 
-/* 悬浮效果 */
 .problem-status:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
@@ -387,67 +381,13 @@ console.log('Rank组件接收到的数据:', raceRank.value);
 }
 
 .status-solved:hover {
-    background-color: #4ad850; /* 稍深一点的绿色 */
+    background-color: #4ad850;
 }
 
 .status-attempted:hover {
-    background-color: #ff6a6a; /* 稍深一点的红色 */
+    background-color: #ff6a6a;
 }
 
-/* 调整表格样式 */
-.rank-list {
-    width: 100%;
-    border-collapse: collapse;
-    table-layout: fixed;
-}
-
-.rank-row td {
-    padding: 0;
-    font-size: 14px;
-    text-align: center;
-    vertical-align: middle;
-    border: 1px solid #e2e8f0;
-}
-
-.rank-row td.column-rank,
-.rank-row td.column-player,
-.rank-row td.column-solved,
-.rank-row td.column-time {
-    padding: 12px 8px;
-}
-
-.column-problem { 
-    min-width: 60px; 
-    width: 60px; 
-    padding: 0 !important; 
-    overflow: hidden;
-    border: 1px solid #e2e8f0;
-}
-
-@media (max-width: 992px) {
-    .rank-card {
-        min-width: 800px;
-    }
-    
-    .th-content {
-        flex-direction: column;
-        gap: 3px;
-    }
-    
-    .player-info {
-        flex-direction: column;
-        gap: 3px;
-        align-items: center;
-    }
-    
-    .column-rank { min-width: 50px; width: 50px; }
-    .column-player { min-width: 80px; width: 80px; }
-    .column-solved { min-width: 60px; width: 60px; }
-    .column-time { min-width: 70px; width: 70px; }
-    .column-problem { min-width: 40px; width: 40px; }
-}
-
-/* 添加空数据状态的样式 */
 .empty-row {
     height: 200px;
 }
@@ -474,5 +414,28 @@ console.log('Rank组件接收到的数据:', raceRank.value);
 .empty-text {
     font-size: 16px;
     color: #64748b;
+}
+
+@media (max-width: 992px) {
+    .rank-card {
+        min-width: 800px;
+    }
+    
+    .th-content {
+        flex-direction: column;
+        gap: 3px;
+    }
+    
+    .player-info {
+        flex-direction: column;
+        gap: 3px;
+        align-items: center;
+    }
+    
+    .column-rank { min-width: 50px; width: 50px; }
+    .column-player { min-width: 80px; width: 80px; }
+    .column-solved { min-width: 60px; width: 60px; }
+    .column-time { min-width: 70px; width: 70px; }
+    .column-problem { min-width: 40px; width: 40px; }
 }
 </style>
