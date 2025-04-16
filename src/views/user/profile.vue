@@ -13,14 +13,14 @@
                   <el-icon><Upload /></el-icon>
                   <span>更换头像</span>
                 </div>
-              </div>
-              <div v-else class="avatar-placeholder">
-                {{ userInitials }}
+          </div>
+          <div v-else class="avatar-placeholder">
+            {{ userInitials }}
                 <div class="avatar-upload-overlay">
                   <el-icon><Upload /></el-icon>
                   <span>上传头像</span>
-                </div>
-              </div>
+          </div>
+        </div>
               <input
                 type="file"
                 ref="fileInput"
@@ -28,18 +28,18 @@
                 style="display: none"
                 @change="onFileChange"
               />
-            </div>
-          </div>
+        </div>
+      </div>
           <h2 class="user-name">{{ username }}</h2>
           <div class="user-role">{{ userRole }}</div>
           <div class="user-joined">
             加入时间: {{ formatDate(userJoinDate) }}
-          </div>
+    </div>
           <div class="user-stats">
             <div class="stat-item">
               <div class="stat-value">{{ problemSolved }}</div>
               <div class="stat-label">已解题目</div>
-            </div>
+          </div>
             <div class="stat-item">
               <div class="stat-value">{{ competitionsJoined }}</div>
               <div class="stat-label">参与比赛</div>
@@ -48,8 +48,8 @@
               <div class="stat-value">{{ rank }}</div>
               <div class="stat-label">当前排名</div>
             </div>
-          </div>
-        </div>
+            </div>
+            </div>
 
         <!-- 侧边导航菜单 -->
         <div class="user-nav">
@@ -69,8 +69,8 @@
           >
             <el-icon><List /></el-icon>
             <span>解题记录</span>
-          </div>
-          
+        </div>
+
           <div 
             class="nav-item"
             :class="{ active: activeSection === 'competitions' }"
@@ -87,35 +87,28 @@
           >
             <el-icon><Setting /></el-icon>
             <span>账户设置</span>
-          </div>
-          
-          <!-- 管理员后台入口按钮, 只对admin角色可见 -->
-          <router-link 
-            v-if="userRole === 'admin'"
-            to="/user/manager" 
-            class="nav-item admin-nav-item"
-            target="_blank"
-          >
-            <el-icon><Monitor /></el-icon>
-            <span>后台管理</span>
-          </router-link>
-        </div>
-      </div>
+            </div>
+            </div>
+        
+        <!-- 管理员后台入口按钮, 只对admin角色可见 -->
+        <router-link 
+          v-if="userRole === 'admin'"
+          to="/user/manager" 
+          class="admin-button"
+          target="_blank"
+        >
+          <el-icon><Monitor /></el-icon>
+          <span>后台管理</span>
+        </router-link>
+            </div>
 
       <!-- 右侧内容区域 -->
       <div class="profile-main-content">
         <!-- 用户活动热力图 - 始终可见 -->
-        <div v-if="isHeatmapVisible" class="profile-section">
+        <div class="profile-section">
           <h3 class="section-title">编程活动</h3>
           <ActivityHeatmap />
-        </div>
-        <div v-else class="profile-section heatmap-placeholder">
-          <h3 class="section-title">编程活动</h3>
-          <div class="loading-indicator">
-            <div class="loading-spinner"></div>
-            <span>加载中...</span>
-          </div>
-        </div>
+            </div>
         
         <transition name="fade" mode="out-in">
           <div v-if="activeSection === 'profile'" class="section-container" key="profile">
@@ -132,13 +125,16 @@
 
           <div v-else-if="activeSection === 'solved-problems'" class="section-container" key="solved-problems">
             <!-- 解题记录 -->
-            <SolvedProblems :problems="recentProblems" />
-          </div>
+            <SolvedProblems :problems="solvedProblemsData" :loading="isLoadingSolvedProblems" />
+        </div>
 
           <div v-else-if="activeSection === 'competitions'" class="section-container" key="competitions">
             <!-- 比赛记录 -->
-            <CompetitionRecords :competitions="competitions" />
-          </div>
+            <CompetitionRecords 
+              :competitions="competitionRecordsData"
+              :loading="isLoadingCompetitions"
+            />
+      </div>
 
           <div v-else-if="activeSection === 'settings'" class="section-container" key="settings">
             <!-- 账户设置 -->
@@ -157,14 +153,14 @@
             />
           </div>
         </transition>
-      </div>
-    </div>
-  </div>
+              </div>
+              </div>
+            </div>
   <foot class="page-footer" />
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch, defineAsyncComponent, defineExpose } from 'vue';
+import { ref, computed, onMounted, watch, defineAsyncComponent, defineExpose, onBeforeUnmount } from 'vue';
 import { useRoute } from 'vue-router';
 import headerheader from '@/components/headerheader.vue';
 import foot from '@/components/foot.vue';
@@ -178,13 +174,11 @@ const ActivityHeatmap = defineAsyncComponent(() =>
 );
 import { UserFilled, List, Trophy, Setting, Upload, Monitor } from '@element-plus/icons-vue';
 import axios from 'axios';
-import { ElMessage } from 'element-plus';
+import { ElMessage, ElLoading } from 'element-plus';
+import emitter from '@/utils/eventBus';
 
 // 控制当前显示的内容区域
 const activeSection = ref('profile');
-
-// 控制组件延迟加载的状态
-const isHeatmapVisible = ref(false);
 
 // 用于确定当前显示的组件
 const route = useRoute();
@@ -217,30 +211,22 @@ const publicSolvedProblems = ref<boolean>(true);
 const publicRanking = ref<boolean>(true);
 
 // 比赛记录
-interface Competition {
-  title: string;
-  startDate: Date;
-  endDate: Date;
-  rank: string;
-  result: string; // 'good', 'average', 'poor'
-}
-
-const competitions = ref<Competition[]>([
-  {
-    title: '2023年春季编程大赛',
-    startDate: new Date('2023-04-10'),
-    endDate: new Date('2023-04-12'),
-    rank: '第8名',
-    result: 'good'
-  },
-  {
-    title: '算法挑战赛',
-    startDate: new Date('2023-03-05'),
-    endDate: new Date('2023-03-05'),
-    rank: '第15名',
-    result: 'average'
-  }
-]);
+// const competitions = ref<Competition[]>([
+//   {
+//     title: '2023年春季编程大赛',
+//     startDate: new Date('2023-04-10'),
+//     endDate: new Date('2023-04-12'),
+//     rank: '第8名',
+//     result: 'good'
+//   },
+//   {
+//     title: '算法挑战赛',
+//     startDate: new Date('2023-03-05'),
+//     endDate: new Date('2023-03-05'),
+//     rank: '第15名',
+//     result: 'average'
+//   }
+// ]);
 
 // 用户统计信息
 const problemSolved = ref(0);
@@ -362,35 +348,6 @@ const defaultAvatarUrl = computed(() => {
   return generateAvatarSvg(username.value);
 });
 
-// 最近解题记录
-interface ProblemRecord {
-  title: string;
-  difficulty: string;
-  difficultyText: string;
-  solvedAt: Date;
-}
-
-const recentProblems = ref<ProblemRecord[]>([
-  {
-    title: '寻找两个有序数组的中位数',
-    difficulty: 'hard',
-    difficultyText: '困难',
-    solvedAt: new Date('2023-09-15')
-  },
-  {
-    title: '两数之和',
-    difficulty: 'easy',
-    difficultyText: '简单',
-    solvedAt: new Date('2023-09-12')
-  },
-  {
-    title: '最长回文子串',
-    difficulty: 'medium',
-    difficultyText: '中等',
-    solvedAt: new Date('2023-09-10')
-  }
-]);
-
 // 格式化日期 - 添加缓存避免重复计算
 const dateFormatCache = new Map<number, string>();
 const formatDate = (date: Date): string => {
@@ -423,6 +380,29 @@ const fetchUserProfile = async (): Promise<void> => {
     // 先使用本地存储的数据
     username.value = localStorage.getItem('username') || '用户';
     userRole.value = localStorage.getItem('userRole') || '普通用户';
+    const avatarFromStorage = localStorage.getItem('avatarUrl');
+    
+    // 获取时间戳，用于防止缓存
+    const timestamp = localStorage.getItem('avatar_timestamp') || Date.now().toString();
+    
+    // 检查localStorage中的头像是否为blob URL，以及是否有效
+    if (avatarFromStorage) {
+      if (avatarFromStorage.startsWith('blob:')) {
+        // 对于blob URL，先尝试刷新头像（避免无效的blob URL）
+        refreshUserAvatar();
+      } else {
+        // 非blob URL直接使用
+        avatarUrl.value = avatarFromStorage;
+      }
+    }
+    
+    // 获取用户ID
+    const userId = localStorage.getItem('uid');
+    
+    // 如果有用户ID，尝试获取最新头像
+    if (userId) {
+      refreshUserAvatar(userId);
+    }
     
     // 然后从API获取用户信息
     try {
@@ -430,6 +410,16 @@ const fetchUserProfile = async (): Promise<void> => {
       if (response.data.authenticated && response.data.user) {
         // 使用后端返回的数据
         const userData = response.data.user;
+        
+        // 保存用户ID
+        if (userData.uid) {
+          localStorage.setItem('uid', userData.uid.toString());
+          
+          // 如果之前没有获取到头像，尝试再次获取
+          if (!avatarUrl.value) {
+            refreshUserAvatar(userData.uid);
+          }
+        }
         
         // 确保使用正确的username字段，而不是uid
         if (userData.username) {
@@ -440,6 +430,12 @@ const fetchUserProfile = async (): Promise<void> => {
         }
         
         userRole.value = userData.role || '普通用户';
+        
+        // 如果后端返回了头像URL，更新本地头像
+        if (userData.avatarUrl) {
+          avatarUrl.value = userData.avatarUrl;
+          localStorage.setItem('avatarUrl', userData.avatarUrl);
+        }
         
         // 保存到localStorage以便下次使用
         localStorage.setItem('username', username.value); // 保存正确的username
@@ -466,20 +462,49 @@ const fetchUserProfile = async (): Promise<void> => {
     rank.value = 128;
     email.value = 'user@example.com';
     bio.value = '热爱编程，喜欢解决复杂问题。正在学习算法和数据结构。';
-  } catch (error) {
+      } catch (error) {
     console.error('获取用户信息失败:', error);
   }
 };
 
-// 延迟显示热力图
-const showHeatmapAfterDelay = (): void => {
-  // 使用 requestAnimationFrame 确保UI绘制完成后再加载热力图
-  requestAnimationFrame(() => {
-    // 200ms延迟，让基本内容先显示
-    setTimeout(() => {
-      isHeatmapVisible.value = true;
-    }, 200);
-  });
+// 添加新方法：刷新用户头像
+const refreshUserAvatar = async (userId?: string | number) => {
+  try {
+    // 使用提供的userId或从localStorage获取
+    const id = userId || localStorage.getItem('uid');
+    if (!id) return;
+    
+    // 添加时间戳防止缓存
+    const timestamp = localStorage.getItem('avatar_timestamp') || Date.now().toString();
+    
+    // 获取头像
+    const avatarResponse = await axios.get(`http://localhost:5000/api/avatar-get/${id}?t=${timestamp}`, {
+      responseType: 'blob',
+      withCredentials: true
+    });
+    
+    // 处理响应
+    if (avatarResponse.status === 200 && avatarResponse.data) {
+      // 释放之前的blob URL资源
+      if (avatarUrl.value && avatarUrl.value.startsWith('blob:')) {
+        try {
+          URL.revokeObjectURL(avatarUrl.value);
+        } catch (e) {
+          console.log('释放旧头像URL资源失败:', e);
+        }
+      }
+      
+      // 创建新的blob URL
+      const blob = new Blob([avatarResponse.data], { type: 'image/jpeg' });
+      const imageUrl = URL.createObjectURL(blob);
+      avatarUrl.value = imageUrl;
+      
+      // 保存到localStorage
+      localStorage.setItem('avatarUrl', imageUrl);
+        }
+      } catch (error) {
+    console.log('获取用户头像失败:', error);
+  }
 };
 
 // 保存用户资料
@@ -604,14 +629,53 @@ const handlePasswordChanged = () => {
   // 这里可以做一些额外的操作，比如显示全局通知等
 };
 
-// 组件挂载时获取用户信息
+// 添加新的状态变量，用于预加载数据
+const solvedProblemsData = ref([]);
+const competitionRecordsData = ref([]);
+const isLoadingSolvedProblems = ref(true);
+const isLoadingCompetitions = ref(true);
+
+// 在组件挂载时获取用户信息和预加载数据
 onMounted(() => {
   // 立即获取用户基本信息
   fetchUserProfile();
   
-  // 延迟显示热力图
-  showHeatmapAfterDelay();
+  // 并行获取解题记录数据
+  fetchSolvedProblems();
+  
+  // 并行获取参赛记录数据
+  fetchCompetitionRecords();
 });
+
+// 添加获取解题记录数据的函数
+const fetchSolvedProblems = async () => {
+  try {
+    isLoadingSolvedProblems.value = true;
+    const response = await axios.get('http://localhost:5000/api/user-questions');
+    if (response.data && Array.isArray(response.data)) {
+      solvedProblemsData.value = response.data;
+    }
+  } catch (error) {
+    console.error('获取解题记录失败:', error);
+  } finally {
+    isLoadingSolvedProblems.value = false;
+  }
+};
+
+// 添加获取参赛记录数据的函数
+const fetchCompetitionRecords = async () => {
+  try {
+    isLoadingCompetitions.value = true;
+    const response = await axios.get('http://localhost:5000/api/user-race');
+    if (response.data && Array.isArray(response.data)) {
+      competitionRecordsData.value = response.data;
+    }
+  } catch (error) {
+    console.error('获取参赛记录失败:', error);
+  } finally {
+    isLoadingCompetitions.value = false;
+  }
+};
 
 // 处理头像上传
 const triggerFileUpload = (): void => {
@@ -646,16 +710,89 @@ const onFileChange = (event: Event): void => {
     const reader = new FileReader();
     reader.onload = (e) => {
       if (e.target && typeof e.target.result === 'string') {
+        // 本地临时预览
         avatarUrl.value = e.target.result;
         
-        // 这里应该将头像上传到服务器
-        // 模拟上传成功
-        setTimeout(() => {
+        // 创建FormData对象用于上传文件
+        const formData = new FormData();
+        formData.append('file', file);
+        
+        // 显示上传中提示
+        const loadingInstance = ElLoading.service({
+          lock: true,
+          text: '头像上传中...',
+          background: 'rgba(0, 0, 0, 0.7)'
+        });
+        
+        // 将头像上传到服务器
+        axios.post('http://localhost:5000/api/avatar-upload', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          },
+          withCredentials: true
+        })
+        .then(response => {
+          loadingInstance.close();
+          
+          if (response.data && response.data.success) {
+            // 创建更新时间戳
+            const timestamp = Date.now();
+            localStorage.setItem('avatar_timestamp', timestamp.toString());
+            
+            // 更新本地存储的头像URL
+            if (response.data.avatarUrl) {
+              avatarUrl.value = response.data.avatarUrl;
+              localStorage.setItem('avatarUrl', response.data.avatarUrl);
+            } else {
+              // 如果没有返回URL但上传成功，保存当前的临时URL
+              localStorage.setItem('avatarUrl', avatarUrl.value);
+            }
+            
+            // 触发全局事件，通知其他组件更新头像
+            emitter.emit('avatar-updated', {
+              avatarUrl: avatarUrl.value,
+              timestamp: timestamp
+            });
+            
+            ElMessage({
+              message: '头像更新成功',
+              type: 'success' as const
+            });
+          } else {
+            // 处理服务器返回的错误信息
+            const errorMsg = response.data?.message || '头像上传失败';
+            ElMessage({
+              message: errorMsg,
+              type: 'error' as const
+            });
+            
+            // 恢复之前的头像
+            avatarUrl.value = localStorage.getItem('avatarUrl') || '';
+          }
+        })
+        .catch(error => {
+          loadingInstance.close();
+          console.error('头像上传失败:', error);
+          
+          // 更详细的错误信息
+          let errorMessage = '头像上传失败，请稍后重试';
+          if (error.response) {
+            // 服务器响应了，但状态码不是2xx
+            errorMessage += ` (${error.response.status})`;
+            console.log('错误响应数据:', error.response.data);
+          } else if (error.request) {
+            // 请求发送了但没有收到响应
+            errorMessage = '服务器未响应，请检查网络连接';
+          }
+          
           ElMessage({
-            message: '头像更新成功',
-            type: 'success' as const
+            message: errorMessage,
+            type: 'error' as const
           });
-        }, 800);
+          
+          // 恢复之前的头像
+          avatarUrl.value = localStorage.getItem('avatarUrl') || '';
+        });
       }
     };
     reader.readAsDataURL(file);
@@ -674,6 +811,18 @@ defineExpose({
   defaultAvatarUrl,
   userInitials,
   onFileChange
+});
+
+// 在onBeforeUnmount中添加资源清理
+onBeforeUnmount(() => {
+  // 释放blob URL资源
+  if (avatarUrl.value && avatarUrl.value.startsWith('blob:')) {
+    try {
+      URL.revokeObjectURL(avatarUrl.value);
+    } catch (e) {
+      console.log('释放头像URL资源失败:', e);
+    }
+  }
 });
 </script>
 
@@ -1486,19 +1635,29 @@ defineExpose({
   }
 }
 
-/* Admin navigation item styling */
-.admin-nav-item {
-  margin-top: 12px;
+/* 独立的管理员按钮样式 */
+.admin-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 20px;
+  padding: 12px 20px;
   background: linear-gradient(to right, #42b983, #33c6aa);
   color: white !important;
   border-radius: 8px;
-  transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+  font-weight: 500;
+  text-decoration: none;
   box-shadow: 0 4px 12px rgba(66, 185, 131, 0.2);
+  transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
   position: relative;
   overflow: hidden;
+  text-align: center;
+  will-change: transform; /* 提高动画性能 */
+  isolation: isolate; /* 创建独立的堆叠上下文 */
 }
 
-.admin-nav-item::before {
+.admin-button::before {
   content: '';
   position: absolute;
   top: 0;
@@ -1510,51 +1669,48 @@ defineExpose({
   z-index: 0;
 }
 
-.admin-nav-item:hover {
+.admin-button:hover {
   transform: translateY(-2px);
   box-shadow: 0 8px 15px rgba(66, 185, 131, 0.25);
 }
 
-.admin-nav-item:hover::before {
+.admin-button:hover::before {
   left: 100%;
 }
 
-.admin-nav-item .el-icon {
+.admin-button .el-icon {
   color: white;
   z-index: 1;
   position: relative;
   transition: transform 0.3s ease;
+  font-size: 18px;
 }
 
-.admin-nav-item span {
+.admin-button span {
   position: relative;
   z-index: 1;
   transition: transform 0.3s ease;
+  font-size: 16px;
 }
 
-.admin-nav-item:hover .el-icon {
+.admin-button:hover .el-icon {
   transform: translateY(-2px);
 }
 
-.admin-nav-item:hover span {
+.admin-button:hover span {
   transform: translateX(2px);
 }
 
-.admin-nav-item::after {
-  content: "";
+/* 添加边缘缓冲区域，防止鼠标在边缘时产生抖动 */
+.admin-button::after {
+  content: '';
   position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  height: 2px;
-  background: rgba(255, 255, 255, 0.6);
-  transform: scaleX(0);
-  transform-origin: right;
-  transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
-}
-
-.admin-nav-item:hover::after {
-  transform: scaleX(1);
-  transform-origin: left;
+  top: -5px;
+  left: -5px;
+  right: -5px;
+  bottom: -5px;
+  z-index: -1;
+  opacity: 0;
+  pointer-events: none;
 }
 </style> 
