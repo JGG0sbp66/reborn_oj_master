@@ -2,7 +2,7 @@
     <div class="sidebar-container">
         <div class="sidebar-items">
             <div id="problems-btn" class="sidebar-item">
-                <router-link to="/contest/problems">
+                <router-link :to="getProblemUrl">
                     <div class="item-icon problem-icon">
                         <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <path d="M8 6H16M8 10H16M8 14H12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -24,7 +24,17 @@
     </div>
 </template>
 
-<script lang="ts" setup></script>
+<script lang="ts" setup>
+import { computed } from 'vue';
+import { useRoute } from 'vue-router';
+
+const route = useRoute();
+
+const getProblemUrl = computed(() => {
+    const uid = route.query.uid;
+    return uid ? `/contest/problems?uid=${uid}` : '/contest/problems';
+});
+</script>
 
 <style scoped>
 .sidebar-container {

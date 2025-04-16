@@ -5,10 +5,13 @@
                     <p class="page-description">管理所有编程竞赛，包括创建、编辑和删除竞赛</p>
                 </div>
                 <div class="header-right">
-                    <el-button type="primary" class="create-button">
+                    <el-button type="primary" class="create-button" @click="CreateRace">
                         <el-icon class="button-icon"><Plus /></el-icon>
                         <span>创建竞赛</span>
                     </el-button>
+                    <race-create @refreshData="fetchData" :alertBoxRef="alertBox" ref="raceCreateRef" />
+                    <race-edit @refreshData="fetchData" :alertBoxRef="alertBox" ref="raceEditRef" />
+                    <race-detail @refreshData="fetchData" @editRace="handleEditFromDetail" :alertBoxRef="alertBox" ref="raceDetailRef" />
                 </div>
             </div>
 
@@ -134,10 +137,17 @@
                     :row-class-name="tableRowClassName"
                     v-loading="loading"
                     @selection-change="handleSelectionChange"
+                    :border="false"
+                    stripe
+                    :cell-style="{ textAlign: 'center', padding: '12px 0' }"
+                    :header-cell-style="{ backgroundColor: '#f8f9fa', color: '#2c3e50', fontWeight: '600', textAlign: 'center' }"
+                    :show-overflow-tooltip="false"
+                    :max-height="'none'"
+                    :height="'auto'"
                 >
-                    <el-table-column type="selection" width="55" />
-                    <el-table-column prop="id" label="ID" width="80" />
-                    <el-table-column prop="title" label="竞赛名称" min-width="200">
+                    <el-table-column type="selection" width="50" align="center" />
+                    <el-table-column prop="id" label="ID" width="90" align="center" />
+                    <el-table-column prop="title" label="竞赛名称" min-width="220" align="left">
                         <template #default="scope">
                             <div class="competition-title">
                                 <span>{{ scope.row.title }}</span>
@@ -165,24 +175,24 @@
                             </div>
                         </template>
                     </el-table-column>
-                    <el-table-column prop="participantsCount" label="参与人数" width="120" />
-                    <el-table-column prop="startTime" label="开始时间" width="180" />
-                    <el-table-column prop="endTime" label="结束时间" width="180" />
-                    <el-table-column prop="status" label="状态" width="100">
+                    <el-table-column prop="participantsCount" label="参与人数" width="100" align="center" />
+                    <el-table-column prop="startTime" label="开始时间" width="170" align="center" />
+                    <el-table-column prop="endTime" label="结束时间" width="170" align="center" />
+                    <el-table-column prop="status" label="状态" width="100" align="center">
                         <template #default="scope">
                             <el-tag :type="getStatusType(scope.row.status)">
                                 {{ scope.row.status }}
                             </el-tag>
                         </template>
                     </el-table-column>
-                    <el-table-column label="操作" width="200" fixed="right">
+                    <el-table-column label="操作" width="180" fixed="right" align="center">
                         <template #default="scope">
                             <div class="action-buttons">
                                 <el-button 
                                     type="primary" 
                                     size="small" 
                                     text
-                                    @click="viewCompetitionDetails(scope.row.id)"
+                                    @click="viewCompetitionDetails(scope.row)"
                                 >
                                     查看
                                 </el-button>
@@ -190,7 +200,7 @@
                                     type="primary" 
                                     size="small" 
                                     text
-                                    @click="editCompetition(scope.row.id)"
+                                    @click="editCompetition(scope.row)"
                                 >
                                     编辑
                                 </el-button>
@@ -234,10 +244,13 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
-import type { FormInstance, FormRules } from 'element-plus';
+import type { FormInstance } from 'element-plus';
 import { Plus, Search, ArrowUp, ArrowDown, Timer, Collection, Refresh } from '@element-plus/icons-vue';
 import AlertBox from '../JGG/alertbox.vue';
 import axios from 'axios';
+import RaceCreate from './race-create.vue';
+import RaceEdit from './race-edit.vue';
+import RaceDetail from './race-detail.vue';
 
 // 定义竞赛标签类型
 interface CompetitionTag {
@@ -259,15 +272,14 @@ interface ApiCompetition {
   problems_list?: number[];
   user_list?: number[];
   status: string;
+  description?: string;
 }
 
-// 定义新建竞赛对象类型
-interface NewCompetition {
-  title: string;
-  start_time: string;
-  end_time: string;
-  logos: string[];
-  problems_list: number[];
+// 定义示例数据类型
+interface ExampleItem {
+  input: string;
+  output: string;
+  explanation: string;
 }
 
 // 定义表格显示的竞赛数据类型
@@ -282,7 +294,10 @@ interface FormattedCompetition {
 }
 
 // AlertBox引用
-const alertBox = ref(null);
+const alertBox = ref<any>(null);
+const raceCreateRef = ref<any>(null);
+const raceEditRef = ref<any>(null);
+const raceDetailRef = ref<any>(null);
 
 // 页面状态
 const loading = ref(false);
@@ -300,42 +315,15 @@ const searchTimeout = ref<number | null>(null);
 const competitionTypeFilter = ref('');
 const competitionModeFilter = ref('');
 
-// 创建竞赛相关
-const createDialogVisible = ref(false);
-const competitionForm = ref<FormInstance | null>(null);
-const creating = ref(false);
-const selectedStatus = ref('upcoming');
-const competitionType = ref('');
-const competitionMode = ref('');
-
-// 表单验证规则
-const competitionRules = ref<FormRules>({
-  title: [
-    { required: true, message: '请输入竞赛名称', trigger: 'blur' },
-    { min: 3, max: 50, message: '长度在 3 到 50 个字符', trigger: 'blur' }
-  ],
-  start_time: [
-    { required: true, message: '请选择开始时间', trigger: 'change' }
-  ],
-  end_time: [
-    { required: true, message: '请选择结束时间', trigger: 'change' }
-  ],
-  problems_list: [
-    { required: true, message: '请至少选择一道题目', trigger: 'change' }
-  ]
-});
-
-// 新竞赛默认值
-const newCompetition = ref<NewCompetition>({
-    title: '',
-    start_time: '',
-    end_time: '',
-    logos: [],
-    problems_list: [],
-});
-
 // 竞赛数据
 const competitions = ref<FormattedCompetition[]>([]);
+
+// 创建竞赛
+const CreateRace = () => {
+  if (raceCreateRef.value) {
+    raceCreateRef.value.openCreateDialog();
+  }
+};
 
 const get_race_info = async (): Promise<ApiCompetition[]> => {
   const { data: userData } = await axios({
@@ -350,12 +338,7 @@ const formatCompetitionData = (data: ApiCompetition[]): FormattedCompetition[] =
     // 处理状态映射
     let status = '未开始';
     if (item.status === 'upcoming') {
-      // 如果状态是未开始，但有团队赛标签，则显示为报名中
-      if (item.tags && item.tags.some(tag => tag.type === 'team')) {
-        status = '报名中';
-      } else {
-        status = '未开始';
-      }
+      status = '未开始';
     } else if (item.status === 'in_progress') {
       status = '进行中';
     } else if (item.status === 'registration') {
@@ -407,8 +390,19 @@ const fetchData = async () => {
   }
 };
 
-onMounted(fetchData);
-console.log(competitions.value);
+onMounted(async () => {
+  // 获取竞赛数据
+  await fetchData();
+  
+  // 告知子组件预加载题目数据
+  if (raceCreateRef.value) {
+    raceCreateRef.value.loadAvailableProblems();
+  }
+  
+  if (raceEditRef.value) {
+    raceEditRef.value.loadAvailableProblems();
+  }
+});
 
 // 处理延迟搜索，避免频繁过滤
 const handleSearch = () => {
@@ -447,20 +441,16 @@ const batchChangeStatus = () => {
     ElMessageBox.prompt('请选择新的竞赛状态', '批量修改状态', {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
-        inputType: 'select',
-        inputValue: '进行中',
-        inputPlaceholder: '请选择状态',
-        inputOptions: [
-            { value: '进行中', label: '进行中' },
-            { value: '报名中', label: '报名中' },
-            { value: '未开始', label: '未开始' },
-            { value: '已结束', label: '已结束' }
-        ]
+        inputPattern: /.*/ // 使用正则表达式验证
     }).then(({ value }) => {
-        const ids = selectedCompetitions.value.map((competition: any) => competition.id).join(', ');
-        alertBox.value.show(`已将竞赛 ${ids} 的状态修改为 ${value}`, 0);
+        const ids = selectedCompetitions.value.map((competition: FormattedCompetition) => competition.id).join(', ');
+        if (alertBox.value) {
+            alertBox.value.show(`已将竞赛 ${ids} 的状态修改为 ${value}`, 0);
+        }
     }).catch(() => {
-        alertBox.value.show('已取消操作', 1);
+        if (alertBox.value) {
+            alertBox.value.show('已取消操作', 1);
+        }
     });
 };
 
@@ -592,14 +582,58 @@ const handleCurrentChange = (page: number) => {
 };
 
 // 操作方法
-const viewCompetitionDetails = (id: string) => {
-    alertBox.value.show(`查看竞赛ID: ${id}`, 0);
-    // 实际应用中跳转到竞赛详情页
+const viewCompetitionDetails = (competition: FormattedCompetition) => {
+    if (!competition.raw) {
+        alertBox.value.show(`无法查看竞赛，缺少原始数据`, 1);
+        return;
+    }
+    
+    // 从id中提取uid (格式为 "C-123" -> 提取 123)
+    const uid = parseInt(competition.id.replace('C-', ''));
+    
+    // 打开竞赛详情对话框
+    if (raceDetailRef.value) {
+        raceDetailRef.value.openDetailDialog(uid);
+    } else {
+        alertBox.value.show(`详情组件未初始化`, 1);
+    }
 };
 
-const editCompetition = (id: string) => {
-    alertBox.value.show(`编辑竞赛ID: ${id}`, 1);
-    // 实际应用中跳转到竞赛编辑页
+// 从详情页跳转到编辑页
+const handleEditFromDetail = (raceData: any) => {
+    if (raceEditRef.value) {
+        raceEditRef.value.openEditDialog(raceData);
+    } else {
+        alertBox.value.show(`编辑组件未初始化`, 1);
+    }
+};
+
+const editCompetition = (competition: FormattedCompetition) => {
+    if (!competition.raw) {
+        alertBox.value.show(`无法编辑竞赛，缺少原始数据`, 1);
+        return;
+    }
+    
+    // 从表格行数据中提取需要编辑的竞赛信息
+    const editData = {
+        uid: competition.raw.uid,
+        title: competition.raw.title,
+        logos: competition.raw.logos || [],
+        start_time: competition.raw.start_time,
+        end_time: competition.raw.end_time,
+        tags: competition.raw.tags || [],
+        problems_list: competition.raw.problems_list || [],
+        user_list: competition.raw.user_list || [],
+        status: competition.raw.status,
+        description: competition.raw.description || ''
+    };
+    
+    // 打开编辑对话框
+    if (raceEditRef.value) {
+        raceEditRef.value.openEditDialog(editData);
+    } else {
+        alertBox.value.show(`编辑组件未初始化`, 1);
+    }
 };
 
 const deleteCompetition = (id: string) => {
@@ -618,25 +652,28 @@ const deleteCompetition = (id: string) => {
             
             // 从id中提取uid (格式为 "C-123" -> 提取 123)
             const uid = parseInt(id.replace('C-', ''));
+            console.log('准备删除竞赛，ID:', id, '提取的UID:', uid);
             
-            // 发送删除请求到后端
-            await axios({
-                url: `http://localhost:5000/api/${uid}`,
-                method: "post",
-                data: { uid: uid },
+            // 发送删除请求到后端，使用正确的DELETE方法和路径
+            const response = await axios({
+                url: `http://localhost:5000/api/races/${uid}`,
+                method: "delete",
             });
             
+            console.log('删除竞赛响应:', response);
+            
             // 删除成功，从本地数据中移除该竞赛
-            competitions.value = competitions.value.filter(comp => comp.id !== id);
+            competitions.value = competitions.value.filter((comp: FormattedCompetition) => comp.id !== id);
             
             // 显示成功提示
             alertBox.value.show(`竞赛 ${id} 已成功删除`, 0);
             
             // 重新加载数据
             await fetchData();
-        } catch (error) {
+        } catch (error: any) {
             console.error('删除竞赛失败:', error);
-            alertBox.value.show(`删除竞赛失败: ${error.message || '服务器错误'}`, 1);
+            console.error('错误详情:', error.response?.data || error.message || '未知错误');
+            alertBox.value.show(`删除竞赛失败: ${error.response?.data?.message || error.message || '服务器错误'}`, 1);
         } finally {
             loading.value = false;
         }
@@ -645,15 +682,6 @@ const deleteCompetition = (id: string) => {
         alertBox.value.show('已取消删除', 1);
     });
 };
-
-// 页面加载时模拟获取数据
-onMounted(() => {
-    loading.value = true;
-    // 模拟异步加载
-    setTimeout(() => {
-        loading.value = false;
-    }, 500);
-});
 
 // 计算总页数
 const totalPages = computed(() => {
@@ -929,32 +957,74 @@ const applyAdvancedSearch = () => {
     overflow: hidden;
     box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
     margin-bottom: 24px;
-    border: 1px solid rgba(24, 160, 88, 0.1);
+    border: none;
+}
+
+.competition-table :deep(.el-table__inner-wrapper) {
+    border: none;
+}
+
+.competition-table :deep(.el-scrollbar__bar.is-horizontal) {
+    display: none;
+}
+
+.competition-table :deep(.el-scrollbar__bar.is-vertical) {
+    display: none;
+}
+
+.competition-table :deep(.el-table__border-left),
+.competition-table :deep(.el-table__border-right),
+.competition-table :deep(.el-table__border-top),
+.competition-table :deep(.el-table__border-bottom) {
+    display: none;
+}
+
+.competition-table :deep(.el-table__row) {
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.competition-table :deep(.el-table__row:last-child) {
+    border-bottom: none;
+}
+
+.competition-table :deep(.el-table__header) {
+    border-bottom: 1px solid #ebeef5;
+}
+
+.competition-table :deep(.el-table__cell) {
+    border: none;
+}
+
+.competition-table :deep(.el-table--stripe .el-table__body tr.el-table__row--striped) {
+    background: rgba(24, 160, 88, 0.02);
+}
+
+.competition-table :deep(.el-table__fixed-right),
+.competition-table :deep(.el-table__fixed) {
+    box-shadow: none;
+    border-right: none;
+    border-left: none;
 }
 
 /* 为表格添加行高和单元格内边距控制 */
 .competition-table :deep(.el-table__row) {
-    height: 60px; /* 统一行高 */
+    height: 70px; /* 增加行高 */
 }
 
 .competition-table :deep(.el-table__cell) {
-    padding: 8px 0; /* 统一单元格内边距 */
+    padding: 10px 0; /* 增加单元格内边距 */
+    vertical-align: middle;
 }
 
 /* 统一表头样式 */
 .competition-table :deep(.el-table__header-row) {
-    height: 56px; /* 表头行高 */
+    height: 60px; /* 增加表头行高 */
 }
 
 .competition-table :deep(.el-table__header-cell) {
     background-color: #f8f9fa;
     font-weight: 600;
     color: #2c3e50;
-}
-
-/* 表格中的操作列样式 */
-.competition-table :deep(.el-button.el-button--text) {
-    padding: 6px 8px;
 }
 
 .competition-title {
@@ -995,7 +1065,25 @@ const applyAdvancedSearch = () => {
 
 .action-buttons {
     display: flex;
-    gap: 8px;
+    justify-content: center;
+    align-items: center;
+    gap: 5px;
+}
+
+.action-buttons :deep(.el-button) {
+    margin: 0;
+    padding: 4px 8px;
+    font-size: 12px;
+    min-height: 28px;
+    line-height: 1;
+}
+
+.action-buttons :deep(.el-button--text) {
+    color: #18a058;
+}
+
+.action-buttons :deep(.el-button--text.el-button--danger) {
+    color: #F56C6C;
 }
 
 .pagination-container {
@@ -1322,6 +1410,94 @@ const applyAdvancedSearch = () => {
 :deep(.el-message-box__btns .el-button--primary:hover) {
     background-color: #35b371 !important;
     border-color: #35b371 !important;
+}
+
+/* 创建竞赛表单样式 */
+.form-row {
+    display: flex;
+    gap: 24px;
+}
+
+.form-row .el-form-item {
+    flex: 1;
+}
+
+.constraints-list, .examples-list {
+    margin-top: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.constraint-item, .example-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    background-color: #f8f9fa;
+    border-radius: 6px;
+    font-size: 14px;
+}
+
+.constraint-item .el-icon, .example-item .el-icon {
+    cursor: pointer;
+    color: #909399;
+}
+
+.constraint-item .el-icon:hover, .example-item .el-icon:hover {
+    color: #f56c6c;
+}
+
+.example-inputs {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.example-content {
+    font-size: 13px;
+    color: #606266;
+    margin: 4px 0;
+    flex: 1;
+}
+
+/* 覆盖表格高度和滚动行为 */
+.competition-table :deep(.el-table) {
+    overflow: visible;
+}
+
+.competition-table :deep(.el-table__body-wrapper) {
+    overflow: visible !important;
+    height: auto !important;
+    max-height: none !important;
+}
+
+.competition-table :deep(.el-scrollbar__wrap) {
+    overflow: visible !important;
+    height: auto !important;
+    max-height: none !important;
+}
+
+.competition-table :deep(.el-scrollbar__view) {
+    height: auto !important;
+    max-height: none !important;
+}
+
+.competition-table :deep(.el-scrollbar) {
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+}
+
+.competition-table :deep(.el-table__fixed-body-wrapper) {
+    overflow: visible !important;
+    height: auto !important;
+    max-height: none !important;
+}
+
+.competition-table :deep(.el-table__fixed-right-patch) {
+    background-color: #f8f9fa !important;
 }
 </style>
 

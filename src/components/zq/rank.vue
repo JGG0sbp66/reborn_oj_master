@@ -28,9 +28,9 @@
                                 <span>总用时</span>
                             </div>
                         </th>
-                        <th v-for="(problem, index) in problems" :key="index" class="column-problem">
+                        <th v-for="problem in problemColumns" :key="problem.index" class="column-problem">
                             <div class="th-content problem-header">
-                                {{ problem }}
+                                {{ problem.label }}
                             </div>
                         </th>
                     </tr>
@@ -59,27 +59,31 @@
                             <td class="column-time">
                                 <div class="total-time">{{ rank.total_penalty }}分钟</div>
                             </td>
-                            <td v-for="(problem, pIndex) in problems" :key="pIndex" class="column-problem">
+                            <td v-for="problem in problemColumns" :key="problem.index" class="column-problem">
                                 <div 
                                     class="problem-status" 
-                                    :class="getProblemStatusClass(rank.problem_stats['problem_' + (pIndex + 1)])">
-                                    <template v-if="rank.problem_stats['problem_' + (pIndex + 1)]">
-                                        <div v-if="rank.problem_stats['problem_' + (pIndex + 1)].solved" class="status-solved">
-                                            {{ rank.problem_stats['problem_' + (pIndex + 1)].penalty_time }}
-                                            <div class="submit-count">{{ rank.problem_stats['problem_' + (pIndex + 1)].submit_count }} {{ rank.problem_stats['problem_' + (pIndex + 1)].submit_count > 1 ? 'trys' : 'try' }}</div>
-                                        </div>
-                                        <div v-else-if="rank.problem_stats['problem_' + (pIndex + 1)].submit_count > 0" class="status-attempted">
-                                            <div class="submit-count">{{ rank.problem_stats['problem_' + (pIndex + 1)].submit_count }} {{ rank.problem_stats['problem_' + (pIndex + 1)].submit_count > 1 ? 'trys' : 'try' }}</div>
-                                        </div>
-                                        <div v-else class="status-unattempted">—</div>
+                                    :class="getProblemStatusClass(rank.problem_stats['problem_' + problem.problemId])">
+                                    <!-- 已解决状态 -->
+                                    <template v-if="rank.problem_stats['problem_' + problem.problemId]?.solved">
+                                        <div class="penalty-time">{{ rank.problem_stats['problem_' + problem.problemId].penalty_time }}</div>
+                                        <div class="submit-count">{{ rank.problem_stats['problem_' + problem.problemId].submit_count }} {{ rank.problem_stats['problem_' + problem.problemId].submit_count > 1 ? 'trys' : 'try' }}</div>
                                     </template>
-                                    <div v-else class="status-unattempted">—</div>
+                                    
+                                    <!-- 尝试未解决状态 -->
+                                    <template v-else-if="rank.problem_stats['problem_' + problem.problemId]?.submit_count > 0">
+                                        <div class="submit-count">{{ rank.problem_stats['problem_' + problem.problemId].submit_count }} {{ rank.problem_stats['problem_' + problem.problemId].submit_count > 1 ? 'trys' : 'try' }}</div>
+                                    </template>
+                                    
+                                    <!-- 未尝试状态 -->
+                                    <template v-else>
+                                        <div class="no-attempt">·</div>
+                                    </template>
                                 </div>
                             </td>
                         </tr>
                     </template>
                     <tr v-else class="empty-row">
-                        <td :colspan="problems.length + 4" class="empty-cell">
+                        <td :colspan="problemColumns.length + 4" class="empty-cell">
                             <div class="empty-content">
                                 <el-icon class="empty-icon"><DataLine /></el-icon>
                                 <span class="empty-text">暂无排名数据</span>
@@ -96,8 +100,32 @@
 import { Trophy, User, Check, Timer, DataLine } from '@element-plus/icons-vue';
 import { ref, computed, defineProps } from 'vue';
 
-// 定义题目列
-const problems = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M'];
+// 最大可能的题目数字母
+const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+
+// 根据实际题目数量计算题目列
+const problemColumns = computed(() => {
+    // 获取比赛题目的实际数量
+    const problemCount = getProblemCount();
+    
+    // 生成对应数量的题目列
+    return Array.from({ length: problemCount }, (_, i) => ({
+        index: i,
+        label: ALPHABET[i],
+        problemId: i + 1 // 用于匹配API返回的problem_1, problem_2等键名
+    }));
+});
+
+// 获取比赛题目的实际数量
+function getProblemCount() {
+    if (!props.raceRank || !props.raceRank.race_info || !props.raceRank.race_info.problems) {
+        // 如果没有题目信息，默认显示5道题
+        return 5;
+    }
+    
+    // 返回实际的题目数量
+    return props.raceRank.race_info.problems.length;
+}
 
 // 排名样式类
 const getRankClass = (rank) => {
@@ -158,6 +186,7 @@ console.log('Rank组件接收到的数据:', raceRank.value);
     width: 100%;
     border-collapse: collapse;
     table-layout: fixed;
+    border: 1px solid #e2e8f0;
 }
 
 .rank-head {
@@ -174,6 +203,7 @@ console.log('Rank组件接收到的数据:', raceRank.value);
     color: #475569;
     font-size: 14px;
     text-align: center;
+    border: 1px solid #e2e8f0;
 }
 
 .problem-header {
@@ -206,16 +236,25 @@ console.log('Rank组件接收到的数据:', raceRank.value);
 }
 
 .rank-row td {
-    padding: 12px 8px;
+    padding: 0;
     font-size: 14px;
     text-align: center;
+    vertical-align: middle;
+    border: 1px solid #e2e8f0;
+}
+
+.rank-row td.column-rank,
+.rank-row td.column-player,
+.rank-row td.column-solved,
+.rank-row td.column-time {
+    padding: 12px 8px;
 }
 
 .column-rank { min-width: 60px; width: 60px; }
 .column-player { min-width: 160px; width: 160px; }
 .column-solved { min-width: 80px; width: 80px; }
 .column-time { min-width: 80px; width: 80px; }
-.column-problem { min-width: 60px; width: 60px; }
+.column-problem { min-width: 60px; width: 60px; padding: 0 !important; overflow: hidden; }
 
 .rank-number-wrapper {
     display: flex;
@@ -280,65 +319,109 @@ console.log('Rank组件接收到的数据:', raceRank.value);
 }
 
 .solved-count {
-    font-family: 'Inter', 'Roboto Mono', monospace, sans-serif;
+    /* font-family: 'Inter', 'Roboto Mono', monospace, sans-serif; */
     font-weight: 600;
-    font-size: 16px;
+    font-size: 15px;
     color: #10b981;
 }
 
 .total-time {
-    font-family: 'Inter', 'Roboto Mono', monospace, sans-serif;
+    /* font-family: 'Inter', 'Roboto Mono', monospace, sans-serif; */
     font-weight: 500;
     color: #6b7280;
 }
 
 /* 问题状态样式 */
 .problem-status {
-    padding: 6px 4px;
-    border-radius: 4px;
-    font-family: 'Inter', 'Roboto Mono', monospace, sans-serif;
+    /* font-family: 'Inter', 'Roboto Mono', monospace, sans-serif; */
     text-align: center;
-    min-height: 38px;
+    min-height: 48px;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
+    width: 100%;
+    height: 100%;
+    padding: 8px 4px;
+    border-radius: 0;
+    transition: all 0.2s ease;
 }
 
 .status-solved {
-    background-color: rgba(16, 185, 129, 0.15);
-    color: #059669;
-    font-weight: 600;
-    width: 100%;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
+    background-color: #67e56d; /* 图片中的绿色 */
+    color: #000; /* 黑色文字 */
+    /* font-weight: 600; */
 }
 
 .status-attempted {
-    background-color: rgba(239, 68, 68, 0.15);
-    color: #dc2626;
-    width: 100%;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
+    background-color: #ff7c7c; /* 图片中的红色 */
+    color: #000; /* 黑色文字 */
+    /* font-weight: 600; */
 }
 
 .status-unattempted, .status-none {
-    color: #94a3b8;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 100%;
-    font-size: 16px;
+    color: #000;
+    background-color: #f1f1f1; /* 图片中的浅灰色 */
+}
+
+.no-attempt {
+    font-size: 24px;
+    line-height: 1;
+}
+
+.penalty-time {
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 2px;
 }
 
 .submit-count {
-    font-size: 11px;
-    margin-top: 2px;
-    opacity: 0.9;
+    font-size: 12px;
+}
+
+/* 悬浮效果 */
+.problem-status:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    z-index: 1;
+}
+
+.status-solved:hover {
+    background-color: #4ad850; /* 稍深一点的绿色 */
+}
+
+.status-attempted:hover {
+    background-color: #ff6a6a; /* 稍深一点的红色 */
+}
+
+/* 调整表格样式 */
+.rank-list {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+}
+
+.rank-row td {
+    padding: 0;
+    font-size: 14px;
+    text-align: center;
+    vertical-align: middle;
+    border: 1px solid #e2e8f0;
+}
+
+.rank-row td.column-rank,
+.rank-row td.column-player,
+.rank-row td.column-solved,
+.rank-row td.column-time {
+    padding: 12px 8px;
+}
+
+.column-problem { 
+    min-width: 60px; 
+    width: 60px; 
+    padding: 0 !important; 
+    overflow: hidden;
+    border: 1px solid #e2e8f0;
 }
 
 @media (max-width: 992px) {
