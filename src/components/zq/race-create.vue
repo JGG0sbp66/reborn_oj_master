@@ -302,9 +302,9 @@ const fetchQuestionsInfo = async (problemIds: number[] = []): Promise<void> => {
     const apiData = response.data;
     
     // 处理API返回的数据
-    const results = apiData.map((item, index) => ({
-      id: index + 1,
-      title: item.question?.title || `题目 ${index + 1}`
+    const results = apiData.map(item => ({
+      id: item.id || apiData.indexOf(item) + 1,
+      title: item.question?.title || `题目 ${apiData.indexOf(item) + 1}`
     }));
     
     allProblems.value = results;

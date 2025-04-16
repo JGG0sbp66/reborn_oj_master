@@ -1,277 +1,274 @@
 <template>
     <div class="page-header">
-                <div class="header-left">
-                    <h2 class="page-title">题库管理</h2>
-                    <p class="page-description">管理所有编程题目，包括创建、编辑和删除题目</p>
+        <div class="header-left">
+            <h2 class="page-title">题库管理</h2>
+            <p class="page-description">管理所有编程题目，包括创建、编辑和删除题目</p>
+        </div>
+        <div class="header-right">
+            <el-button type="primary" class="create-button" @click="openCreateDialog">
+                <el-icon class="button-icon">
+                    <Plus />
+                </el-icon>
+                <span>创建题目</span>
+            </el-button>
+        </div>
+    </div>
+
+    <AlertBox ref="alertBox" />
+    <ProblemCreate ref="problemCreateRef" :alertBoxRef="alertBox" @refreshData="fetchData" />
+    <ProblemEdit ref="problemEditRef" :alertBoxRef="alertBox" :defaultExamples="defaultExamples" @refreshData="fetchData" />
+    <ProblemDetail ref="problemDetailRef" :alertBoxRef="alertBox" @editProblem="handleEditFromDetail" />
+
+    <div class="filter-bar">
+        <div class="filter-left">
+            <el-input placeholder="搜索题目名称或ID" prefix-icon="Search" v-model="searchQuery" clearable class="search-input"
+                @input="handleSearch">
+                <template #append>
+                    <el-button @click="handleSearch"
+                        style="background-color: #18a058; border-color: #18a058; color: white;">搜索</el-button>
+                </template>
+            </el-input>
+            <el-button type="primary" plain @click="showAdvancedSearch = !showAdvancedSearch"
+                style="background-color: rgba(24, 160, 88, 0.05); border-color: #18a05880; color: #18a058;">
+                {{ showAdvancedSearch ? '收起' : '高级筛选' }}
+                <el-icon>
+                    <component :is="showAdvancedSearch ? 'ArrowUp' : 'ArrowDown'" />
+                </el-icon>
+            </el-button>
+        </div>
+    </div>
+
+    <div class="advanced-search" v-if="showAdvancedSearch">
+        <div class="advanced-search-header">
+            <h3 class="advanced-search-title">高级筛选</h3>
+            <el-button type="text" @click="resetAdvancedSearch" class="reset-btn">
+                <el-icon>
+                    <Refresh />
+                </el-icon> 重置筛选
+            </el-button>
+        </div>
+        <div class="advanced-search-content">
+            <div class="search-row">
+                <div class="search-item">
+                    <span class="search-label">难度等级:</span>
+                    <el-select v-model="difficultyFilter" placeholder="难度等级" clearable @change="handleSearch"
+                        style="flex: 1;">
+                        <el-option label="全部" value="" />
+                        <el-option label="入门" value="入门" />
+                        <el-option label="普及" value="普及" />
+                        <el-option label="提高" value="提高" />
+                        <el-option label="省选" value="省选" />
+                        <el-option label="NOI" value="NOI" />
+                        <el-option label="CTSC" value="CTSC" />
+                    </el-select>
                 </div>
-                <div class="header-right">
-                    <el-button type="primary" class="create-button">
-                        <el-icon class="button-icon"><Plus /></el-icon>
-                        <span>创建题目</span>
-                    </el-button>
+                <div class="search-item">
+                    <span class="search-label">题目分类:</span>
+                    <el-select v-model="categoryFilter" placeholder="题目分类" clearable @change="handleSearch"
+                        style="flex: 1;">
+                        <el-option label="全部" value="" />
+                        <el-option label="算法" value="算法" />
+                        <el-option label="数据结构" value="数据结构" />
+                        <el-option label="数学" value="数学" />
+                        <el-option label="字符串" value="字符串" />
+                        <el-option label="动态规划" value="动态规划" />
+                    </el-select>
                 </div>
             </div>
-
-            <AlertBox ref="alertBox" />
-
-            <div class="filter-bar">
-                <div class="filter-left">
-                    <el-input
-                        placeholder="搜索题目名称或ID"
-                        prefix-icon="Search"
-                        v-model="searchQuery"
-                        clearable
-                        class="search-input"
-                        @input="handleSearch"
-                    >
-                        <template #append>
-                            <el-button @click="handleSearch" style="background-color: #18a058; border-color: #18a058; color: white;">搜索</el-button>
-                        </template>
-                    </el-input>
-                    <el-button type="primary" plain @click="showAdvancedSearch = !showAdvancedSearch" style="background-color: rgba(24, 160, 88, 0.05); border-color: #18a05880; color: #18a058;">
-                        {{ showAdvancedSearch ? '收起' : '高级筛选' }}
-                        <el-icon>
-                            <component :is="showAdvancedSearch ? 'ArrowUp' : 'ArrowDown'" />
-                        </el-icon>
-                    </el-button>
+            <div class="search-item full-width">
+                <span class="search-label">通过率范围:</span>
+                <el-slider v-model="passRateRange" range :min="0" :max="100"
+                    :marks="{ 0: '0%', 25: '25%', 50: '50%', 75: '75%', 100: '100%' }" @change="handleSearch"
+                    style="flex: 1;" />
+            </div>
+            <div class="search-row">
+                <div class="search-item">
+                    <span class="search-label">提交次数:</span>
+                    <el-select v-model="submissionCountFilter" placeholder="提交次数" clearable @change="handleSearch"
+                        style="flex: 1;">
+                        <el-option label="全部" value="" />
+                        <el-option label="1000以下" value="<1000" />
+                        <el-option label="1000-5000" value="1000-5000" />
+                        <el-option label="5000-10000" value="5000-10000" />
+                        <el-option label="10000以上" value=">10000" />
+                    </el-select>
+                </div>
+                <div class="search-item">
+                    <span class="search-label">创建时间:</span>
+                    <el-date-picker v-model="createTimeRange" type="daterange" range-separator="至"
+                        start-placeholder="开始日期" end-placeholder="结束日期" format="YYYY-MM-DD" @change="handleSearch"
+                        style="flex: 1;" />
                 </div>
             </div>
+        </div>
+        <div class="advanced-search-footer">
+            <div class="search-result-info">已筛选出 {{ totalProblems }} 道题目</div>
+            <div class="search-actions">
+                <el-button type="primary" @click="applyAdvancedSearch">应用</el-button>
+            </div>
+        </div>
+    </div>
 
-            <div class="advanced-search" v-if="showAdvancedSearch">
-                <div class="advanced-search-header">
-                    <h3 class="advanced-search-title">高级筛选</h3>
-                    <el-button type="text" @click="resetAdvancedSearch" class="reset-btn">
-                        <el-icon><Refresh /></el-icon> 重置筛选
-                    </el-button>
-                </div>
-                <div class="advanced-search-content">
-                    <div class="search-row">
-                        <div class="search-item">
-                            <span class="search-label">难度等级:</span>
-                            <el-select v-model="difficultyFilter" placeholder="难度等级" clearable @change="handleSearch" style="flex: 1;">
-                                <el-option label="全部" value="" />
-                                <el-option label="入门" value="入门" />
-                                <el-option label="普及" value="普及" />
-                                <el-option label="提高" value="提高" />
-                                <el-option label="省选" value="省选" />
-                                <el-option label="NOI" value="NOI" />
-                            </el-select>
+    <div class="batch-operations" v-if="selectedProblems.length > 0">
+        <div class="selected-count">已选择 {{ selectedProblems.length }} 题</div>
+        <div class="batch-actions">
+            <el-button type="primary" plain size="small" @click="batchExport">批量导出</el-button>
+            <el-button type="warning" plain size="small" @click="batchChangeCategory">修改分类</el-button>
+            <el-button type="danger" plain size="small" @click="batchDelete">批量删除</el-button>
+        </div>
+    </div>
+
+    <div class="problem-table">
+        <el-table :data="filteredProblems" style="width: 100%" :row-class-name="tableRowClassName" v-loading="loading"
+            @selection-change="handleSelectionChange">
+            <el-table-column type="selection" width="55" />
+            <el-table-column prop="id" label="ID" width="80" sortable />
+            <el-table-column prop="title" label="题目名称" min-width="200">
+                <template #header>
+                    <div class="table-header" @click="toggleSort('title')">
+                        题目名称
+                        <span class="sort-icon" v-if="sortBy === 'title'">
+                            <el-icon v-if="sortOrder === 'ascending'">
+                                <ArrowUp />
+                            </el-icon>
+                            <el-icon v-else>
+                                <ArrowDown />
+                            </el-icon>
+                        </span>
+                    </div>
+                </template>
+                <template #default="scope">
+                    <div class="problem-title">
+                        <span>{{ scope.row.title }}</span>
+                    </div>
+                </template>
+            </el-table-column>
+            <el-table-column prop="category" label="分类" width="120">
+                <template #header>
+                    <div class="table-header" @click="toggleSort('category')">
+                        分类
+                        <span class="sort-icon" v-if="sortBy === 'category'">
+                            <el-icon v-if="sortOrder === 'ascending'">
+                                <ArrowUp />
+                            </el-icon>
+                            <el-icon v-else>
+                                <ArrowDown />
+                            </el-icon>
+                        </span>
+                    </div>
+                </template>
+            </el-table-column>
+            <el-table-column prop="difficulty" label="难度" width="100">
+                <template #header>
+                    <div class="table-header" @click="toggleSort('difficulty')">
+                        难度
+                        <span class="sort-icon" v-if="sortBy === 'difficulty'">
+                            <el-icon v-if="sortOrder === 'ascending'">
+                                <ArrowUp />
+                            </el-icon>
+                            <el-icon v-else>
+                                <ArrowDown />
+                            </el-icon>
+                        </span>
+                    </div>
+                </template>
+                <template #default="scope">
+                    <el-tag :type="getDifficultyType(scope.row.difficulty)" size="small">
+                        {{ scope.row.difficulty }}
+                    </el-tag>
+                </template>
+            </el-table-column>
+            <el-table-column prop="passRate" label="通过率" width="100">
+                <template #header>
+                    <div class="table-header" @click="toggleSort('passRate')">
+                        通过率
+                        <span class="sort-icon" v-if="sortBy === 'passRate'">
+                            <el-icon v-if="sortOrder === 'ascending'">
+                                <ArrowUp />
+                            </el-icon>
+                            <el-icon v-else>
+                                <ArrowDown />
+                            </el-icon>
+                        </span>
+                    </div>
+                </template>
+                <template #default="scope">
+                    <div class="pass-rate">
+                        {{ scope.row.passRate }}%
+                        <div class="progress-bar">
+                            <div class="progress"
+                                :style="{ width: scope.row.passRate + '%', backgroundColor: getPassRateColor(scope.row.passRate) }">
+                            </div>
                         </div>
-                        <div class="search-item">
-                            <span class="search-label">题目分类:</span>
-                            <el-select v-model="categoryFilter" placeholder="题目分类" clearable @change="handleSearch" style="flex: 1;">
-                                <el-option label="全部" value="" />
-                                <el-option label="算法" value="算法" />
-                                <el-option label="数据结构" value="数据结构" />
-                                <el-option label="数学" value="数学" />
-                                <el-option label="字符串" value="字符串" />
-                                <el-option label="动态规划" value="动态规划" />
-                            </el-select>
-                        </div>
                     </div>
-                    <div class="search-item full-width">
-                        <span class="search-label">通过率范围:</span>
-                        <el-slider
-                            v-model="passRateRange"
-                            range
-                            :min="0"
-                            :max="100"
-                            :marks="{0: '0%', 25: '25%', 50: '50%', 75: '75%', 100: '100%'}"
-                            @change="handleSearch"
-                            style="flex: 1;"
-                        />
+                </template>
+            </el-table-column>
+            <el-table-column prop="submissionCount" label="提交次数" width="120">
+                <template #header>
+                    <div class="table-header" @click="toggleSort('submissionCount')">
+                        提交次数
+                        <span class="sort-icon" v-if="sortBy === 'submissionCount'">
+                            <el-icon v-if="sortOrder === 'ascending'">
+                                <ArrowUp />
+                            </el-icon>
+                            <el-icon v-else>
+                                <ArrowDown />
+                            </el-icon>
+                        </span>
                     </div>
-                    <div class="search-row">
-                        <div class="search-item">
-                            <span class="search-label">提交次数:</span>
-                            <el-select v-model="submissionCountFilter" placeholder="提交次数" clearable @change="handleSearch" style="flex: 1;">
-                                <el-option label="全部" value="" />
-                                <el-option label="1000以下" value="<1000" />
-                                <el-option label="1000-5000" value="1000-5000" />
-                                <el-option label="5000-10000" value="5000-10000" />
-                                <el-option label="10000以上" value=">10000" />
-                            </el-select>
-                        </div>
-                        <div class="search-item">
-                            <span class="search-label">创建时间:</span>
-                            <el-date-picker
-                                v-model="createTimeRange"
-                                type="daterange"
-                                range-separator="至"
-                                start-placeholder="开始日期"
-                                end-placeholder="结束日期"
-                                format="YYYY-MM-DD"
-                                @change="handleSearch"
-                                style="flex: 1;"
-                            />
-                        </div>
+                </template>
+            </el-table-column>
+            <el-table-column prop="createTime" label="创建时间" width="180">
+                <template #header>
+                    <div class="table-header" @click="toggleSort('createTime')">
+                        创建时间
+                        <span class="sort-icon" v-if="sortBy === 'createTime'">
+                            <el-icon v-if="sortOrder === 'ascending'">
+                                <ArrowUp />
+                            </el-icon>
+                            <el-icon v-else>
+                                <ArrowDown />
+                            </el-icon>
+                        </span>
                     </div>
-                </div>
-                <div class="advanced-search-footer">
-                    <div class="search-result-info">已筛选出 {{ totalProblems }} 道题目</div>
-                    <div class="search-actions">
-                        <el-button type="primary" @click="applyAdvancedSearch">应用</el-button>
+                </template>
+            </el-table-column>
+            <el-table-column label="操作" width="200" fixed="right">
+                <template #default="scope">
+                    <div class="action-buttons">
+                        <el-button type="primary" size="small" text @click="viewProblemDetails(scope.row.id)">
+                            查看
+                        </el-button>
+                        <el-button type="primary" size="small" text @click="editProblem(scope.row.id)">
+                            编辑
+                        </el-button>
+                        <el-button type="danger" size="small" text @click="deleteProblem(scope.row.id)">
+                            删除
+                        </el-button>
                     </div>
-                </div>
-            </div>
+                </template>
+            </el-table-column>
+        </el-table>
+    </div>
 
-            <div class="batch-operations" v-if="selectedProblems.length > 0">
-                <div class="selected-count">已选择 {{ selectedProblems.length }} 题</div>
-                <div class="batch-actions">
-                    <el-button type="primary" plain size="small" @click="batchExport">批量导出</el-button>
-                    <el-button type="warning" plain size="small" @click="batchChangeCategory">修改分类</el-button>
-                    <el-button type="danger" plain size="small" @click="batchDelete">批量删除</el-button>
-                </div>
+    <div class="pagination-container">
+        <div class="pagination">
+            <button class="page-btn prev-btn" :disabled="currentPage === 1"
+                @click="handleCurrentChange(currentPage - 1)">
+                <span class="chevron-left"></span>
+            </button>
+            <div class="page-numbers">
+                <button v-for="num in displayedPages" :key="num" class="page-number"
+                    :class="{ active: currentPage === num }" @click="handleCurrentChange(num)">
+                    {{ num }}
+                </button>
             </div>
-
-            <div class="problem-table">
-                <el-table
-                    :data="filteredProblems"
-                    style="width: 100%"
-                    :row-class-name="tableRowClassName"
-                    v-loading="loading"
-                    @selection-change="handleSelectionChange"
-                >
-                    <el-table-column type="selection" width="55" />
-                    <el-table-column prop="id" label="ID" width="80" sortable />
-                    <el-table-column prop="title" label="题目名称" min-width="200">
-                        <template #header>
-                            <div class="table-header" @click="toggleSort('title')">
-                                题目名称
-                                <span class="sort-icon" v-if="sortBy === 'title'">
-                                    <el-icon v-if="sortOrder === 'ascending'"><ArrowUp /></el-icon>
-                                    <el-icon v-else><ArrowDown /></el-icon>
-                                </span>
-                            </div>
-                        </template>
-                        <template #default="scope">
-                            <div class="problem-title">
-                                <span>{{ scope.row.title }}</span>
-                            </div>
-                        </template>
-                    </el-table-column>
-                    <el-table-column prop="category" label="分类" width="120">
-                        <template #header>
-                            <div class="table-header" @click="toggleSort('category')">
-                                分类
-                                <span class="sort-icon" v-if="sortBy === 'category'">
-                                    <el-icon v-if="sortOrder === 'ascending'"><ArrowUp /></el-icon>
-                                    <el-icon v-else><ArrowDown /></el-icon>
-                                </span>
-                            </div>
-                        </template>
-                    </el-table-column>
-                    <el-table-column prop="difficulty" label="难度" width="100">
-                        <template #header>
-                            <div class="table-header" @click="toggleSort('difficulty')">
-                                难度
-                                <span class="sort-icon" v-if="sortBy === 'difficulty'">
-                                    <el-icon v-if="sortOrder === 'ascending'"><ArrowUp /></el-icon>
-                                    <el-icon v-else><ArrowDown /></el-icon>
-                                </span>
-                            </div>
-                        </template>
-                        <template #default="scope">
-                            <el-tag :type="getDifficultyType(scope.row.difficulty)" size="small">
-                                {{ scope.row.difficulty }}
-                            </el-tag>
-                        </template>
-                    </el-table-column>
-                    <el-table-column prop="passRate" label="通过率" width="100">
-                        <template #header>
-                            <div class="table-header" @click="toggleSort('passRate')">
-                                通过率
-                                <span class="sort-icon" v-if="sortBy === 'passRate'">
-                                    <el-icon v-if="sortOrder === 'ascending'"><ArrowUp /></el-icon>
-                                    <el-icon v-else><ArrowDown /></el-icon>
-                                </span>
-                            </div>
-                        </template>
-                        <template #default="scope">
-                            <div class="pass-rate">
-                                {{ scope.row.passRate }}%
-                                <div class="progress-bar">
-                                    <div class="progress" :style="{ width: scope.row.passRate + '%', backgroundColor: getPassRateColor(scope.row.passRate) }"></div>
-                                </div>
-                            </div>
-                        </template>
-                    </el-table-column>
-                    <el-table-column prop="submissionCount" label="提交次数" width="120">
-                        <template #header>
-                            <div class="table-header" @click="toggleSort('submissionCount')">
-                                提交次数
-                                <span class="sort-icon" v-if="sortBy === 'submissionCount'">
-                                    <el-icon v-if="sortOrder === 'ascending'"><ArrowUp /></el-icon>
-                                    <el-icon v-else><ArrowDown /></el-icon>
-                                </span>
-                            </div>
-                        </template>
-                    </el-table-column>
-                    <el-table-column prop="createTime" label="创建时间" width="180">
-                        <template #header>
-                            <div class="table-header" @click="toggleSort('createTime')">
-                                创建时间
-                                <span class="sort-icon" v-if="sortBy === 'createTime'">
-                                    <el-icon v-if="sortOrder === 'ascending'"><ArrowUp /></el-icon>
-                                    <el-icon v-else><ArrowDown /></el-icon>
-                                </span>
-                            </div>
-                        </template>
-                    </el-table-column>
-                    <el-table-column label="操作" width="200" fixed="right">
-                        <template #default="scope">
-                            <div class="action-buttons">
-                                <el-button 
-                                    type="primary" 
-                                    size="small" 
-                                    text
-                                    @click="viewProblemDetails(scope.row.id)"
-                                >
-                                    查看
-                                </el-button>
-                                <el-button 
-                                    type="primary" 
-                                    size="small" 
-                                    text
-                                    @click="editProblem(scope.row.id)"
-                                >
-                                    编辑
-                                </el-button>
-                                <el-button 
-                                    type="danger" 
-                                    size="small" 
-                                    text
-                                    @click="deleteProblem(scope.row.id)"
-                                >
-                                    删除
-                                </el-button>
-                            </div>
-                        </template>
-                    </el-table-column>
-                </el-table>
-            </div>
-
-            <div class="pagination-container">
-                <div class="pagination">
-                    <button class="page-btn prev-btn" :disabled="currentPage === 1" @click="handleCurrentChange(currentPage - 1)">
-                        <span class="chevron-left"></span>
-                    </button>
-                    <div class="page-numbers">
-                        <button 
-                            v-for="num in displayedPages" 
-                            :key="num"
-                            class="page-number"
-                            :class="{ active: currentPage === num }"
-                            @click="handleCurrentChange(num)"
-                        >
-                            {{ num }}
-                        </button>
-                    </div>
-                    <button class="page-btn next-btn" :disabled="currentPage === totalPages" @click="handleCurrentChange(currentPage + 1)">
-                        <span class="chevron-right"></span>
-                    </button>
-                </div>
-            </div>
+            <button class="page-btn next-btn" :disabled="currentPage === totalPages"
+                @click="handleCurrentChange(currentPage + 1)">
+                <span class="chevron-right"></span>
+            </button>
+        </div>
+    </div>
 </template>
 
 <script setup lang="ts">
@@ -280,32 +277,42 @@ import { ElMessage, ElMessageBox } from 'element-plus';
 import { Plus, Search, ArrowUp, ArrowDown, Refresh } from '@element-plus/icons-vue';
 import AlertBox from '../JGG/alertbox.vue';
 import axios from 'axios';
+import ProblemCreate from './problem-create.vue';
+import ProblemEdit from './problem-edit.vue';
+import ProblemDetail from './problem-detail.vue';
+
+/* eslint-disable */
 
 // 定义题目类型接口
 interface Example {
-  input: string;
-  output: string;
-  explanation: string;
+    input: string;
+    output: string;
+    explanation: string;
 }
 
 interface QuestionData {
-  title: string;
-  description: string;
-  time_limit: number;
-  memory_limit: number;
-  input_format: string;
-  output_format: string;
-  constraints: string[];
-  examples: Example[];
+    title: string;
+    description: string;
+    time_limit: number;
+    memory_limit: number;
+    input_format: string;
+    output_format: string;
+    constraints: string[];
+    examples: Example[];
 }
 
 interface ApiProblem {
-  question: QuestionData;
-  topic: string;
+    question: QuestionData;
+    topic: string;
 }
 
 // AlertBox引用
 const alertBox = ref(null);
+
+// 在script setup部分添加组件引用
+const problemCreateRef = ref(null);
+const problemEditRef = ref(null);
+const problemDetailRef = ref(null);
 
 // 页面状态
 const loading = ref(false);
@@ -324,12 +331,29 @@ const searchTimeout = ref(null);
 
 // 模拟题目数据
 const problems = ref([]);
+const defaultExamples = ref([
+  {
+    input: '3\n1 2 3',
+    output: '6',
+    explanation: '1 + 2 + 3 = 6，计算数组所有元素的和'
+  },
+  {
+    input: '5\n1 2 3 4 5',
+    output: '15',
+    explanation: '1 + 2 + 3 + 4 + 5 = 15'
+  },
+  {
+    input: '0',
+    output: '0',
+    explanation: '空数组的和为0'
+  }
+]);
 const get_problem_info = async (): Promise<ApiProblem[]> => {
-  const { data: userData } = await axios({
-    url: "http://localhost:5000/api/",
-    method: "get",
-  });
-  return userData;
+    const { data: userData } = await axios({
+        url: "http://localhost:5000/api/",
+        method: "get",
+    });
+    return userData;
 };
 
 // 处理延迟搜索，避免频繁过滤
@@ -337,7 +361,7 @@ const handleSearch = () => {
     if (searchTimeout.value) {
         clearTimeout(searchTimeout.value);
     }
-    
+
     searchTimeout.value = setTimeout(() => {
         // 在实际应用中，这里可能会发送API请求
         console.log('搜索条件:', {
@@ -348,7 +372,7 @@ const handleSearch = () => {
             submissionCount: submissionCountFilter.value,
             createTimeRange: createTimeRange.value
         });
-        
+
         // 触发过滤计算
         // 如果是API请求，这里不需要手动触发，因为计算属性会自动重新计算
     }, 300);
@@ -391,15 +415,15 @@ const batchDelete = () => {
             type: 'warning',
         }
     )
-    .then(() => {
-        // ElMessage.success(`已删除题目: ${ids}`);
-        alertBox.value.show(`已删除题目: ${ids}`, 0);
-        selectedProblems.value = [];
-    })
-    .catch(() => {
-        // ElMessage.info('已取消删除');
-        alertBox.value.show('已取消删除', 1);
-    });
+        .then(() => {
+            // ElMessage.success(`已删除题目: ${ids}`);
+            alertBox.value.show(`已删除题目: ${ids}`, 0);
+            selectedProblems.value = [];
+        })
+        .catch(() => {
+            // ElMessage.info('已取消删除');
+            alertBox.value.show('已取消删除', 1);
+        });
 };
 
 // 监听筛选条件变化，重置分页
@@ -409,73 +433,80 @@ watch([searchQuery, difficultyFilter, categoryFilter, passRateRange, submissionC
 
 // 获取题目数据
 const fetchData = async () => {
-  loading.value = true;
-  try {
-    // 从API获取数据
-    const apiData = await get_problem_info();
-    
-    // 处理API返回的数据，转换为组件需要的格式
-    const formattedProblems = apiData.map((item, index) => {
-      // 生成一个随机的通过率和提交次数（实际应用中这些应该从API获取）
-      const passRate = Math.floor(Math.random() * 100);
-      const submissionCount = Math.floor(Math.random() * 10000) + 1000;
-      
-      return {
-        id: `P${1001 + index}`, // 生成ID，从P1001开始
-        title: item.question.title,
-        category: item.topic || '未分类',
-        difficulty: getDifficultyByComplexity(item.question), // 根据题目复杂度推断难度
-        passRate: passRate,
-        submissionCount: submissionCount,
-        createTime: new Date().toISOString().split('T')[0], // 使用当前日期
-        question: item.question,
-        topic: item.topic
-      };
-    });
-    
-    // 对题目按ID排序
-    formattedProblems.sort((a, b) => {
-      const numA = parseInt(a.id.replace('P', ''));
-      const numB = parseInt(b.id.replace('P', ''));
-      return numA - numB;
-    });
-    
-    problems.value = formattedProblems;
-    
-  } catch (error) {
-    console.error('获取题目数据失败:', error);
-    // 发生错误时显示提示
-    alertBox.value?.show('获取题目数据失败，请稍后重试', 1);
-    
-    // 如果API调用失败，使用空数组
-    problems.value = [];
-  } finally {
-    // 延迟关闭loading，提升用户体验
-    setTimeout(() => {
-      loading.value = false;
-    }, 500);
-  }
+    loading.value = true;
+    try {
+        // 从API获取数据
+        const apiData = await get_problem_info();
+
+        // 处理API返回的数据，转换为组件需要的格式
+        const formattedProblems = apiData.map((item, index) => {
+            // 生成一个随机的通过率和提交次数（实际应用中这些应该从API获取）
+            const passRate = Math.floor(Math.random() * 100);
+            const submissionCount = Math.floor(Math.random() * 10000) + 1000;
+
+            return {
+                id: `P${1001 + index}`, // 生成ID，从P1001开始
+                title: item.question.title,
+                category: item.topic || '未分类',
+                difficulty: getDifficultyByComplexity(item.question), // 根据题目复杂度推断难度
+                passRate: passRate,
+                submissionCount: submissionCount,
+                createTime: new Date().toISOString().split('T')[0], // 使用当前日期
+                question: item.question,
+                topic: item.topic
+            };
+        });
+
+        // 对题目按ID排序
+        formattedProblems.sort((a, b) => {
+            const numA = parseInt(a.id.replace('P', ''));
+            const numB = parseInt(b.id.replace('P', ''));
+            return numA - numB;
+        });
+
+        problems.value = formattedProblems;
+
+        // 显示提示信息
+        if (formattedProblems.length > 0) {
+            console.log(`成功加载了 ${formattedProblems.length} 个题目`);
+        } else {
+            console.log('没有找到任何题目');
+        }
+
+    } catch (error) {
+        console.error('获取题目数据失败:', error);
+        // 发生错误时显示提示
+        alertBox.value?.show('获取题目数据失败，请稍后重试', 1);
+
+        // 如果API调用失败，使用空数组
+        problems.value = [];
+    } finally {
+        // 延迟关闭loading，提升用户体验
+        setTimeout(() => {
+            loading.value = false;
+        }, 500);
+    }
 };
 
 // 根据题目复杂度推断难度
 const getDifficultyByComplexity = (question: QuestionData): string => {
-  // 基于题目的约束条件、时间和内存限制等推断难度
-  const constraints = question.constraints || [];
-  const timeLimit = question.time_limit || 1000;
-  const memoryLimit = question.memory_limit || 128;
-  
-  // 简单的难度判断逻辑（实际应用中可能需要更复杂的判断）
-  if (timeLimit <= 500 && memoryLimit <= 64) {
-    return '入门';
-  } else if (timeLimit <= 1000 && memoryLimit <= 128) {
-    return '普及';
-  } else if (timeLimit <= 2000 && memoryLimit <= 256) {
-    return '提高';
-  } else if (timeLimit <= 5000 && memoryLimit <= 512) {
-    return '省选';
-  } else {
-    return 'NOI';
-  }
+    // 基于题目的约束条件、时间和内存限制等推断难度
+    const constraints = question.constraints || [];
+    const timeLimit = question.time_limit || 1000;
+    const memoryLimit = question.memory_limit || 128;
+
+    // 简单的难度判断逻辑（实际应用中可能需要更复杂的判断）
+    if (timeLimit <= 500 && memoryLimit <= 64) {
+        return '入门';
+    } else if (timeLimit <= 1000 && memoryLimit <= 128) {
+        return '普及';
+    } else if (timeLimit <= 2000 && memoryLimit <= 256) {
+        return '提高';
+    } else if (timeLimit <= 5000 && memoryLimit <= 512) {
+        return '省选';
+    } else {
+        return 'NOI';
+    }
 };
 
 // 页面加载时获取数据
@@ -487,110 +518,110 @@ const sortOrder = ref('ascending');
 
 // 切换排序
 const toggleSort = (column: string) => {
-  if (sortBy.value === column) {
-    // 如果已经按这个列排序，则切换排序方向
-    sortOrder.value = sortOrder.value === 'ascending' ? 'descending' : 'ascending';
-  } else {
-    // 否则，设置新的排序列并默认使用降序
-    sortBy.value = column;
-    sortOrder.value = 'ascending';
-  }
+    if (sortBy.value === column) {
+        // 如果已经按这个列排序，则切换排序方向
+        sortOrder.value = sortOrder.value === 'ascending' ? 'descending' : 'ascending';
+    } else {
+        // 否则，设置新的排序列并默认使用降序
+        sortBy.value = column;
+        sortOrder.value = 'ascending';
+    }
 };
 
 // 过滤后的题目数据
 const filteredProblems = computed(() => {
-  // 先应用所有过滤条件
-  const filtered = problems.value.filter((problem: any) => {
-    // 搜索过滤
-    const matchesSearch = searchQuery.value ? 
-        problem.title.toLowerCase().includes(searchQuery.value.toLowerCase()) || 
-        problem.id.toLowerCase().includes(searchQuery.value.toLowerCase()) : 
-        true;
-    
-    // 难度过滤
-    const matchesDifficulty = difficultyFilter.value ? 
-        problem.difficulty === difficultyFilter.value : 
-        true;
-        
-    // 分类过滤
-    const matchesCategory = categoryFilter.value ? 
-        problem.category === categoryFilter.value : 
-        true;
-        
-    // 通过率范围过滤
-    const matchesPassRate = problem.passRate >= passRateRange.value[0] && 
-                            problem.passRate <= passRateRange.value[1];
-                            
-    // 提交次数过滤
-    let matchesSubmissionCount = true;
-    if (submissionCountFilter.value) {
-        const count = problem.submissionCount;
-        switch (submissionCountFilter.value) {
-            case '<1000':
-                matchesSubmissionCount = count < 1000;
-                break;
-            case '1000-5000':
-                matchesSubmissionCount = count >= 1000 && count <= 5000;
-                break;
-            case '5000-10000':
-                matchesSubmissionCount = count > 5000 && count <= 10000;
-                break;
-            case '>10000':
-                matchesSubmissionCount = count > 10000;
-                break;
+    // 先应用所有过滤条件
+    const filtered = problems.value.filter((problem: any) => {
+        // 搜索过滤
+        const matchesSearch = searchQuery.value ?
+            problem.title.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
+            problem.id.toLowerCase().includes(searchQuery.value.toLowerCase()) :
+            true;
+
+        // 难度过滤
+        const matchesDifficulty = difficultyFilter.value ?
+            problem.difficulty === difficultyFilter.value :
+            true;
+
+        // 分类过滤
+        const matchesCategory = categoryFilter.value ?
+            problem.category === categoryFilter.value :
+            true;
+
+        // 通过率范围过滤
+        const matchesPassRate = problem.passRate >= passRateRange.value[0] &&
+            problem.passRate <= passRateRange.value[1];
+
+        // 提交次数过滤
+        let matchesSubmissionCount = true;
+        if (submissionCountFilter.value) {
+            const count = problem.submissionCount;
+            switch (submissionCountFilter.value) {
+                case '<1000':
+                    matchesSubmissionCount = count < 1000;
+                    break;
+                case '1000-5000':
+                    matchesSubmissionCount = count >= 1000 && count <= 5000;
+                    break;
+                case '5000-10000':
+                    matchesSubmissionCount = count > 5000 && count <= 10000;
+                    break;
+                case '>10000':
+                    matchesSubmissionCount = count > 10000;
+                    break;
+            }
         }
-    }
-    
-    // 创建时间范围过滤
-    let matchesCreateTime = true;
-    if (createTimeRange.value && createTimeRange.value.length === 2) {
-        const createDate = new Date(problem.createTime);
-        const startDate = new Date(createTimeRange.value[0]);
-        const endDate = new Date(createTimeRange.value[1]);
-        
-        // 设置结束日期为当天最后一刻，以包含整个选择的日期
-        endDate.setHours(23, 59, 59, 999);
-        
-        matchesCreateTime = createDate >= startDate && createDate <= endDate;
-    }
-    
-    return matchesSearch && matchesDifficulty && matchesCategory && 
-           matchesPassRate && matchesSubmissionCount && matchesCreateTime;
-  });
-  
-  // 更新总题目数量，用于计算分页
-  totalProblems.value = filtered.length;
-  
-  // 对过滤后的数据进行排序
-  const sorted = [...filtered].sort((a, b) => {
-    // 特殊处理ID排序
-    if (sortBy.value === 'id') {
-      const numA = parseInt(a.id.replace('P', ''));
-      const numB = parseInt(b.id.replace('P', ''));
-      return sortOrder.value === 'ascending' ? numA - numB : numB - numA;
-    }
-    
-    let aValue = a[sortBy.value];
-    let bValue = b[sortBy.value];
-    
-    // 特殊处理日期类型
-    if (sortBy.value === 'createTime') {
-      aValue = new Date(aValue).getTime();
-      bValue = new Date(bValue).getTime();
-    }
-    
-    // 根据排序方向返回比较结果
-    if (sortOrder.value === 'ascending') {
-      return aValue > bValue ? 1 : -1;
-    } else {
-      return aValue < bValue ? 1 : -1;
-    }
-  });
-  
-  // 应用分页，只返回当前页的数据
-  const startIndex = (currentPage.value - 1) * pageSize.value;
-  const endIndex = startIndex + pageSize.value;
-  return sorted.slice(startIndex, endIndex);
+
+        // 创建时间范围过滤
+        let matchesCreateTime = true;
+        if (createTimeRange.value && createTimeRange.value.length === 2) {
+            const createDate = new Date(problem.createTime);
+            const startDate = new Date(createTimeRange.value[0]);
+            const endDate = new Date(createTimeRange.value[1]);
+
+            // 设置结束日期为当天最后一刻，以包含整个选择的日期
+            endDate.setHours(23, 59, 59, 999);
+
+            matchesCreateTime = createDate >= startDate && createDate <= endDate;
+        }
+
+        return matchesSearch && matchesDifficulty && matchesCategory &&
+            matchesPassRate && matchesSubmissionCount && matchesCreateTime;
+    });
+
+    // 更新总题目数量，用于计算分页
+    totalProblems.value = filtered.length;
+
+    // 对过滤后的数据进行排序
+    const sorted = [...filtered].sort((a, b) => {
+        // 特殊处理ID排序
+        if (sortBy.value === 'id') {
+            const numA = parseInt(a.id.replace('P', ''));
+            const numB = parseInt(b.id.replace('P', ''));
+            return sortOrder.value === 'ascending' ? numA - numB : numB - numA;
+        }
+
+        let aValue = a[sortBy.value];
+        let bValue = b[sortBy.value];
+
+        // 特殊处理日期类型
+        if (sortBy.value === 'createTime') {
+            aValue = new Date(aValue).getTime();
+            bValue = new Date(bValue).getTime();
+        }
+
+        // 根据排序方向返回比较结果
+        if (sortOrder.value === 'ascending') {
+            return aValue > bValue ? 1 : -1;
+        } else {
+            return aValue < bValue ? 1 : -1;
+        }
+    });
+
+    // 应用分页，只返回当前页的数据
+    const startIndex = (currentPage.value - 1) * pageSize.value;
+    const endIndex = startIndex + pageSize.value;
+    return sorted.slice(startIndex, endIndex);
 });
 
 // 表格行样式
@@ -606,6 +637,7 @@ const getDifficultyType = (difficulty: string) => {
         case '提高': return 'warning';
         case '省选': return 'warning';
         case 'NOI': return 'danger';
+        case 'CTSC': return 'danger';
         default: return 'info';
     }
 };
@@ -625,15 +657,73 @@ const handleCurrentChange = (page: number) => {
 
 // 操作方法
 const viewProblemDetails = (id: string) => {
-    // ElMessage.success(`查看题目ID: ${id}`);
-    alertBox.value.show(`查看题目ID: ${id}`, 0);
-    // 实际应用中跳转到题目详情页
+    // 打开题目详情对话框
+    if (problemDetailRef.value) {
+        const problem = problems.value.find((p: any) => p.id === id);
+        if (problem) {
+            problemDetailRef.value.openDetailDialog(id);
+        }
+    }
 };
 
 const editProblem = (id: string) => {
-    // ElMessage.info(`编辑题目ID: ${id}`);
-    alertBox.value.show(`编辑题目ID: ${id}`, 1);
-    // 实际应用中跳转到题目编辑页
+    // 打开编辑题目对话框
+    if (problemEditRef.value) {
+        const problem = problems.value.find((p: any) => p.id === id);
+        if (problem) {
+            // 转换数据格式以匹配problem-edit.vue期望的格式
+            const editData = {
+                id: problem.id,
+                title: problem.question.title || problem.title,
+                description: problem.question.description || '',
+                topic: problem.topic || '入门',
+                time_limit: problem.question.time_limit || 1000,
+                memory_limit: problem.question.memory_limit || 128,
+                input_format: problem.question.input_format || '',
+                output_format: problem.question.output_format || '',
+                constraints: problem.question.constraints || [],
+                examples: problem.question.examples || [],
+                passRate: problem.passRate,
+                submissionCount: problem.submissionCount,
+                createTime: problem.createTime
+            };
+            
+            console.log('准备编辑题目数据:', JSON.stringify(editData));
+            problemEditRef.value.openEditDialog(editData);
+        }
+    }
+};
+
+// 从详情页面打开编辑对话框
+const handleEditFromDetail = (problemData: any) => {
+    if (problemEditRef.value) {
+        // 转换数据格式以匹配problem-edit.vue期望的格式
+        const editData = {
+            id: problemData.id,
+            title: problemData.title || '',
+            description: problemData.description || '',
+            topic: problemData.category || '入门',
+            time_limit: problemData.time_limit || 1000,
+            memory_limit: problemData.memory_limit || 128,
+            input_format: problemData.input_format || '',
+            output_format: problemData.output_format || '',
+            constraints: problemData.constraints || [],
+            examples: problemData.examples || [],
+            passRate: problemData.passRate,
+            submissionCount: problemData.submissionCount,
+            createTime: problemData.createTime
+        };
+        
+        console.log('从详情页准备编辑题目数据:', JSON.stringify(editData));
+        problemEditRef.value.openEditDialog(editData);
+    }
+};
+
+// 打开创建题目对话框
+const openCreateDialog = () => {
+    if (problemCreateRef.value) {
+        problemCreateRef.value.openCreateDialog();
+    }
 };
 
 const deleteProblem = (id: string) => {
@@ -646,13 +736,47 @@ const deleteProblem = (id: string) => {
             type: 'warning',
         }
     )
-    .then(() => {
-        // 实际应用中发送删除请求
-        // ElMessage.success(`题目 ${id} 已成功删除`);
-        alertBox.value.show(`题目 ${id} 已成功删除`, 0);
+    .then(async () => {
+        try {
+            // 从ID中提取实际数字部分
+            // P1XXX格式，需要提取出XXX部分对应的数字
+            const matches = id.match(/P1(\d+)/);
+            const numericId = matches ? parseInt(matches[1], 10) : 0;
+            
+            console.log(`正在删除题目，原始ID: ${id}, 实际ID: ${numericId}`);
+            
+            // 使用实际ID调用接口
+            const response = await axios({
+                url: `http://localhost:5000/api/${numericId}`,
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            // 成功删除
+            console.log('删除响应:', response);
+            
+            // 从本地数据中移除已删除的题目
+            problems.value = problems.value.filter((p: any) => p.id !== id);
+            totalProblems.value -= 1;
+            
+            // 显示成功消息
+            alertBox.value.show(`题目 ${id} 已成功删除`, 0);
+            
+            // 如果当前页没有数据了且不是第一页，则跳转到前一页
+            if (filteredProblems.value.length === 0 && currentPage.value > 1) {
+                currentPage.value -= 1;
+            }
+            
+            // 重新加载数据
+            fetchData();
+        } catch (error: any) {
+            console.error('删除题目失败:', error);
+            alertBox.value.show(`删除题目失败: ${error.response?.data?.message || error.message || '未知错误'}`, 2);
+        }
     })
     .catch(() => {
-        // ElMessage.info('已取消删除');
         alertBox.value.show('已取消删除', 1);
     });
 };
@@ -667,16 +791,16 @@ const displayedPages = computed(() => {
     const total = totalPages.value;
     const current = currentPage.value;
     const delta = 2; // 当前页前后最多显示的页数
-    
+
     if (total <= 5) {
         // 如果总页数小于等于5，则全部显示
         return Array.from({ length: total }, (_, i) => i + 1);
     }
-    
+
     // 确保current前后都有delta个页码（如果可能）
     let start = Math.max(1, current - delta);
     let end = Math.min(total, current + delta);
-    
+
     // 如果不够5个页码，则调整start或end
     if (end - start + 1 < 5) {
         if (start === 1) {
@@ -685,7 +809,7 @@ const displayedPages = computed(() => {
             start = Math.max(1, total - 4);
         }
     }
-    
+
     return Array.from({ length: end - start + 1 }, (_, i) => start + i);
 });
 
@@ -874,16 +998,19 @@ const applyAdvancedSearch = () => {
 
 /* 为表格添加行高和单元格内边距控制 */
 .problem-table :deep(.el-table__row) {
-    height: 60px; /* 统一行高 */
+    height: 60px;
+    /* 统一行高 */
 }
 
 .problem-table :deep(.el-table__cell) {
-    padding: 8px 0; /* 统一单元格内边距 */
+    padding: 8px 0;
+    /* 统一单元格内边距 */
 }
 
 /* 统一表头样式 */
 .problem-table :deep(.el-table__header-row) {
-    height: 56px; /* 表头行高 */
+    height: 56px;
+    /* 表头行高 */
 }
 
 .problem-table :deep(.el-table__header-cell) {
@@ -1044,7 +1171,8 @@ const applyAdvancedSearch = () => {
     cursor: not-allowed;
 }
 
-.chevron-left, .chevron-right {
+.chevron-left,
+.chevron-right {
     position: relative;
     z-index: 1;
     display: inline-block;
@@ -1085,17 +1213,17 @@ const applyAdvancedSearch = () => {
         margin-left: 0;
         padding: 16px;
     }
-    
-    .filter-bar, 
+
+    .filter-bar,
     .advanced-search-content,
     .batch-operations {
         flex-direction: column;
     }
-    
+
     .search-item {
         width: 100%;
     }
-    
+
     .filter-left,
     .filter-right {
         width: 100%;
@@ -1200,8 +1328,8 @@ const applyAdvancedSearch = () => {
     background-color: rgba(24, 160, 88, 0.1) !important;
 }
 
-:deep(.el-date-table td.start-date span, 
-       .el-date-table td.end-date span) {
+:deep(.el-date-table td.start-date span,
+    .el-date-table td.end-date span) {
     background-color: #18a058 !important;
 }
 
@@ -1222,8 +1350,8 @@ const applyAdvancedSearch = () => {
     background-color: #18a058 !important;
 }
 
-:deep(.el-slider__button-wrapper:hover, 
-       .el-slider__button-wrapper.hover) {
+:deep(.el-slider__button-wrapper:hover,
+    .el-slider__button-wrapper.hover) {
     cursor: grab;
 }
 
@@ -1232,8 +1360,8 @@ const applyAdvancedSearch = () => {
 }
 
 /* 弹窗样式 */
-:deep(.el-message-box__headerbtn:focus .el-message-box__close, 
-       .el-message-box__headerbtn:hover .el-message-box__close) {
+:deep(.el-message-box__headerbtn:focus .el-message-box__close,
+    .el-message-box__headerbtn:hover .el-message-box__close) {
     color: #18a058 !important;
 }
 
@@ -1269,4 +1397,3 @@ const applyAdvancedSearch = () => {
     color: #18a058;
 }
 </style>
-
