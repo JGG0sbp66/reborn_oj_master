@@ -4,7 +4,7 @@
     <el-dialog
       v-model="dialogVisible"
       title="编辑题目"
-      width="80%"
+      width="600px"
       :close-on-click-modal="false"
       :close-on-press-escape="false"
     >
@@ -12,14 +12,15 @@
         ref="problemFormRef" 
         :model="problem" 
         :rules="problemRules" 
-        label-width="100px"
+        label-width="120px"
+        label-position="top"
       >
         <el-form-item label="题目名称" prop="title">
           <el-input v-model="problem.title" placeholder="请输入题目名称"></el-input>
         </el-form-item>
         
         <el-form-item label="题目难度" prop="topic">
-          <el-select v-model="problem.topic" placeholder="请选择题目难度">
+          <el-select v-model="problem.topic" placeholder="请选择题目难度" style="width: 100%">
             <el-option label="入门" value="入门"></el-option>
             <el-option label="普及" value="普及"></el-option>
             <el-option label="提高" value="提高"></el-option>
@@ -454,5 +455,23 @@ defineExpose({
 
 .example-content div {
   margin-bottom: 4px;
+}
+
+.tip-text {
+  font-size: 12px;
+  color: #909399;
+  margin-top: 6px;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+  .form-row {
+    flex-direction: column;
+    gap: 0;
+  }
+  
+  .form-row .el-form-item {
+    width: 100%;
+  }
 }
 </style>

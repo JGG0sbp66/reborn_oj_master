@@ -10,7 +10,7 @@
 
 <script setup lang="ts">
 
-import managerslider from '@/components/zq/manager-slider.vue';
+import managerslider from '@/components/zq/manager-sidebar.vue';
 import managerhead from '@/components/zq/manager-head.vue';
 import managerrace from '@/components/zq/manager-race.vue';
 

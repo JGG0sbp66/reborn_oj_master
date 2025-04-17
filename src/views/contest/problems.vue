@@ -11,7 +11,7 @@
             <competitionshow :raceInfo="raceInfo" :uid="uid"/>
           </div>
           <div class="right-main">
-            <competitioninformation :raceInfo="raceInfo"/>
+            <competitioninformation :raceInfo="raceInfo" :uid="uid"/>
           </div>
         </div>
       </div>
@@ -23,7 +23,7 @@
 import { ref, reactive, onMounted } from "vue";
 import axios from "axios";
 import competitionheader from "@/components/zq/competitionheader.vue";
-import sidebarproblem from "@/components/zq/sidebar-problem.vue";
+import sidebarproblem from "@/components/zq/contest-sidebar.vue";
 import competitionshow from "@/components/zq/compotitionshow.vue";
 import competitioninformation from "@/components/zq/competitioninformation.vue";
 import { useRoute } from "vue-router";

@@ -1,7 +1,7 @@
 <template>
     <div class="competition-info">
         <ctypecnum :raceInfo="props.raceInfo" />
-        <cisbegin :raceInfo="props.raceInfo" />
+        <cisbegin :raceInfo="props.raceInfo" :uid="props.uid" />
         <ctime :raceInfo="props.raceInfo" />
     </div>
 </template>
@@ -29,6 +29,10 @@ interface RaceInfo {
 const props = defineProps({
     raceInfo: {
         type: Object,
+        required: true
+    },
+    uid: {
+        type: String,
         required: true
     }
 });

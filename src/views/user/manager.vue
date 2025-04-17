@@ -23,7 +23,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue';
-import managerslider from '@/components/zq/manager-slider.vue';
+import managerslider from '@/components/zq/manager-sidebar.vue';
 import managerhead from '@/components/zq/manager-head.vue';
 import managerwelcome from '@/components/zq/manager-welcome.vue';
 import manageractive from '@/components/zq/manager-active.vue';
