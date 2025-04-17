@@ -37,15 +37,15 @@
     </div>
           <div class="user-stats">
             <div class="stat-item">
-              <div class="stat-value">{{ problemSolved }}</div>
+              <div class="stat-value" :class="{ 'animate-number': isAnimatingStats }">{{ displayProblemSolved }}</div>
               <div class="stat-label">已解题目</div>
           </div>
             <div class="stat-item">
-              <div class="stat-value">{{ competitionsJoined }}</div>
+              <div class="stat-value" :class="{ 'animate-number': isAnimatingStats }">{{ displayCompetitionsJoined }}</div>
               <div class="stat-label">参与比赛</div>
             </div>
             <div class="stat-item">
-              <div class="stat-value">{{ rank }}</div>
+              <div class="stat-value" :class="{ 'animate-number': isAnimatingStats }">{{ displayRank }}</div>
               <div class="stat-label">当前排名</div>
             </div>
             </div>
@@ -211,28 +211,68 @@ const loginNotificationsEnabled = ref<boolean>(true);
 const publicSolvedProblems = ref<boolean>(true);
 const publicRanking = ref<boolean>(true);
 
-// 比赛记录
-// const competitions = ref<Competition[]>([
-//   {
-//     title: '2023年春季编程大赛',
-//     startDate: new Date('2023-04-10'),
-//     endDate: new Date('2023-04-12'),
-//     rank: '第8名',
-//     result: 'good'
-//   },
-//   {
-//     title: '算法挑战赛',
-//     startDate: new Date('2023-03-05'),
-//     endDate: new Date('2023-03-05'),
-//     rank: '第15名',
-//     result: 'average'
-//   }
-// ]);
-
 // 用户统计信息
 const problemSolved = ref(0);
 const competitionsJoined = ref(0);
 const rank = ref(0);
+
+// 数字动画相关
+const isAnimatingStats = ref(false);
+const displayProblemSolved = ref(0);
+const displayCompetitionsJoined = ref(0);
+const displayRank = ref(0);
+
+// 为统计数据添加增长动画
+const animateStats = () => {
+  // 如果数据全为0，不需要动画
+  if (problemSolved.value === 0 && competitionsJoined.value === 0 && rank.value === 0) return;
+  
+  // 开始动画
+  isAnimatingStats.value = true;
+  
+  // 重置显示值
+  displayProblemSolved.value = 0;
+  displayCompetitionsJoined.value = 0;
+  displayRank.value = 0;
+  
+  // 使用更平滑的动画
+  const duration = 1500; // 和热力图相同的动画时间
+  const startTime = Date.now();
+  
+  // 缓动函数 - 使用与热力图相同的三次贝塞尔
+  const easing = (t: number) => t < 0.5 ? 4 * t * t * t : (t - 1) * (2 * t - 2) * (2 * t - 2) + 1;
+  
+  const updateValues = () => {
+    const currentTime = Date.now();
+    const elapsed = currentTime - startTime;
+    
+    if (elapsed < duration) {
+      const progress = easing(elapsed / duration);
+      
+      // 同步更新所有数值
+      displayProblemSolved.value = Math.floor(progress * problemSolved.value);
+      displayCompetitionsJoined.value = Math.floor(progress * competitionsJoined.value);
+      displayRank.value = Math.floor(progress * rank.value);
+      
+      requestAnimationFrame(updateValues);
+    } else {
+      // 确保最终值精确
+      displayProblemSolved.value = problemSolved.value;
+      displayCompetitionsJoined.value = competitionsJoined.value;
+      displayRank.value = rank.value;
+      
+      // 动画结束
+      setTimeout(() => {
+        isAnimatingStats.value = false;
+      }, 200);
+    }
+  };
+  
+  // 启动动画
+  setTimeout(() => {
+    requestAnimationFrame(updateValues);
+  }, 100);
+};
 
 // 从用户名生成缩写 - 使用记忆化避免重复计算
 let cachedInitials = '';
@@ -460,48 +500,36 @@ const fetchUserProfile = async (): Promise<void> => {
       });
     }
     
-    // 然后从API获取用户信息
+    // 从新的API获取用户信息
     try {
-      const response = await axios.get('http://localhost:5000/api/user/profile');
-      if (response.data.authenticated && response.data.user) {
-        // 使用后端返回的数据
-        const userData = response.data.user;
+      const response = await axios.get('http://localhost:5000/api/get-user-info', {
+        withCredentials: true
+      });
+      
+      // 处理新的数据结构
+      if (response.data) {
+        // 使用API返回的数据
+        const userData = response.data;
         
-        // 保存用户ID
-        if (userData.uid) {
-          localStorage.setItem('uid', userData.uid.toString());
-          
-          // 如果之前没有获取到头像，尝试再次获取
-          if (!avatarUrl.value) {
-            refreshUserAvatar(userData.uid);
-          }
-        }
-        
-        // 确保使用正确的username字段，而不是uid
+        // 更新用户名和邮箱
         if (userData.username) {
-          username.value = userData.username; // 优先使用username
-        } else if (userData.uid && typeof userData.uid === 'string') {
-          // 如果没有username字段但有uid字段且为字符串，可能是老数据结构
-          username.value = userData.uid;
+          username.value = userData.username;
+          localStorage.setItem('username', userData.username);
         }
         
-        userRole.value = userData.role || '普通用户';
-        
-        // 如果后端返回了头像URL，更新本地头像
-        if (userData.avatarUrl) {
-          avatarUrl.value = userData.avatarUrl;
-          localStorage.setItem('avatarUrl', userData.avatarUrl);
+        if (userData.email) {
+          email.value = userData.email;
         }
         
-        // 保存到localStorage以便下次使用
-        localStorage.setItem('username', username.value); // 保存正确的username
-        localStorage.setItem('userRole', userData.role || '普通用户');
+        // 尝试获取头像 (如果有userId)
+        if (userId && !avatarUrl.value) {
+          refreshUserAvatar(userId);
+        }
       }
     } catch (apiError) {
       console.error('API调用失败，使用本地数据:', apiError);
       
-      // 如果API调用失败，确保从localStorage获取的用户名也是正确的格式
-      // 如果用户名像是数字ID，可能是之前保存错了，尝试修正
+      // 如果API调用失败，确保从localStorage获取的用户名是正确的格式
       if (username.value && !isNaN(Number(username.value))) {
         // 尝试从本地存储获取其他可能保存了正确username的位置
         const possibleUsername = localStorage.getItem('user_name') || 
@@ -511,12 +539,11 @@ const fetchUserProfile = async (): Promise<void> => {
       }
     }
     
-    // 假设这是从后端获取的其他用户数据
+    // 使用一些模拟数据填充其他字段
     userJoinDate.value = new Date('2023-01-15');
     problemSolved.value = 42;
     competitionsJoined.value = 5;
     rank.value = 128;
-    email.value = 'user@example.com';
     bio.value = '热爱编程，喜欢解决复杂问题。正在学习算法和数据结构。';
       } catch (error) {
     console.error('获取用户信息失败:', error);
@@ -604,6 +631,21 @@ interface UserProfileData {
 
 const handleProfileUpdated = (updatedProfile: UserProfileData) => {
   // 更新本地状态
+  if (username.value !== updatedProfile.username) {
+    username.value = updatedProfile.username;
+    // 如果用户名修改了，需要更新页面标题和其他显示用户名的地方
+    localStorage.setItem('username', updatedProfile.username);
+    
+    // 强制更新DOM，确保页面立即反映新用户名
+    document.querySelectorAll('.user-name').forEach(el => {
+      (el as HTMLElement).innerText = updatedProfile.username;
+    });
+    
+    // 重新生成用户首字母缩写
+    cachedUsername = '';
+    cachedInitials = '';
+  }
+  
   email.value = updatedProfile.email;
   bio.value = updatedProfile.bio;
   
@@ -661,6 +703,11 @@ onMounted(() => {
   
   // 并行获取参赛记录数据
   fetchCompetitionRecords();
+  
+  // 在获取数据后添加动画效果
+  setTimeout(() => {
+    animateStats();
+  }, 500);
 });
 
 // 添加获取解题记录数据的函数
@@ -1011,37 +1058,58 @@ onBeforeUnmount(() => {
 
 .user-stats {
   display: flex;
-  justify-content: space-around;
-  border-top: 1px solid #f0f0f0;
-  padding-top: 20px;
+  justify-content: space-between;
+  margin-top: 15px;
 }
 
 .stat-item {
+  flex: 1;
   text-align: center;
-  transition: all 0.3s ease;
-  padding: 5px 10px;
-  border-radius: 8px;
+  padding: 5px 0;
+  border-radius: 6px;
+  transition: background-color 0.2s;
 }
 
 .stat-item:hover {
-  background-color: rgba(66, 185, 131, 0.05);
-  transform: translateY(-3px);
+  background-color: rgba(66, 185, 131, 0.06);
 }
 
 .stat-value {
   font-size: 24px;
   font-weight: 600;
-  color: #333;
-  margin-bottom: 5px;
-  background: linear-gradient(90deg, #42b983, #33c6aa);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: #42b983;
+  display: inline-block;
+  min-width: 2em; /* 保持数字宽度稳定，防止闪烁 */
+  transition: color 0.3s ease, transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .stat-label {
   font-size: 13px;
   color: #888;
-  margin-top: 3px;
+  margin-top: 5px;
+}
+
+/* 添加和热力图相同的数字变化动画 */
+.stat-value.animate-number {
+  animation: countBlur 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes countBlur {
+  0% {
+    filter: blur(0px);
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    filter: blur(1.5px);
+    opacity: 0.9;
+    transform: scale(1.1);
+  }
+  100% {
+    filter: blur(0px);
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 .user-nav {
