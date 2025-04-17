@@ -25,8 +25,8 @@
 </template>
 
 <script setup lang="ts">
-import { defineProps, defineEmits, ref, computed, onMounted } from 'vue';
-import { ElMessage } from 'element-plus';
+import { defineProps, defineEmits, ref, computed, onMounted, watch } from 'vue';
+import { ElMessage, ElLoading } from 'element-plus';
 import axios from 'axios';
 
 interface UserProfileData {
@@ -53,6 +53,11 @@ onMounted(() => {
   updateLocalData();
 });
 
+// 添加watch监听器，当props变化时更新本地数据
+watch(() => props.userProfile, (newUserProfile) => {
+  updateLocalData();
+}, { deep: true });
+
 const updateLocalData = () => {
   username.value = props.userProfile.username || '';
   email.value = props.userProfile.email || '';
@@ -71,6 +76,70 @@ const saveProfile = async (): Promise<void> => {
       return;
     }
     
+    // 检查用户名是否变更
+    const isUsernameChanged = username.value !== props.userProfile.username;
+    
+    // 如果用户名变更，先修改用户名
+    if (isUsernameChanged) {
+      try {
+        // 显示加载指示器
+        const loadingInstance = ElLoading.service({
+          lock: true,
+          text: '修改用户名中...',
+          background: 'rgba(0, 0, 0, 0.7)'
+        });
+        
+        // 发送修改用户名请求
+        const usernameResponse = await axios.post('http://localhost:5000/api/user-change-username', {
+          new_username: username.value,
+        }, {
+          withCredentials: true
+        });
+        
+        // 关闭加载指示器
+        loadingInstance.close();
+        
+        if (!usernameResponse.data || !usernameResponse.data.success) {
+          // 用户名修改失败，显示错误信息
+          ElMessage({
+            message: usernameResponse.data?.message || '用户名修改失败',
+            type: 'error'
+          });
+          return; // 终止后续操作
+        }
+        
+        // 用户名修改成功
+        ElMessage({
+          message: usernameResponse.data.message || '用户名修改成功',
+          type: 'success'
+        });
+        
+        // 更新本地存储中的用户名
+        localStorage.setItem('username', username.value);
+        
+        // 创建更新后的用户数据
+        const updatedProfile: UserProfileData = {
+          username: username.value,
+          email: email.value,
+          bio: bio.value
+        };
+        
+        // 立即通知父组件数据已更新
+        emit('profile-updated', updatedProfile);
+        
+        // 不再需要更新其他信息，直接返回
+        return;
+      } catch (usernameError: any) {
+        console.error('修改用户名失败:', usernameError);
+        ElMessage({
+          message: usernameError.response?.data?.message || '修改用户名失败，请稍后重试',
+          type: 'error'
+        });
+        return; // 终止后续操作
+      }
+    }
+    
+    // 如果只修改邮箱和简介，不修改用户名
     // 创建更新后的用户数据
     const updatedProfile: UserProfileData = {
       username: username.value,
@@ -78,26 +147,52 @@ const saveProfile = async (): Promise<void> => {
       bio: bio.value
     };
 
-    // 这里应该发送请求到后端保存用户信息
-    // const response = await axios.post('/api/user/profile', updatedProfile);
+    // 发送请求到后端保存其他用户信息
+    const loadingInstance = ElLoading.service({
+      lock: true,
+      text: '保存个人资料...',
+      background: 'rgba(0, 0, 0, 0.7)'
+    });
     
-    // 通知父组件数据已更新
-    emit('profile-updated', updatedProfile);
-    
-    // 更新本地存储中的用户名
-    localStorage.setItem('username', username.value);
-    
-    // 模拟成功响应
-    setTimeout(() => {
-      ElMessage({
-        message: '个人资料已更新',
-        type: 'success'
+    try {
+      const response = await axios.post('http://localhost:5000/api/update-user-info', {
+        email: email.value,
+        bio: bio.value
+      }, {
+        withCredentials: true
       });
-    }, 500);
-  } catch (error) {
+      
+      // 关闭加载指示器
+      loadingInstance.close();
+      
+      if (response.data && response.data.success) {
+        // 通知父组件数据已更新
+        emit('profile-updated', updatedProfile);
+        
+        // 更新本地存储中的邮箱
+        localStorage.setItem('email', email.value);
+        
+        ElMessage({
+          message: response.data.message || '个人资料已更新',
+          type: 'success'
+        });
+      } else {
+        throw new Error(response.data?.message || '保存失败');
+      }
+    } catch (error: any) {
+      // 关闭加载指示器
+      loadingInstance.close();
+      
+      console.error('保存用户资料失败:', error);
+      ElMessage({
+        message: error.message || '保存失败，请稍后重试',
+        type: 'error'
+      });
+    }
+  } catch (error: any) {
     console.error('保存用户资料失败:', error);
     ElMessage({
-      message: '保存失败，请稍后重试',
+      message: error.message || '保存失败，请稍后重试',
       type: 'error'
     });
   }
