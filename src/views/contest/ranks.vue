@@ -18,10 +18,8 @@
 
 <script setup>
 import { ref } from "vue"
-import showtitle from "@/components/test/showtitle.vue"
-import navlinks from "@/components/test/navlinks.vue";
 import competitionheader from "@/components/zq/competitionheader.vue";
-import sidebarrank from "@/components/zq/sidebar-rank.vue";
+import sidebarrank from "@/components/zq/contest-sidebar.vue";
 import rank from "@/components/zq/rank.vue";
 import axios from "axios";
 import { onMounted } from "vue";

@@ -1,7 +1,7 @@
 <template>
     <div class="sidebar-container">
       <div class="sidebar-items">
-        <div id="problems-btn" class="sidebar-item active">
+        <div :class="['sidebar-item', { active: isProblemsActive }]" @click="navigateToProblems">
           <div class="item-icon problem-icon">
             <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M8 6H16M8 10H16M8 14H12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -10,15 +10,13 @@
           </div>
           <div class="item-text">题目</div>
         </div>
-        <div id="ranks-btn" class="sidebar-item">
-          <div class="sidebar-link" @click="navigateToRanks">
-            <div class="item-icon rank-icon">
-              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M6 20V10M12 20V4M18 20V14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-            </div>
-            <div class="item-text">排名</div>
+        <div :class="['sidebar-item', { active: isRanksActive }]" @click="navigateToRanks">
+          <div class="item-icon rank-icon">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M6 20V10M12 20V4M18 20V14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
           </div>
+          <div class="item-text">排名</div>
         </div>
       </div>
     </div>
@@ -26,18 +24,55 @@
   
   <script lang="ts" setup>
   import { useRoute, useRouter } from 'vue-router';
+  import { computed, onMounted } from 'vue';
   
   const route = useRoute();
   const router = useRouter();
   
+  // 计算当前路由是否与题目页面匹配
+  const isProblemsActive = computed(() => {
+    return route.path.includes('/contest/problems');
+  });
+  
+  // 计算当前路由是否与排名页面匹配
+  const isRanksActive = computed(() => {
+    return route.path.includes('/contest/ranks');
+  });
+  
+  // 获取当前路由中的uid参数
+  const getUid = () => {
+    return route.query.uid || '';
+  };
+  
+  // 跳转到题目页面
+  const navigateToProblems = () => {
+    const uid = getUid();
+    if (uid) {
+      router.push(`/contest/problems?uid=${uid}`);
+    } else {
+      router.push('/contest/problems');
+    }
+  };
+  
+  // 跳转到排名页面
   const navigateToRanks = () => {
-    const uid = route.query.uid;
+    const uid = getUid();
     if (uid) {
       router.push(`/contest/ranks?uid=${uid}`);
     } else {
       router.push('/contest/ranks');
     }
   };
+  
+  // 初始化时如果没有明确路由，则跳转到题目页面
+  onMounted(() => {
+    if (!isProblemsActive.value && !isRanksActive.value) {
+      // 如果当前路径是/contest/或类似路径，自动跳转到problems
+      if (route.path.match(/^\/contest\/?$/)) {
+        navigateToProblems();
+      }
+    }
+  });
   </script>
   
   <style scoped>
@@ -98,8 +133,8 @@
   }
   
   .problem-icon {
-    background-color: #ecfdf5;
-    color: #10b981;
+    background-color: #f3f4f6;
+    color: #9ca3af;
   }
   
   .rank-icon {
@@ -115,6 +150,16 @@
   }
   
   .sidebar-item.active .item-icon {
+    background-color: #ecfdf5;
+    color: #10b981;
+  }
+  
+  .sidebar-item.active .problem-icon {
+    background-color: #ecfdf5;
+    color: #10b981;
+  }
+  
+  .sidebar-item.active .rank-icon {
     background-color: #ecfdf5;
     color: #10b981;
   }
