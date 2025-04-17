@@ -1159,6 +1159,9 @@ export default {
         };
         this.$emit("add-pending-submission", pendingSubmission);
 
+        // 模拟API请求延迟
+        // await new Promise((resolve) => setTimeout(resolve, 1500));
+
         const formData = new FormData();
         formData.append("question_uid", this.id);
         formData.append("question", JSON.stringify(this.questionDetail));
@@ -1176,7 +1179,8 @@ export default {
 
         // 解析AI返回的结果
         const aiResponse = response.message;
-        console.log(aiResponse);
+        //const aiResponse = "编译错误"; // 测试用的假数据
+        // console.log(aiResponse);
         let statusOption = this.stateOptions.find((option) =>
           option.status.includes(this.getStatusFromAiResponse(aiResponse))
         );
@@ -1355,6 +1359,7 @@ export default {
   justify-content: space-between;
   background-color: #f9f9f9;
   position: relative;
+  margin-bottom: 8px;
 }
 
 .language-selector {
