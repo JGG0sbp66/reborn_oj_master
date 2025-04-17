@@ -72,6 +72,7 @@
           </svg>
           <span>我的提交</span>
         </div>
+        <span>{{this.isAuthenticated}}</span>
       </div>
       <div
         v-if="questionDetail"
@@ -230,7 +231,7 @@
             </thead>
             <tbody>
               <tr
-                v-for="submission in submissions"
+                v-for="submission in displayedSubmissions"
                 :key="submission.index"
                 :class="{ 'pending-row': submission.isPending }"
               >
@@ -249,18 +250,18 @@
 </template>
   
 <script>
-// 1. 在顶部引入 axios
 import axios from "axios";
 
 export default {
   name: "DescribeComponent",
-  props: ["submissions", "activeTab"],
+  props: ["submissions", "activeTab", "isAuthenticated"],
   data() {
     return {
       id: "",
       questionDetail: null,
       isLoading: false,
       error: null,
+      localSubmissions: [], // 用于存储本地提交记录
     };
   },
   created() {
@@ -270,16 +271,87 @@ export default {
       localStorage.getItem("currentQuestionId");
 
     if (this.questionId) {
-      // 同步到所有存储位置
       this.$store.commit("setCurrentQuestionId", this.questionId);
       localStorage.setItem("currentQuestionId", this.questionId);
       this.fetchQuestionDetail();
     }
+
+    // 初始化时加载本地存储的提交记录
+    this.loadLocalSubmissions();
   },
   methods: {
     switchTab(tab) {
       this.$emit("switch-tab", tab);
     },
+
+    // 加载本地存储的提交记录
+    loadLocalSubmissions() {
+      if (this.isAuthenticated && this.questionId) {
+        const storageKey = `submissions_${this.questionId}`;
+        const savedSubmissions = localStorage.getItem(storageKey);
+        if (savedSubmissions) {
+          this.localSubmissions = JSON.parse(savedSubmissions);
+          // 按时间排序确保最新的记录在前面
+          this.localSubmissions.sort((a, b) => 
+            new Date(b.submitTime) - new Date(a.submitTime)
+          );
+          console.log("Loaded from local storage:", this.localSubmissions);
+        }
+      }
+    },
+
+    // 修改保存提交记录到本地存储的方法
+    saveSubmissionsToLocal() {
+      if (this.isAuthenticated && this.questionId && this.submissions.length > 0) {
+        const storageKey = `submissions_${this.questionId}`;
+        // 获取现有的提交记录
+        let existingSubmissions = JSON.parse(localStorage.getItem(storageKey)) || [];
+    
+        // 过滤出新的、非评测中的提交记录
+        const newSubmissions = this.submissions.filter(submission => {
+          // 排除评测中的状态
+          if (submission.isPending || submission.status.includes('评测中')) {
+            return false;
+          }
+          
+          // 检查是否已存在相同的提交记录
+          return !existingSubmissions.some(existing => 
+            existing.submitTime === submission.submitTime && 
+            existing.status === submission.status &&
+            existing.language === submission.language
+          );
+        });
+    
+        if (newSubmissions.length > 0) {
+          // 合并新的提交记录到现有记录中
+          const updatedSubmissions = [...existingSubmissions, ...newSubmissions];
+          
+          // 按提交时间降序排序
+          updatedSubmissions.sort((a, b) => 
+            new Date(b.submitTime) - new Date(a.submitTime)
+          );
+          
+          // 存储更新后的提交记录
+          localStorage.setItem(storageKey, JSON.stringify(updatedSubmissions));
+          console.log("保存新的提交记录到本地存储:", newSubmissions);
+        }
+      }
+    },
+
+    // 修改清理本地存储的提交记录方法
+    clearAllLocalSubmissions() {
+      // 只有在用户未登录状态下才清除存储
+      if (!this.isAuthenticated) {
+        const keys = Object.keys(localStorage).filter((key) =>
+          key.startsWith("submissions_")
+        );
+        keys.forEach((key) => {
+          localStorage.removeItem(key);
+        });
+        this.localSubmissions = [];
+      }
+    },
+
     async fetchQuestionDetail() {
       this.isLoading = true;
       this.error = null;
@@ -296,11 +368,9 @@ export default {
           },
         });
 
-        console.log("Fetched question detail:", response); // 调试日志
-        console.log("Question ID:", this.questionId); // 调试日志
+        console.log("Fetched question detail:", response);
         this.questionDetail = response.question_detail;
 
-        // 触发事件将数据传递给父组件
         this.$emit("question-loaded", this.questionDetail);
         this.$emit("question-id", this.questionId);
       } catch (error) {
@@ -310,10 +380,10 @@ export default {
         this.isLoading = false;
       }
     },
+
     async copyToClipboard(text) {
       try {
         await navigator.clipboard.writeText(text);
-        // 可以添加一些视觉反馈，比如显示一个短暂的通知
         this.$notify({
           title: "复制成功",
           message: "内容已复制到剪贴板",
@@ -322,16 +392,14 @@ export default {
         });
       } catch (err) {
         console.error("复制失败:", err);
-        // 回退方案
         this.fallbackCopyToClipboard(text);
       }
     },
 
-    // 兼容性回退方案
     fallbackCopyToClipboard(text) {
       const textarea = document.createElement("textarea");
       textarea.value = text;
-      textarea.style.position = "fixed"; // 防止页面滚动
+      textarea.style.position = "fixed";
       document.body.appendChild(textarea);
       textarea.select();
 
@@ -360,20 +428,54 @@ export default {
     },
   },
   watch: {
-    "$route.params.id"(newId) {
-      if (newId) {
-        this.questionId = newId;
-        this.$store.commit("setCurrentQuestionId", newId);
-        localStorage.setItem("currentQuestionId", newId);
-        this.fetchQuestionDetail();
-      }
-    },
     submissions: {
       deep: true,
       handler(newVal) {
-        console.log("Submissions updated:", newVal);
+        if (this.isAuthenticated) {
+          this.saveSubmissionsToLocal();
+          this.loadLocalSubmissions();
+        }
       },
     },
+    // 修改 isAuthenticated 的监听逻辑
+    isAuthenticated: {
+      immediate: false, // 改为 false，避免初始化时执行
+      handler(newVal, oldVal) {
+        console.log("Auth status changed:", newVal, "old value:", oldVal);
+        if (newVal) {
+          // 用户登录时，加载本地存储
+          this.loadLocalSubmissions();
+        } else if (oldVal === true && newVal === false) {
+          // 只有从登录状态变为未登录状态时才清除记录
+          console.log("User logged out, clearing submissions...");
+          this.clearAllLocalSubmissions();
+        }
+      }
+    }
+  },
+  computed: {
+    displayedSubmissions() {
+      // 获取待评测的提交
+      const pendingSubmissions = this.submissions.filter(s => s.isPending);
+      
+      // 获取已完成的提交
+      let completedSubmissions = [];
+      if (this.isAuthenticated) {
+        // 确保从本地存储获取最新数据
+        const storageKey = `submissions_${this.questionId}`;
+        const storedData = localStorage.getItem(storageKey);
+        if (storedData) {
+          completedSubmissions = JSON.parse(storedData);
+        }
+      } else {
+        completedSubmissions = this.submissions.filter(s => !s.isPending);
+      }
+
+      // 合并并按时间排序
+      return [...pendingSubmissions, ...completedSubmissions].sort((a, b) => 
+        new Date(b.submitTime) - new Date(a.submitTime)
+      );
+    }
   },
 };
 </script>
