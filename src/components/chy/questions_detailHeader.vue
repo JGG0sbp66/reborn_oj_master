@@ -23,21 +23,19 @@
             <span class="nav-text">题库</span>
             <span class="nav-hover-effect"></span>
           </router-link>
-          <router-link
-            to="/nav/question"
+          <div
             class="nav-item"
+            @click="handleShare"
           >
             <el-icon class="nav-icon">
               <Share />
             </el-icon>
             <span class="nav-text">分享</span>
             <span class="nav-hover-effect"></span>
-          </router-link>
+          </div>
         </nav>
       </div>
 
-      <!-- 用户操作区 -->
-      <!-- 用户操作区 -->
       <div class="user-actions">
         <template v-if="!isAuthenticated">
           <router-link
@@ -146,45 +144,32 @@
     
 <script setup lang="ts">
 import { ref, computed, onMounted, onBeforeUnmount, defineExpose } from "vue";
-import {
-  House,
-  Collection,
-  Trophy,
-  UserFilled,
-  SwitchButton,
-} from "@element-plus/icons-vue";
-import { checkAuth } from "@/utils/auth";
-import axios from "axios";
-import { useRouter } from "vue-router";
-import emitter from "@/utils/eventBus";
+import { House, Collection, Trophy, UserFilled, SwitchButton,Share } from "@element-plus/icons-vue";
+import { checkAuth } from '@/utils/auth';
+import axios from 'axios';
+import { useRouter } from 'vue-router';
+import emitter from '@/utils/eventBus';
+import { ElMessage } from 'element-plus';
 
 const router = useRouter();
 const isAuthenticated = ref<boolean>(false);
-const username = ref<string>("");
-const userRole = ref<string>("");
-const avatarUrl = ref<string>("");
+const username = ref<string>('');
+const userRole = ref<string>('');
+const avatarUrl = ref<string>('');
 const showUserMenu = ref<boolean>(false);
 const menuCloseTimer = ref<number | null>(null); // 用于延迟关闭菜单
 
 // 从用户名生成缩写
 const userInitials = computed(() => {
-  if (!username.value || typeof username.value !== "string") return "?";
+  if (!username.value || typeof username.value !== 'string') return '?';
   return username.value.substring(0, 2).toUpperCase();
 });
 
 // 生成随机颜色以便为用户头像创建背景色
 const getRandomColor = () => {
   const colors = [
-    "#42b983",
-    "#33c6aa",
-    "#00c4ff",
-    "#3399ff",
-    "#2979ff",
-    "#5e72e4",
-    "#7795f8",
-    "#6772e5",
-    "#7b69ee",
-    "#6f42c1",
+    '#42b983', '#33c6aa', '#00c4ff', '#3399ff', '#2979ff',
+    '#5e72e4', '#7795f8', '#6772e5', '#7b69ee', '#6f42c1'
   ];
   const randomIndex = Math.floor(Math.random() * colors.length);
   return colors[randomIndex];
@@ -193,45 +178,43 @@ const getRandomColor = () => {
 // 生成随机矢量图头像
 const generateAvatarSvg = (username: string) => {
   // 从用户名生成一个稳定的哈希值，确保同一用户名总是生成相同的图案
-  const hash = username.split("").reduce((acc, char, i) => {
-    return acc + char.charCodeAt(0) * (i + 1);
+  const hash = username.split('').reduce((acc, char, i) => {
+    return acc + (char.charCodeAt(0) * (i + 1));
   }, 0);
-
+  
   // 定义一些颜色方案
   const colorSchemes = [
-    { bg: "#E8F4F8", fg: ["#2980b9", "#3498db", "#1abc9c", "#16a085"] },
-    { bg: "#F8F4E8", fg: ["#E67E22", "#F39C12", "#D35400", "#FFA07A"] },
-    { bg: "#F4E8F8", fg: ["#8E44AD", "#9B59B6", "#745399", "#B19CD9"] },
-    { bg: "#E8F8F4", fg: ["#27AE60", "#2ECC71", "#1E8449", "#A0DAA9"] },
-    { bg: "#F8E8E8", fg: ["#C0392B", "#E74C3C", "#922B21", "#F5B7B1"] },
-    { bg: "#E8F0F8", fg: ["#3498DB", "#2874A6", "#2E86C1", "#85C1E9"] },
+    { bg: '#E8F4F8', fg: ['#2980b9', '#3498db', '#1abc9c', '#16a085'] },
+    { bg: '#F8F4E8', fg: ['#E67E22', '#F39C12', '#D35400', '#FFA07A'] },
+    { bg: '#F4E8F8', fg: ['#8E44AD', '#9B59B6', '#745399', '#B19CD9'] },
+    { bg: '#E8F8F4', fg: ['#27AE60', '#2ECC71', '#1E8449', '#A0DAA9'] },
+    { bg: '#F8E8E8', fg: ['#C0392B', '#E74C3C', '#922B21', '#F5B7B1'] },
+    { bg: '#E8F0F8', fg: ['#3498DB', '#2874A6', '#2E86C1', '#85C1E9'] }
   ];
-
+  
   // 根据哈希值选择颜色方案
   const schemeIndex = hash % colorSchemes.length;
   const colorScheme = colorSchemes[schemeIndex];
-
+  
   // 生成SVG的尺寸
   const size = 200;
   const halfSize = size / 2;
-
+  
   // 生成一些随机形状
   const shapes = [];
   const shapesCount = 4 + (hash % 4); // 4到7个形状
-
+  
   for (let i = 0; i < shapesCount; i++) {
     const shapeType = (hash + i) % 3; // 0: 圆形, 1: 矩形, 2: 多边形
     const color = colorScheme.fg[i % colorScheme.fg.length];
-    const shapeSeed = hash + i * 13;
-
+    const shapeSeed = hash + (i * 13);
+    
     if (shapeType === 0) {
       // 圆形
       const cx = 30 + (shapeSeed % (size - 60));
       const cy = 30 + ((shapeSeed * 5) % (size - 60));
       const r = 10 + (shapeSeed % 40);
-      shapes.push(
-        `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${color}" opacity="0.8" />`
-      );
+      shapes.push(`<circle cx="${cx}" cy="${cy}" r="${r}" fill="${color}" opacity="0.8" />`);
     } else if (shapeType === 1) {
       // 矩形
       const x = 20 + (shapeSeed % (size - 80));
@@ -239,9 +222,7 @@ const generateAvatarSvg = (username: string) => {
       const width = 15 + (shapeSeed % 50);
       const height = 15 + ((shapeSeed * 3) % 50);
       const rx = shapeSeed % 15; // 圆角
-      shapes.push(
-        `<rect x="${x}" y="${y}" width="${width}" height="${height}" rx="${rx}" fill="${color}" opacity="0.8" />`
-      );
+      shapes.push(`<rect x="${x}" y="${y}" width="${width}" height="${height}" rx="${rx}" fill="${color}" opacity="0.8" />`);
     } else {
       // 多边形 (三角形或其他简单形状)
       const points = [];
@@ -249,36 +230,91 @@ const generateAvatarSvg = (username: string) => {
       const centerX = 30 + (shapeSeed % (size - 60));
       const centerY = 30 + ((shapeSeed * 11) % (size - 60));
       const radius = 10 + (shapeSeed % 30);
-
+      
       for (let j = 0; j < sides; j++) {
-        const angle = (j * 2 * Math.PI) / sides + (shapeSeed % Math.PI);
+        const angle = (j * 2 * Math.PI / sides) + (shapeSeed % Math.PI);
         const x = centerX + radius * Math.cos(angle);
         const y = centerY + radius * Math.sin(angle);
         points.push(`${x},${y}`);
       }
-
-      shapes.push(
-        `<polygon points="${points.join(" ")}" fill="${color}" opacity="0.8" />`
-      );
+      
+      shapes.push(`<polygon points="${points.join(' ')}" fill="${color}" opacity="0.8" />`);
     }
   }
-
+  
   // 组合SVG
   const svg = `
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${size} ${size}" width="${size}" height="${size}">
       <rect width="${size}" height="${size}" fill="${colorScheme.bg}" />
-      ${shapes.join("\n      ")}
+      ${shapes.join('\n      ')}
     </svg>
   `;
-
+  
   // 返回Data URL形式的SVG
   return `data:image/svg+xml;utf8,${encodeURIComponent(svg.trim())}`;
 };
 
-// 生成用户默认头像
+// 修改tryRefreshAvatar方法
+const tryRefreshAvatar = async (userId?: string | number) => {
+  try {
+    // 使用传入的userId或从localStorage获取
+    const id = userId || localStorage.getItem('uid');
+    if (!id) return;
+    
+    // 添加时间戳以防止缓存
+    const timestamp = localStorage.getItem('avatar_timestamp') || Date.now().toString();
+    
+    // 检查是否有头像
+    const avatarResponse = await axios.get(`http://localhost:5000/api/avatar-get/${id}?t=${timestamp}`, {
+      responseType: 'blob',  // 以二进制blob格式接收数据
+      withCredentials: true
+    });
+    
+    // 如果成功获取头像
+    if (avatarResponse.status === 200 && avatarResponse.data) {
+      // 释放之前的blob URL资源
+      if (avatarUrl.value && avatarUrl.value.startsWith('blob:')) {
+        try {
+          URL.revokeObjectURL(avatarUrl.value);
+        } catch (e) {
+          console.log('释放旧头像URL资源失败:', e);
+        }
+      }
+      
+      // 创建blob URL用于当前会话显示
+      const blob = new Blob([avatarResponse.data], { type: 'image/jpeg' });
+      const imageUrl = URL.createObjectURL(blob);
+      avatarUrl.value = imageUrl;
+      
+      // 将blob转换为Base64，用于持久化存储
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        if (reader.result) {
+          // 保存Base64格式的图片到localStorage
+          localStorage.setItem('avatarBase64', reader.result.toString());
+          // 更新时间戳
+          localStorage.setItem('avatar_timestamp', Date.now().toString());
+        }
+      };
+      reader.readAsDataURL(blob);
+    }
+  } catch (avatarError) {
+    console.log('没有找到用户头像或头像加载失败:', avatarError);
+    // 如果头像获取失败，继续使用默认头像或已有的头像
+  }
+};
+
+// 修改生成用户默认头像逻辑
 const defaultAvatarUrl = computed(() => {
+  // 首先检查localStorage中是否有Base64格式的头像
+  const cachedAvatarBase64 = localStorage.getItem('avatarBase64');
+  if (cachedAvatarBase64) return cachedAvatarBase64;
+  
+  // 其次检查avatarUrl
   if (avatarUrl.value) return avatarUrl.value;
-  if (!username.value) return "";
+  
+  // 最后才生成默认头像
+  if (!username.value) return '';
   return generateAvatarSvg(username.value);
 });
 
@@ -286,133 +322,89 @@ const defaultAvatarUrl = computed(() => {
 const verifyUserState = async () => {
   try {
     // 先检查localStorage中是否有登录状态
-    const isLoggedInFromStorage = localStorage.getItem("isLoggedIn") === "true";
-    const usernameFromStorage = localStorage.getItem("username");
-    const userRoleFromStorage = localStorage.getItem("userRole");
-    const avatarUrlFromStorage = localStorage.getItem("avatarUrl");
-    const avatarTimestamp =
-      localStorage.getItem("avatar_timestamp") || Date.now().toString();
-
+    const isLoggedInFromStorage = localStorage.getItem('isLoggedIn') === 'true';
+    const usernameFromStorage = localStorage.getItem('username');
+    const userRoleFromStorage = localStorage.getItem('userRole');
+    
     // 如果localStorage中有数据，先使用这些数据更新UI
     if (isLoggedInFromStorage && usernameFromStorage) {
       isAuthenticated.value = true;
       username.value = usernameFromStorage;
-      userRole.value = userRoleFromStorage || "普通用户";
-
-      // 如果localStorage中有头像URL，先使用它
-      if (avatarUrlFromStorage) {
-        // 检查是否是blob URL，如果是，可能需要刷新
-        if (avatarUrlFromStorage.startsWith("blob:")) {
-          // 通过URL参数打破缓存或重新获取头像
-          tryRefreshAvatar();
-        } else {
+      userRole.value = userRoleFromStorage || '普通用户';
+      
+      // 优先使用储存的Base64头像，避免闪烁
+      const cachedAvatarBase64 = localStorage.getItem('avatarBase64');
+      if (cachedAvatarBase64) {
+        avatarUrl.value = cachedAvatarBase64;
+      } else {
+        // 如果没有Base64缓存，检查旧版本的Blob URL
+        const avatarUrlFromStorage = localStorage.getItem('avatarUrl');
+        if (avatarUrlFromStorage) {
           avatarUrl.value = avatarUrlFromStorage;
         }
       }
     }
-
+    
     // 获取用户ID用于头像
-    const userId = localStorage.getItem("uid");
-
-    // 如果有用户ID，尝试从服务器获取头像
+    const userId = localStorage.getItem('uid');
+    
+    // 如果有用户ID，尝试从服务器获取最新头像，但不阻塞UI显示
     if (userId) {
-      tryRefreshAvatar();
+      requestAnimationFrame(() => {
+        tryRefreshAvatar(userId);
+      });
     }
-
+    
     // 然后再通过API获取最新状态
     const { authenticated, user } = await checkAuth();
     isAuthenticated.value = authenticated;
     if (authenticated && user) {
-      username.value = user.username || "用户"; // 使用username而不是uid
-      userRole.value = user.role || "普通用户";
-
+      username.value = user.username || '用户'; // 使用username而不是uid
+      userRole.value = user.role || '普通用户';
+      
       // 保存用户ID，可用于头像获取
       if (user.uid) {
-        localStorage.setItem("uid", user.uid.toString());
-
+        localStorage.setItem('uid', user.uid.toString());
+        
         // 如果之前没有获取头像，尝试用获取到的ID获取
         if (!avatarUrl.value) {
           tryRefreshAvatar(user.uid);
         }
       }
-
+      
       // 更新localStorage
-      localStorage.setItem("isLoggedIn", "true");
-      localStorage.setItem("username", user.username); // 保存正确的username
-      localStorage.setItem("userRole", user.role);
+      localStorage.setItem('isLoggedIn', 'true');
+      localStorage.setItem('username', user.username); // 保存正确的username
+      localStorage.setItem('userRole', user.role);
     } else {
       // 如果API返回未认证，清除localStorage
-      localStorage.removeItem("isLoggedIn");
-      localStorage.removeItem("username");
-      localStorage.removeItem("userRole");
-      localStorage.removeItem("uid");
+      localStorage.removeItem('isLoggedIn');
+      localStorage.removeItem('username');
+      localStorage.removeItem('userRole');
+      localStorage.removeItem('uid');
       // 不要清除avatarUrl，因为它可能在其他地方使用
     }
   } catch (error) {
-    console.error("验证用户状态错误:", error);
+    console.error('验证用户状态错误:', error);
     isAuthenticated.value = false;
-  }
-};
-
-// 添加新的方法用于刷新头像
-const tryRefreshAvatar = async (userId?: string | number) => {
-  try {
-    // 使用传入的userId或从localStorage获取
-    const id = userId || localStorage.getItem("uid");
-    if (!id) return;
-
-    // 添加时间戳以防止缓存
-    const timestamp =
-      localStorage.getItem("avatar_timestamp") || Date.now().toString();
-
-    // 检查是否有头像
-    const avatarResponse = await axios.get(
-      `http://localhost:5000/api/avatar-get/${id}?t=${timestamp}`,
-      {
-        responseType: "blob", // 以二进制blob格式接收数据
-        withCredentials: true,
-      }
-    );
-
-    // 如果成功获取头像，创建一个本地URL并更新头像
-    if (avatarResponse.status === 200 && avatarResponse.data) {
-      // 释放之前的blob URL资源
-      if (avatarUrl.value && avatarUrl.value.startsWith("blob:")) {
-        try {
-          URL.revokeObjectURL(avatarUrl.value);
-        } catch (e) {
-          console.log("释放旧头像URL资源失败:", e);
-        }
-      }
-
-      const blob = new Blob([avatarResponse.data], { type: "image/jpeg" });
-      const imageUrl = URL.createObjectURL(blob);
-      avatarUrl.value = imageUrl;
-
-      // 保存到localStorage
-      localStorage.setItem("avatarUrl", imageUrl);
-    }
-  } catch (avatarError) {
-    console.log("没有找到用户头像或头像加载失败:", avatarError);
-    // 如果头像获取失败，继续使用默认头像或已有的头像
   }
 };
 
 // 退出登录
 const logout = async () => {
   try {
-    await axios.post("http://localhost:5000/api/logout");
+    await axios.post('http://localhost:5000/api/logout');
     isAuthenticated.value = false;
     showUserMenu.value = false;
-
+    
     // 清除localStorage中的登录信息
-    localStorage.removeItem("isLoggedIn");
-    localStorage.removeItem("username");
-    localStorage.removeItem("userRole");
-
-    router.push("/nav/home");
+    localStorage.removeItem('isLoggedIn');
+    localStorage.removeItem('username');
+    localStorage.removeItem('userRole');
+    
+    router.push('/nav/home');
   } catch (error) {
-    console.error("退出登录失败:", error);
+    console.error('退出登录失败:', error);
   }
 };
 
@@ -438,20 +430,45 @@ const handleUserMenuLeave = () => {
 
 // 跳转到用户个人中心
 const goToUserProfile = () => {
-  router.push("/user/profile");
+  router.push('/user/profile');
+};
+
+// 分享功能
+const handleShare = async () => {
+  try {
+    // 获取当前页面URL
+    const currentUrl = window.location.href;
+    
+    // 复制到剪贴板
+    await navigator.clipboard.writeText(currentUrl);
+    
+    // 使用 Element Plus 的消息提示
+    ElMessage({
+      message: '链接已复制到剪贴板',
+      type: 'success',
+      duration: 2000
+    });
+  } catch (err) {
+    console.error('复制失败:', err);
+    ElMessage({
+      message: '复制失败,请重试',
+      type: 'error',
+      duration: 2000
+    });
+  }
 };
 
 // 组件加载时验证用户状态
 onMounted(() => {
   verifyUserState();
-
+  
   // 监听头像更新事件
-  emitter.on("avatar-updated", (data: any) => {
+  emitter.on('avatar-updated', (data: any) => {
     // 更新头像URL
     if (data.avatarUrl) {
       avatarUrl.value = data.avatarUrl;
     }
-
+    
     // 也可以直接刷新用户状态
     verifyUserState();
   });
@@ -462,23 +479,23 @@ onBeforeUnmount(() => {
   if (menuCloseTimer.value !== null) {
     clearTimeout(menuCloseTimer.value);
   }
-
+  
   // 取消事件监听
-  emitter.off("avatar-updated");
-
+  emitter.off('avatar-updated');
+  
   // 释放blob URL
-  if (avatarUrl.value && avatarUrl.value.startsWith("blob:")) {
+  if (avatarUrl.value && avatarUrl.value.startsWith('blob:')) {
     try {
       URL.revokeObjectURL(avatarUrl.value);
     } catch (e) {
-      console.log("释放头像URL资源失败:", e);
+      console.log('释放头像URL资源失败:', e);
     }
   }
 });
 
 // 暴露方法给父组件
 defineExpose({
-  verifyUserState,
+  verifyUserState
 });
 </script>
     
