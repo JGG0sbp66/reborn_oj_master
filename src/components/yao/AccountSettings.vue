@@ -48,7 +48,7 @@
 
 <script setup lang="ts">
 import { defineProps, defineEmits, ref } from 'vue';
-import { ElMessage } from 'element-plus';
+import { ElMessage, ElLoading } from 'element-plus';
 import axios from 'axios';
 
 interface SecuritySettings {
@@ -104,18 +104,32 @@ const changePassword = async (): Promise<void> => {
   }
   
   try {
-    // 这里应该发送请求到后端修改密码
-    // const response = await axios.post('/api/user/change-password', {
-    //   oldPassword: oldPassword.value,
-    //   newPassword: newPassword.value
-    // });
+    // 显示加载中
+    const loadingInstance = ElLoading.service({
+      lock: true,
+      text: '正在修改密码...',
+      background: 'rgba(0, 0, 0, 0.7)'
+    });
     
-    // 模拟成功响应
-    setTimeout(() => {
+    // 发送请求到后端修改密码
+    const response = await axios.post('http://localhost:5000/api/user-change-password', {
+      old_password: oldPassword.value,
+      new_password: newPassword.value,
+      re_new_password: confirmPassword.value
+    }, {
+      withCredentials: true
+    });
+    
+    // 关闭加载提示
+    loadingInstance.close();
+    
+    // 处理响应
+    if (response.data && response.data.success) {
       ElMessage({
-        message: '密码已成功修改',
+        message: response.data.message || '密码已成功修改',
         type: 'success'
       });
+      
       // 清空表单
       oldPassword.value = '';
       newPassword.value = '';
@@ -123,11 +137,28 @@ const changePassword = async (): Promise<void> => {
       
       // 通知父组件密码已修改
       emit('password-changed');
-    }, 500);
-  } catch (error) {
+    } else {
+      // 后端返回失败信息
+      ElMessage({
+        message: response.data?.message || '修改密码失败',
+        type: 'error'
+      });
+    }
+  } catch (error: any) {
     console.error('修改密码失败:', error);
+    
+    // 提供更详细的错误信息
+    let errorMessage = '修改密码失败，请稍后重试';
+    if (error.response) {
+      // 服务器响应了，但状态码不是2xx
+      errorMessage = error.response.data?.message || `修改密码失败 (${error.response.status})`;
+    } else if (error.request) {
+      // 请求发送了但没有收到响应
+      errorMessage = '服务器未响应，请检查网络连接';
+    }
+    
     ElMessage({
-      message: '修改密码失败，请稍后重试',
+      message: errorMessage,
       type: 'error'
     });
   }
