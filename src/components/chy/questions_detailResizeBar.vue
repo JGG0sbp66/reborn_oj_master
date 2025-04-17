@@ -23,7 +23,6 @@
     cursor: col-resize;
     transition: background-color 0.2s;
     position: relative;
-    z-index: 1;
     margin: 0 2px;
     border-radius: 4px;
   }

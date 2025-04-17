@@ -8,7 +8,9 @@
     <questions_detailBody :raceUid="race_uid"></questions_detailBody>
   </div>
   <!-- 页脚组件 -->
-  <foot></foot>
+  <div class="footer-wrapper">
+    <foot />
+  </div>
 
 </template>
   
@@ -25,15 +27,31 @@ import { useRoute } from "vue-router";
 const route = useRoute();
 const race_uid = route.query.race_uid; // 从 query 获取
 
-console.log("接收到的参数:", {race_uid});
+console.log("接收到的参数:", { race_uid });
 </script>
   
   
 <style scoped>
 .content {
   min-height: calc(100vh - 100px); /* 确保内容区域高度减去 footer 的高度 */
-  padding-bottom: 20px; /* 给 footer 留出空间 */
+  padding-bottom: 50px; /* 给 footer 留出空间 */
   padding-top: 40px; /* 给 headerheader 留出空间 */
+}
+.footer-wrapper {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  clip-path: inset(calc(100% - 60px) 0 0 0);
+  transition: clip-path 0.3s ease-in-out;
+}
+
+.footer-wrapper:hover {
+  clip-path: inset(0 0 0 0);
+}
+
+.footer-wrapper > * {
+  width: 100%;
 }
 </style>
   

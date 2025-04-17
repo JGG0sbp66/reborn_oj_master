@@ -168,7 +168,10 @@
           class="AlineDiv"
           v-for="(line, index) in codeLines"
           :key="index"
-          :class="{ 'selected-line': isAllSelected }"
+          :class="{ 'selected-line': isAllSelected || (index >= Math.min(startSelectionIndex, endSelectionIndex) && index <= Math.max(startSelectionIndex, endSelectionIndex)) }"
+          @mousedown="handleMouseDown(index)"
+          @mouseenter="handleMouseMove(index)"
+          @mouseup="handleMouseUp"
         >
           <span class="lineNumber">{{ index + 1 }}</span>
           <div class="code-input-wrapper">
@@ -269,6 +272,10 @@ export default {
       isShiftKeyDown: false, // 跟踪Shift键是否按下
       isMetaKeyDown: false, // 跟踪Meta键是否按下（Mac的Command键）
       pendingClearAction: false, // 标记是否有待处理的清空操作
+      enterKeyPressStartTime: 0, // 记录Enter键按下的开始时间
+      isMouseDown: false, // 是否按下鼠标左键
+      startSelectionIndex: -1, // 选择起始行索引
+      endSelectionIndex: -1, // 选择结束行索引
     };
   },
   watch: {
@@ -482,12 +489,16 @@ export default {
 
     // 在指定行后插入新行
     insertNewLineAfter(index) {
-      this.codeLines.splice(index + 1, 0, "");
+      const currentLine = this.codeLines[index];
+      const indent = this.getCurrentIndent(currentLine); // 获取当前缩进
+      this.codeLines.splice(index + 1, 0, indent); // 新行继承缩进
       this.$nextTick(() => {
         const newIndex = index + 1;
         const inputRef = this.$refs[`input_${newIndex}`];
         if (inputRef && inputRef[0]) {
           inputRef[0].focus();
+          // 将光标定位在新行的缩进末尾
+          inputRef[0].setSelectionRange(indent.length, indent.length);
         }
       });
     },
@@ -713,19 +724,39 @@ export default {
           break;
       }
 
+      // 在开头添加：处理括号自动补全
+      if (
+        ["{", "("].includes(event.key) &&
+        !(event.ctrlKey || event.metaKey || event.altKey)
+      ) {
+        if (this.handleBracketCompletion(index, event.key)) {
+          event.preventDefault(); // 阻止默认行为
+          return; // 如果已处理，就不再执行后面的逻辑
+        }
+      }
+
       // 添加 Ctrl+C 处理 - 复制选中内容
       if (event.key === "c" && (event.ctrlKey || event.metaKey)) {
         event.preventDefault();
-        // 不再设置pendingClearAction为false，保持全选状态
-        // 获取当前选中的内容
+
+        // 获取选中的行范围
+        const start = Math.min(
+          this.startSelectionIndex,
+          this.endSelectionIndex
+        );
+        const end = Math.max(this.startSelectionIndex, this.endSelectionIndex);
+
         let textToCopy = "";
 
         if (this.isAllSelected) {
           // 全选状态下复制所有代码
           textToCopy = this.codeLines.join("\n");
+        } else if (start !== -1 && end !== -1 && start !== end) {
+          // 复制鼠标选择的区域
+          textToCopy = this.codeLines.slice(start, end + 1).join("\n");
         } else {
-          // 否则复制当前行
-          textToCopy = this.codeLines[index];
+          // 默认复制当前行
+          textToCopy = this.codeLines[this.currentFocusIndex];
         }
 
         if (textToCopy.trim() !== "") {
@@ -737,8 +768,23 @@ export default {
                 this.$el.querySelectorAll(".AlineDiv").forEach((div) => {
                   div.style.backgroundColor = "rgba(3, 102, 214, 0.1)";
                 });
+              } else if (start !== -1 && end !== -1) {
+                // 高亮显示鼠标选择的区域
+                for (let i = start; i <= end; i++) {
+                  const lineDiv = this.$el.querySelectorAll(".AlineDiv")[i];
+                  if (lineDiv) {
+                    lineDiv.style.backgroundColor = "rgba(3, 102, 214, 0.1)";
+                    setTimeout(() => {
+                      lineDiv.style.backgroundColor = "";
+                    }, 500);
+                  }
+                }
               } else {
-                const lineDiv = this.$el.querySelectorAll(".AlineDiv")[index];
+                // 高亮显示当前行
+                const lineDiv =
+                  this.$el.querySelectorAll(".AlineDiv")[
+                    this.currentFocusIndex
+                  ];
                 if (lineDiv) {
                   lineDiv.style.backgroundColor = "rgba(3, 102, 214, 0.1)";
                   setTimeout(() => {
@@ -815,13 +861,27 @@ export default {
       }
       if (event.key === "Enter") {
         event.preventDefault();
+
+        // 记录按键开始时间
+        this.enterKeyPressStartTime = Date.now();
+
+        // 先检查是否在括号内按回车
+        if (this.handleEnterInsideBrackets(index)) {
+          return; // 如果已处理括号内回车，就不再执行普通回车逻辑
+        }
         if (!this.isEnterKeyDown) {
           this.isEnterKeyDown = true;
           this.addNewLine(index);
-          this.enterKeyInterval = setInterval(() => {
-            const lastIndex = this.codeLines.length - 1;
-            this.insertNewLineAfter(lastIndex);
-          }, 100);
+          // 设置一个延迟，只有按住超过300ms才启动连续创建
+          this.enterKeyInterval = setTimeout(() => {
+            if (Date.now() - this.enterKeyPressStartTime >= 300) {
+              // 启动连续创建新行的定时器
+              this.enterKeyInterval = setInterval(() => {
+                const lastIndex = this.codeLines.length - 1;
+                this.insertNewLineAfter(lastIndex);
+              }, 100);
+            }
+          }, 300);
         }
       } else if (event.key === "Backspace") {
         const inputElement = this.$refs[`input_${index}`][0];
@@ -910,6 +970,10 @@ export default {
 
       // 处理其他键的keyup
       if (event.key === "Enter") {
+        // 如果按键时间小于300ms，清除延迟定时器
+        if (Date.now() - this.enterKeyPressStartTime < 300) {
+          clearTimeout(this.enterKeyInterval);
+        }
         this.isEnterKeyDown = false;
         clearInterval(this.enterKeyInterval);
         this.enterKeyInterval = null;
@@ -922,18 +986,12 @@ export default {
     handleGlobalClick(e) {
       // 检查点击是否在输入框上
       const isClickOnInput = e.target.tagName === "INPUT";
-      // 如果点击的不是输入框，就取消全选状态
+
+      // 如果点击的不是输入框，就取消选择状态
       if (!isClickOnInput) {
         this.clearSelection();
       }
 
-      // 移除事件监听器（确保只执行一次）
-      document.removeEventListener("click", this.handleGlobalClick);
-      // 检查点击是否在代码区域内
-      const isClickInsideCode = this.$el.contains(e.target);
-      if (!isClickInsideCode || e.target.tagName === "INPUT") {
-        this.clearSelection();
-      }
       // 移除事件监听器（确保只执行一次）
       document.removeEventListener("click", this.handleGlobalClick);
     },
@@ -990,12 +1048,60 @@ export default {
       this.highlightAllLines();
       this.saveHistory();
     },
+
+    // 处理鼠标按下事件
+    handleMouseDown(index) {
+      this.isMouseDown = true;
+      this.startSelectionIndex = index;
+      this.endSelectionIndex = index;
+      this.isAllSelected = false; // 确保全选状态被清除
+      this.updateSelection();
+    },
+
+    // 处理鼠标移动事件
+    handleMouseMove(index) {
+      if (this.isMouseDown) {
+        this.endSelectionIndex = index;
+        this.updateSelection();
+      }
+    },
+
+    // 处理鼠标释放事件
+    handleMouseUp() {
+      this.isMouseDown = false;
+      // 如果只选择了一行，则取消选择
+      if (this.startSelectionIndex !== this.endSelectionIndex) {
+        this.shouldClearOnNextAction = true;
+      }
+    },
+
+    // 更新选择区域
+    updateSelection() {
+      // 清除之前的选择
+      this.$el.querySelectorAll(".AlineDiv").forEach((div) => {
+        div.classList.remove("selected-line");
+      });
+
+      const start = Math.min(this.startSelectionIndex, this.endSelectionIndex);
+      const end = Math.max(this.startSelectionIndex, this.endSelectionIndex);
+
+      // 应用选择样式
+      for (let i = start; i <= end; i++) {
+        const lineDiv = this.$el.querySelectorAll(".AlineDiv")[i];
+        if (lineDiv) {
+          lineDiv.classList.add("selected-line");
+        }
+      }
+    },
     clearSelection() {
       this.isAllSelected = false;
       this.shouldClearOnNextAction = false;
       this.pendingClearAction = false; // 新增
+      this.startSelectionIndex = -1;
+      this.endSelectionIndex = -1;
       this.$el.querySelectorAll(".AlineDiv").forEach((div) => {
-        div.style.backgroundColor = "";
+        div.classList.remove("selected-line");
+        div.style.backgroundColor = ""; // 清除背景颜色
       });
     },
 
@@ -1302,6 +1408,99 @@ export default {
       }
       this.saveHistory();
     },
+    // 处理大括号和圆括号的自动补全
+    handleBracketCompletion(index, key) {
+      const input = this.$refs[`input_${index}`][0];
+      const cursorPos = input.selectionStart;
+      const line = this.codeLines[index];
+
+      // 处理 { 补全
+      if (key === "{") {
+        const newLine =
+          line.substring(0, cursorPos) + "{}" + line.substring(cursorPos);
+        this.codeLines[index] = newLine;
+        this.$nextTick(() => {
+          input.setSelectionRange(cursorPos + 1, cursorPos + 1); // 将光标定位在 {} 中间
+        });
+        return true; // 表示已处理
+      }
+
+      // 处理 ( 补全
+      if (key === "(") {
+        const newLine =
+          line.substring(0, cursorPos) + "()" + line.substring(cursorPos);
+        this.codeLines[index] = newLine;
+        this.$nextTick(() => {
+          input.setSelectionRange(cursorPos + 1, cursorPos + 1); // 将光标定位在 () 中间
+        });
+        return true; // 表示已处理
+      }
+
+      return false; // 未处理
+    },
+
+    // 处理在括号内按回车的情况
+    handleEnterInsideBrackets(index) {
+      const input = this.$refs[`input_${index}`][0];
+      const cursorPos = input.selectionStart;
+      const line = this.codeLines[index];
+
+      // 获取光标前后的内容
+      const beforeCursor = line.substring(0, cursorPos);
+      const afterCursor = line.substring(cursorPos);
+
+      // 检查是否在 {} 中间
+      if (beforeCursor.includes("{") && afterCursor.includes("}")) {
+        const indent = this.getCurrentIndent(line); // 获取当前缩进
+        const newLines = [
+          line.substring(0, cursorPos), // { 之前的部分
+          indent + "  ", // 新行（增加缩进）
+          indent + line.substring(cursorPos), // } 之后的部分
+        ];
+
+        // 替换当前行为三行
+        this.codeLines.splice(index, 1, ...newLines);
+
+        this.$nextTick(() => {
+          // 将焦点设置在新插入的行
+          const newInput = this.$refs[`input_${index + 1}`][0];
+          if (newInput) {
+            newInput.focus();
+            // 将光标定位在新行的缩进之后
+            newInput.setSelectionRange(indent.length + 2, indent.length + 2);
+          }
+        });
+        return true; // 表示已处理
+      }
+
+      // 检查是否在 () 中间（逻辑同上）
+      if (beforeCursor.includes("(") && afterCursor.includes(")")) {
+        const indent = this.getCurrentIndent(line);
+        const newLines = [
+          line.substring(0, cursorPos),
+          indent + "  ",
+          indent + line.substring(cursorPos),
+        ];
+
+        this.codeLines.splice(index, 1, ...newLines);
+        this.$nextTick(() => {
+          const newInput = this.$refs[`input_${index + 1}`][0];
+          if (newInput) {
+            newInput.focus();
+            newInput.setSelectionRange(indent.length + 2, indent.length + 2);
+          }
+        });
+        return true;
+      }
+
+      return false; // 未处理
+    },
+
+    // 获取当前行的缩进（行首的空格）
+    getCurrentIndent(line) {
+      const match = line.match(/^\s*/);
+      return match ? match[0] : "";
+    },
   },
   mounted() {
     // 请求剪贴板权限
@@ -1314,6 +1513,7 @@ export default {
     }
     this.highlightAllLines();
     document.addEventListener("keyup", this.handleKeyUp);
+    document.addEventListener('click', this.handleGlobalClick);
     this.saveHistory(); // 保存初始状态
     this.$el.addEventListener("compositionstart", () => {
       this.isComposing = true;
@@ -1328,7 +1528,7 @@ export default {
     this.enterKeyInterval = null;
     this.backspaceKeyInterval = null;
     document.removeEventListener("keyup", this.handleKeyUp);
-    document.removeEventListener("click", this.handleGlobalClick); // 新增
+    document.removeEventListener('click', this.handleGlobalClick);
     this.$el
       .querySelector(".codeBody")
       ?.removeEventListener("click", this.handleCodeAreaClick);
@@ -1508,9 +1708,15 @@ export default {
   background-color: rgba(3, 102, 214, 0.1) !important;
 }
 
-.selected-line {
-  background-color: rgba(3, 102, 214, 0.2) !important;
-  transition: background-color 0.3s ease;
+/* 添加选中行的边框效果 */
+.selected-line::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
 }
 
 /* 增强选中效果 */
@@ -1748,13 +1954,16 @@ export default {
 .spinner {
   animation: spin 1s linear infinite;
 }
-
 </style>
 
 <style>
 /* 非 scoped 样式 */
 @keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 </style>
