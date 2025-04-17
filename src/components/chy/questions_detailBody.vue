@@ -8,6 +8,7 @@
       <questions_dBodyIntroduce
         :submissions="submissions"
         :activeTab="activeTab"
+        :isAuthenticated="isAuthenticated"
         @switch-tab="switchTab"
         @question-loaded="handleQuestionLoaded"
         @question-id="handleQuestionId"
@@ -28,6 +29,7 @@
         @add-pending-submission="handleAddPendingSubmission"
         @remove-pending-submission="handleAddPendingSubmission"
         @update-submission="handleUpdateSubmission"
+        @update-auth="updateAuthStatus"
       ></qustions_dBodyCode>
     </div>
 
@@ -50,7 +52,7 @@ export default {
   props: {
     raceUid: {
       type: Object, // 指定类型
-      required: true, 
+      required: true,
     },
   },
   components: {
@@ -72,6 +74,7 @@ export default {
       startWidth: 0,
       questionDetail: null, // 存储题目详情
       id: null, // 存储题目ID
+      isAuthenticated: false, // 添加认证状态
     };
   },
   mounted() {
@@ -83,6 +86,10 @@ export default {
     window.removeEventListener("mouseup", this.stopDrag);
   },
   methods: {
+    updateAuthStatus(status) {
+      console.log(status)
+      this.isAuthenticated = status;
+    },
     initDrag(e) {
       this.isDragging = true;
       this.startX = e.clientX;

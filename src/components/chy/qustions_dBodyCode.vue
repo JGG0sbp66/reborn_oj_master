@@ -1221,6 +1221,16 @@ export default {
       const seconds = String(now.getSeconds()).padStart(2, "0");
       return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
     },
+    async checkUserAuth() {
+      try {
+        const { authenticated } = await checkAuth();
+        console.log("用户认证状态:", authenticated);
+        this.$emit("update-auth", authenticated);
+      } catch (error) {
+        console.error("检查认证状态失败:", error);
+        return;
+      }
+    },
     async submitCode() {
       const nonEmptyLines = this.codeLines.filter((line) => line.trim() !== "");
       if (nonEmptyLines.length === 0) {
@@ -1230,15 +1240,12 @@ export default {
         });
         return;
       }
-
       try {
-        // 验证用户状态函数，可用于检查用户是否已登录
-        const { authenticated, user } = await checkAuth();
+        const { authenticated } = await checkAuth();
         console.log("用户认证状态:", authenticated);
         if (!authenticated) {
           throw new Error("用户未登录");
         }
-
         // 如果已登录，继续提交流程
         const pendingSubmission = {
           status: `
@@ -1266,26 +1273,26 @@ export default {
         this.$emit("add-pending-submission", pendingSubmission);
 
         // 模拟API请求延迟
-        // await new Promise((resolve) => setTimeout(resolve, 1500));
+        await new Promise((resolve) => setTimeout(resolve, 1500));
 
-        const formData = new FormData();
-        formData.append("question_uid", this.id);
-        formData.append("question", JSON.stringify(this.questionDetail));
-        formData.append("prompt", this.codeLines.join("\n"));
-        formData.append("race_uid", this.race_uid);
+        // const formData = new FormData();
+        // formData.append("question_uid", this.id);
+        // formData.append("question", JSON.stringify(this.questionDetail));
+        // formData.append("prompt", this.codeLines.join("\n"));
+        // formData.append("race_uid", this.race_uid);
 
-        const { data: response } = await axios({
-          url: "http://localhost:5000/api/askAi-question",
-          method: "post",
-          data: formData,
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        });
+        // const { data: response } = await axios({
+        //   url: "http://localhost:5000/api/askAi-question",
+        //   method: "post",
+        //   data: formData,
+        //   headers: {
+        //     "Content-Type": "multipart/form-data",
+        //   },
+        // });
 
         // 解析AI返回的结果
-        const aiResponse = response.message;
-        //const aiResponse = "编译错误"; // 测试用的假数据
+        // const aiResponse = response.message;
+        const aiResponse = "编译错误"; // 测试用的假数据
         // console.log(aiResponse);
         let statusOption = this.stateOptions.find((option) =>
           option.status.includes(this.getStatusFromAiResponse(aiResponse))
@@ -1502,6 +1509,10 @@ export default {
       return match ? match[0] : "";
     },
   },
+  created() {
+    // 页面加载时立即检查用户认证状态
+    this.checkUserAuth();
+  },
   mounted() {
     // 请求剪贴板权限
     if (navigator.permissions) {
@@ -1513,7 +1524,7 @@ export default {
     }
     this.highlightAllLines();
     document.addEventListener("keyup", this.handleKeyUp);
-    document.addEventListener('click', this.handleGlobalClick);
+    document.addEventListener("click", this.handleGlobalClick);
     this.saveHistory(); // 保存初始状态
     this.$el.addEventListener("compositionstart", () => {
       this.isComposing = true;
@@ -1528,7 +1539,7 @@ export default {
     this.enterKeyInterval = null;
     this.backspaceKeyInterval = null;
     document.removeEventListener("keyup", this.handleKeyUp);
-    document.removeEventListener('click', this.handleGlobalClick);
+    document.removeEventListener("click", this.handleGlobalClick);
     this.$el
       .querySelector(".codeBody")
       ?.removeEventListener("click", this.handleCodeAreaClick);
