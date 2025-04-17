@@ -131,6 +131,7 @@
           <div v-else-if="activeSection === 'competitions'" class="section-container" key="competitions">
             <!-- 比赛记录 -->
             <CompetitionRecords 
+              v-if="activeSection === 'competitions'"
               :competitions="competitionRecordsData"
               :loading="isLoadingCompetitions"
             />
@@ -341,9 +342,65 @@ const generateAvatarSvg = (username: string): string => {
   return svgUrl;
 };
 
-// 生成用户默认头像
+// 修改refreshUserAvatar方法，使用Base64存储图片数据
+const refreshUserAvatar = async (userId?: string | number) => {
+  try {
+    // 使用提供的userId或从localStorage获取
+    const id = userId || localStorage.getItem('uid');
+    if (!id) return;
+    
+    // 添加时间戳防止缓存
+    const timestamp = localStorage.getItem('avatar_timestamp') || Date.now().toString();
+    
+    // 获取头像
+    const avatarResponse = await axios.get(`http://localhost:5000/api/avatar-get/${id}?t=${timestamp}`, {
+      responseType: 'blob',
+      withCredentials: true
+    });
+    
+    // 处理响应
+    if (avatarResponse.status === 200 && avatarResponse.data) {
+      // 释放之前的blob URL资源
+      if (avatarUrl.value && avatarUrl.value.startsWith('blob:')) {
+        try {
+          URL.revokeObjectURL(avatarUrl.value);
+        } catch (e) {
+          console.log('释放旧头像URL资源失败:', e);
+        }
+      }
+      
+      // 创建新的blob URL用于当前会话显示
+      const blob = new Blob([avatarResponse.data], { type: 'image/jpeg' });
+      const imageUrl = URL.createObjectURL(blob);
+      avatarUrl.value = imageUrl;
+      
+      // 将blob转换为Base64，用于持久化存储
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        if (reader.result) {
+          // 保存Base64格式的图片到localStorage
+          localStorage.setItem('avatarBase64', reader.result.toString());
+          // 更新时间戳
+          localStorage.setItem('avatar_timestamp', Date.now().toString());
+        }
+      };
+      reader.readAsDataURL(blob);
+    }
+  } catch (error) {
+    console.log('获取用户头像失败:', error);
+  }
+};
+
+// 修改defaultAvatarUrl计算属性
 const defaultAvatarUrl = computed(() => {
+  // 首先检查localStorage中是否有Base64格式的头像
+  const cachedAvatarBase64 = localStorage.getItem('avatarBase64');
+  if (cachedAvatarBase64) return cachedAvatarBase64;
+  
+  // 其次检查响应式变量中的头像
   if (avatarUrl.value) return avatarUrl.value;
+  
+  // 最后才生成默认头像
   if (!username.value) return '';
   return generateAvatarSvg(username.value);
 });
@@ -374,34 +431,33 @@ const formatDate = (date: Date): string => {
   return formatted;
 };
 
-// 获取用户信息
+// 修改fetchUserProfile函数，改进头像加载逻辑
 const fetchUserProfile = async (): Promise<void> => {
   try {
     // 先使用本地存储的数据
     username.value = localStorage.getItem('username') || '用户';
     userRole.value = localStorage.getItem('userRole') || '普通用户';
-    const avatarFromStorage = localStorage.getItem('avatarUrl');
     
-    // 获取时间戳，用于防止缓存
-    const timestamp = localStorage.getItem('avatar_timestamp') || Date.now().toString();
-    
-    // 检查localStorage中的头像是否为blob URL，以及是否有效
-    if (avatarFromStorage) {
-      if (avatarFromStorage.startsWith('blob:')) {
-        // 对于blob URL，先尝试刷新头像（避免无效的blob URL）
-        refreshUserAvatar();
-      } else {
-        // 非blob URL直接使用
-        avatarUrl.value = avatarFromStorage;
+    // 优先使用缓存的Base64头像，避免闪烁
+    const cachedAvatarBase64 = localStorage.getItem('avatarBase64');
+    if (cachedAvatarBase64) {
+      avatarUrl.value = cachedAvatarBase64;
+    } else {
+      // 如果没有Base64缓存，检查旧版本的Blob URL
+      const cachedAvatar = localStorage.getItem('avatarUrl');
+      if (cachedAvatar) {
+        avatarUrl.value = cachedAvatar;
       }
     }
     
     // 获取用户ID
     const userId = localStorage.getItem('uid');
     
-    // 如果有用户ID，尝试获取最新头像
+    // 始终尝试获取最新头像，但不阻塞UI显示
     if (userId) {
-      refreshUserAvatar(userId);
+      requestAnimationFrame(() => {
+        refreshUserAvatar(userId);
+      });
     }
     
     // 然后从API获取用户信息
@@ -464,46 +520,6 @@ const fetchUserProfile = async (): Promise<void> => {
     bio.value = '热爱编程，喜欢解决复杂问题。正在学习算法和数据结构。';
       } catch (error) {
     console.error('获取用户信息失败:', error);
-  }
-};
-
-// 添加新方法：刷新用户头像
-const refreshUserAvatar = async (userId?: string | number) => {
-  try {
-    // 使用提供的userId或从localStorage获取
-    const id = userId || localStorage.getItem('uid');
-    if (!id) return;
-    
-    // 添加时间戳防止缓存
-    const timestamp = localStorage.getItem('avatar_timestamp') || Date.now().toString();
-    
-    // 获取头像
-    const avatarResponse = await axios.get(`http://localhost:5000/api/avatar-get/${id}?t=${timestamp}`, {
-      responseType: 'blob',
-      withCredentials: true
-    });
-    
-    // 处理响应
-    if (avatarResponse.status === 200 && avatarResponse.data) {
-      // 释放之前的blob URL资源
-      if (avatarUrl.value && avatarUrl.value.startsWith('blob:')) {
-        try {
-          URL.revokeObjectURL(avatarUrl.value);
-        } catch (e) {
-          console.log('释放旧头像URL资源失败:', e);
-        }
-      }
-      
-      // 创建新的blob URL
-      const blob = new Blob([avatarResponse.data], { type: 'image/jpeg' });
-      const imageUrl = URL.createObjectURL(blob);
-      avatarUrl.value = imageUrl;
-      
-      // 保存到localStorage
-      localStorage.setItem('avatarUrl', imageUrl);
-        }
-      } catch (error) {
-    console.log('获取用户头像失败:', error);
   }
 };
 
@@ -684,6 +700,7 @@ const triggerFileUpload = (): void => {
   }
 };
 
+// 修改onFileChange函数，使用Base64存储头像
 const onFileChange = (event: Event): void => {
   const input = event.target as HTMLInputElement;
   if (input.files && input.files.length > 0) {
@@ -739,18 +756,12 @@ const onFileChange = (event: Event): void => {
             const timestamp = Date.now();
             localStorage.setItem('avatar_timestamp', timestamp.toString());
             
-            // 更新本地存储的头像URL
-            if (response.data.avatarUrl) {
-              avatarUrl.value = response.data.avatarUrl;
-              localStorage.setItem('avatarUrl', response.data.avatarUrl);
-            } else {
-              // 如果没有返回URL但上传成功，保存当前的临时URL
-              localStorage.setItem('avatarUrl', avatarUrl.value);
-            }
+            // 保存Base64格式的图片到localStorage
+            localStorage.setItem('avatarBase64', e.target.result);
             
             // 触发全局事件，通知其他组件更新头像
             emitter.emit('avatar-updated', {
-              avatarUrl: avatarUrl.value,
+              avatarUrl: e.target.result,
               timestamp: timestamp
             });
             
@@ -767,7 +778,7 @@ const onFileChange = (event: Event): void => {
             });
             
             // 恢复之前的头像
-            avatarUrl.value = localStorage.getItem('avatarUrl') || '';
+            avatarUrl.value = localStorage.getItem('avatarBase64') || '';
           }
         })
         .catch(error => {
@@ -791,7 +802,7 @@ const onFileChange = (event: Event): void => {
           });
           
           // 恢复之前的头像
-          avatarUrl.value = localStorage.getItem('avatarUrl') || '';
+          avatarUrl.value = localStorage.getItem('avatarBase64') || '';
         });
       }
     };

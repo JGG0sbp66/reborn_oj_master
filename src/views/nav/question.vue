@@ -25,16 +25,10 @@ import questiobSum from "@/components/chy/questionSum.vue";
 import foot from "@/components/foot.vue";
 import headerheader from "@/components/headerheader.vue";
 import AIAgent from "@/components/AI-Agent.vue";
-import { questionData, loadQuestionData } from "@/utils/dataStore";
 
 const showComponent = ref(false);
 
 onMounted(() => {
-  // 检查数据是否已预加载，如果没有，立即开始加载
-  if (!questionData.isLoaded && !questionData.isLoading) {
-    loadQuestionData();
-  }
-  
   // 组件挂载后显示，触发进入动画
   showComponent.value = true;
 });
