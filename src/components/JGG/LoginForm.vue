@@ -142,6 +142,13 @@
         alertboxRef.value?.show("登陆失败，账号或密码不能为空", 2);
         return;
       }
+      
+      // 登录前立即清除所有头像相关数据
+      localStorage.removeItem('avatarBase64');
+      localStorage.removeItem('avatar_timestamp');
+      localStorage.removeItem('avatarUrl');
+      localStorage.removeItem('avatar_user_id');
+      
       // 验证账号密码是否正确
       const { data: userData } = await axios({
         url: "http://localhost:5000/api/login",
@@ -163,6 +170,39 @@
         if (authenticated && user) {
           localStorage.setItem("username", user.uid);
           localStorage.setItem("userRole", user.role);
+          
+          // 如果有用户ID，尝试获取新用户的头像
+          if (user.uid) {
+            try {
+              // 向服务器请求用户头像
+              const avatarResponse = await axios.get(`http://localhost:5000/api/user-avatar/${user.uid}`, {
+                responseType: 'blob',
+                withCredentials: true
+              });
+              
+              if (avatarResponse.status === 200 && avatarResponse.data) {
+                // 创建blob URL用于显示
+                const blob = new Blob([avatarResponse.data], { type: 'image/jpeg' });
+                
+                // 将blob转换为Base64，用于持久化存储
+                const reader = new FileReader();
+                reader.onloadend = () => {
+                  if (reader.result) {
+                    // 保存Base64格式的图片到localStorage
+                    localStorage.setItem('avatarBase64', reader.result.toString());
+                    // 更新时间戳
+                    localStorage.setItem('avatar_timestamp', Date.now().toString());
+                    // 保存当前用户ID与头像的关联
+                    localStorage.setItem('avatar_user_id', user.uid);
+                  }
+                };
+                reader.readAsDataURL(blob);
+              }
+            } catch (avatarError) {
+              console.error('获取用户头像失败:', avatarError);
+              // 头像获取失败不会阻止登录流程
+            }
+          }
         }
   
         // 触发登录成功事件，通知父组件

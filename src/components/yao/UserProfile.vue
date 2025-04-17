@@ -13,6 +13,23 @@
         <el-form-item label="电子邮箱">
           <el-input v-model="email" placeholder="请输入电子邮箱" />
         </el-form-item>
+        <el-form-item label="验证码">
+          <div class="verification-code-container">
+            <el-input 
+              v-model="verificationCode" 
+              placeholder="请输入验证码" 
+              class="verification-input"
+            />
+            <el-button 
+              type="primary" 
+              class="verification-btn"
+              :disabled="cooldown > 0"
+              @click="getVerificationCode"
+            >
+              {{ cooldown > 0 ? `${cooldown}秒后重试` : '获取验证码' }}
+            </el-button>
+          </div>
+        </el-form-item>
         <el-form-item label="个人简介">
           <el-input v-model="bio" type="textarea" :rows="4" placeholder="介绍一下自己吧..." />
         </el-form-item>
@@ -47,6 +64,8 @@ const emit = defineEmits<{
 const username = ref(props.userProfile.username || '');
 const email = ref(props.userProfile.email || '');
 const bio = ref(props.userProfile.bio || '');
+const verificationCode = ref('');
+const cooldown = ref(0);
 
 // 监听props变化更新本地状态
 onMounted(() => {
@@ -64,6 +83,62 @@ const updateLocalData = () => {
   bio.value = props.userProfile.bio || '';
 };
 
+// 获取验证码
+const getVerificationCode = async () => {
+  // 验证邮箱格式
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!email.value || !emailRegex.test(email.value)) {
+    ElMessage({
+      message: '请输入有效的电子邮箱',
+      type: 'warning'
+    });
+    return;
+  }
+
+  try {
+    // 显示加载指示器
+    const loadingInstance = ElLoading.service({
+      lock: true,
+      text: '发送验证码中...',
+      background: 'rgba(0, 0, 0, 0.7)'
+    });
+
+    // 发送获取验证码请求
+    const response = await axios.post('http://localhost:5000/api/send-email-code', {
+      email: email.value
+    }, {
+      withCredentials: true
+    });
+
+    // 关闭加载指示器
+    loadingInstance.close();
+
+    if (response.data && response.data.success) {
+      ElMessage({
+        message: response.data.message || '验证码已发送，请查收邮箱',
+        type: 'success'
+      });
+
+      // 设置冷却时间（60秒）
+      cooldown.value = 60;
+      const timer = setInterval(() => {
+        cooldown.value--;
+        if (cooldown.value <= 0) {
+          clearInterval(timer);
+        }
+      }, 1000);
+    } else {
+      throw new Error(response.data?.message || '发送验证码失败');
+    }
+  } catch (error: any) {
+    console.error('发送验证码失败:', error);
+    ElMessage({
+      message: error.response?.data?.message || error.message || '发送验证码失败，请稍后重试',
+      type: 'error'
+    });
+  }
+};
+
 // 保存用户资料
 const saveProfile = async (): Promise<void> => {
   try {
@@ -76,10 +151,70 @@ const saveProfile = async (): Promise<void> => {
       return;
     }
     
+    // 处理邮箱变更 - 如果邮箱有变更且提供了验证码
+    if (email.value !== props.userProfile.email) {
+      if (!verificationCode.value.trim()) {
+        ElMessage({
+          message: '更改邮箱需要验证码',
+          type: 'warning'
+        });
+        return;
+      }
+      
+      // 处理邮箱变更
+      try {
+        // 显示加载指示器
+        const loadingInstance = ElLoading.service({
+          lock: true,
+          text: '修改邮箱中...',
+          background: 'rgba(0, 0, 0, 0.7)'
+        });
+        
+        // 发送修改邮箱请求
+        const emailResponse = await axios.post('http://localhost:5000/api/user-change-email', {
+          new_email: email.value,
+          new_email_code: verificationCode.value
+        }, {
+          withCredentials: true
+        });
+        
+        // 关闭加载指示器
+        loadingInstance.close();
+        
+        if (!emailResponse.data || !emailResponse.data.success) {
+          // 邮箱修改失败，显示错误信息
+          ElMessage({
+            message: emailResponse.data?.message || '邮箱修改失败',
+            type: 'error'
+          });
+          return; // 终止后续操作
+        }
+        
+        // 邮箱修改成功
+        ElMessage({
+          message: emailResponse.data.message || '邮箱修改成功',
+          type: 'success'
+        });
+        
+        // 更新本地存储中的邮箱
+        localStorage.setItem('email', email.value);
+        
+        // 清空验证码
+        verificationCode.value = '';
+      } catch (emailError: any) {
+        console.error('修改邮箱失败:', emailError);
+        ElMessage({
+          message: emailError.response?.data?.message || '修改邮箱失败，请稍后重试',
+          type: 'error'
+        });
+        return; // 终止后续操作
+      }
+    }
+    
     // 检查用户名是否变更
     const isUsernameChanged = username.value !== props.userProfile.username;
     
-    // 如果用户名变更，先修改用户名
+    // 如果用户名变更，修改用户名
     if (isUsernameChanged) {
       try {
         // 显示加载指示器
@@ -116,19 +251,6 @@ const saveProfile = async (): Promise<void> => {
         
         // 更新本地存储中的用户名
         localStorage.setItem('username', username.value);
-        
-        // 创建更新后的用户数据
-        const updatedProfile: UserProfileData = {
-          username: username.value,
-          email: email.value,
-          bio: bio.value
-        };
-        
-        // 立即通知父组件数据已更新
-        emit('profile-updated', updatedProfile);
-        
-        // 不再需要更新其他信息，直接返回
-        return;
       } catch (usernameError: any) {
         console.error('修改用户名失败:', usernameError);
         ElMessage({
@@ -139,56 +261,56 @@ const saveProfile = async (): Promise<void> => {
       }
     }
     
-    // 如果只修改邮箱和简介，不修改用户名
-    // 创建更新后的用户数据
+    // 如果只修改个人简介，不修改用户名和邮箱
+    if (!isUsernameChanged && email.value === props.userProfile.email && bio.value !== props.userProfile.bio) {
+      // 发送请求到后端保存个人简介
+      const loadingInstance = ElLoading.service({
+        lock: true,
+        text: '保存个人简介...',
+        background: 'rgba(0, 0, 0, 0.7)'
+      });
+      
+      try {
+        const response = await axios.post('http://localhost:5000/api/update-user-info', {
+          bio: bio.value
+        }, {
+          withCredentials: true
+        });
+        
+        // 关闭加载指示器
+        loadingInstance.close();
+        
+        if (!response.data || !response.data.success) {
+          throw new Error(response.data?.message || '保存个人简介失败');
+        }
+        
+        ElMessage({
+          message: response.data.message || '个人简介已更新',
+          type: 'success'
+        });
+      } catch (error: any) {
+        // 关闭加载指示器
+        loadingInstance.close();
+        
+        console.error('保存个人简介失败:', error);
+        ElMessage({
+          message: error.message || '保存个人简介失败，请稍后重试',
+          type: 'error'
+        });
+        return;
+      }
+    }
+    
+    // 创建更新后的用户数据并通知父组件
     const updatedProfile: UserProfileData = {
       username: username.value,
       email: email.value,
       bio: bio.value
     };
-
-    // 发送请求到后端保存其他用户信息
-    const loadingInstance = ElLoading.service({
-      lock: true,
-      text: '保存个人资料...',
-      background: 'rgba(0, 0, 0, 0.7)'
-    });
     
-    try {
-      const response = await axios.post('http://localhost:5000/api/update-user-info', {
-        email: email.value,
-        bio: bio.value
-      }, {
-        withCredentials: true
-      });
-      
-      // 关闭加载指示器
-      loadingInstance.close();
-      
-      if (response.data && response.data.success) {
-        // 通知父组件数据已更新
-        emit('profile-updated', updatedProfile);
-        
-        // 更新本地存储中的邮箱
-        localStorage.setItem('email', email.value);
-        
-        ElMessage({
-          message: response.data.message || '个人资料已更新',
-          type: 'success'
-        });
-      } else {
-        throw new Error(response.data?.message || '保存失败');
-      }
-    } catch (error: any) {
-      // 关闭加载指示器
-      loadingInstance.close();
-      
-      console.error('保存用户资料失败:', error);
-      ElMessage({
-        message: error.message || '保存失败，请稍后重试',
-        type: 'error'
-      });
-    }
+    // 通知父组件数据已更新
+    emit('profile-updated', updatedProfile);
+    
   } catch (error: any) {
     console.error('保存用户资料失败:', error);
     ElMessage({
@@ -239,6 +361,36 @@ const saveProfile = async (): Promise<void> => {
 
 .profile-form {
   max-width: 600px;
+}
+
+/* 验证码输入框容器 */
+.verification-code-container {
+  display: flex;
+  gap: 10px;
+}
+
+.verification-input {
+  flex: 1;
+}
+
+.verification-btn {
+  width: 120px;
+  background-color: #42b983;
+  border-color: #42b983;
+  transition: all 0.3s ease;
+}
+
+.verification-btn:hover {
+  background-color: #33a06f;
+  border-color: #33a06f;
+  transform: translateY(-2px);
+}
+
+.verification-btn:disabled {
+  background-color: #a0d6be;
+  border-color: #a0d6be;
+  color: white;
+  cursor: not-allowed;
 }
 
 .save-btn {
