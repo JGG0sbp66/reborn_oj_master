@@ -43,7 +43,7 @@ onMounted(() => {
 <style scoped>
 .content {
   min-height: calc(100vh - 100px); /* 确保内容区域高度减去 footer 的高度 */
-  padding-bottom: 30px; /* 给 footer 留出空间 */
+  padding-bottom: 50px; /* 给 footer 留出空间 */
   padding-top: 50px; /* 给 headerheader 留出空间 */
 }
 
@@ -62,4 +62,5 @@ onMounted(() => {
   opacity: 0;
   transform: scale(1.1);
 }
+
 </style>
