@@ -295,14 +295,14 @@ const userInitials = computed(() => {
 
 // 生成随机矢量图头像 - 添加缓存避免重复生成
 const avatarCache = new Map<string, string>();
-const generateAvatarSvg = (username: string): string => {
+const generateAvatarSvg = (seed: string): string => {
   // 检查缓存
-  if (avatarCache.has(username)) {
-    return avatarCache.get(username) || '';
+  if (avatarCache.has(seed)) {
+    return avatarCache.get(seed) || '';
   }
   
-  // 从用户名生成一个稳定的哈希值，确保同一用户名总是生成相同的图案
-  const hash = username.split('').reduce((acc: number, char: string, i: number) => {
+  // 从种子字符串生成一个稳定的哈希值，确保同一字符串总是生成相同的图案
+  const hash = seed.split('').reduce((acc: number, char: string, i: number) => {
     return acc + (char.charCodeAt(0) * (i + 1));
   }, 0);
   
@@ -377,7 +377,7 @@ const generateAvatarSvg = (username: string): string => {
   const svgUrl = `data:image/svg+xml;utf8,${encodeURIComponent(svg.trim())}`;
   
   // 存入缓存
-  avatarCache.set(username, svgUrl);
+  avatarCache.set(seed, svgUrl);
   
   return svgUrl;
 };
@@ -435,9 +435,12 @@ const defaultAvatarUrl = computed(() => {
   // 其次检查响应式变量中的头像
   if (avatarUrl.value) return avatarUrl.value;
   
-  // 最后才生成默认头像
-  if (!username.value) return '';
-  return generateAvatarSvg(username.value);
+  // 最后才生成默认头像，使用uid而不是username
+  const uid = localStorage.getItem('uid');
+  if (!uid) return '';
+  
+  // 使用uid生成默认头像，确保即使用户名变化，头像也保持一致
+  return generateAvatarSvg(uid);
 });
 
 // 格式化日期 - 添加缓存避免重复计算

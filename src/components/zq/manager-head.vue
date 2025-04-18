@@ -208,9 +208,12 @@
       if (cachedAvatarBase64) return cachedAvatarBase64;
     }
     
-    // 否则生成默认头像
-    if (!username.value) return '';
-    return generateAvatarSvg(username.value);
+    // 否则生成默认头像，使用uid而不是username
+    const uid = localStorage.getItem('uid');
+    if (!uid) return '';
+    
+    // 使用uid生成默认头像，确保即使用户名变化，头像也保持一致
+    return generateAvatarSvg(uid);
   });
   
   // 验证用户状态
