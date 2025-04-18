@@ -371,6 +371,15 @@ const fetchCompetitions = async () => {
         };
       });
       
+      // 按照开始时间排序，将最新的竞赛排在前面
+      competitionData.value.sort((a, b) => {
+        // 将时间字符串转换为日期对象进行比较
+        const dateA = new Date(a.startTime);
+        const dateB = new Date(b.startTime);
+        // 降序排列，最新的日期在前面
+        return dateB.getTime() - dateA.getTime();
+      });
+      
       console.log('获取到竞赛数据:', competitionData.value);
     } else {
       console.warn('获取到的竞赛数据格式不正确:', data);
