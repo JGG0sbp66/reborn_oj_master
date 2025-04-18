@@ -22,6 +22,7 @@ interface RaceInfo {
             problems: any[];
             user_num: number;
             user_status: string[];
+            status: 'upcoming' | 'running' | 'ended'; // 添加状态字段
         }
     }
 }

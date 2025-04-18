@@ -1,6 +1,13 @@
 <template>
   <div class="competition-problems">
-    <div class="problems-card">
+    <div v-if="!isCompetitionStarted" class="not-started-notice">
+      <el-empty description="比赛未开始，题目将在开始后显示">
+        <template #image>
+          <el-icon :size="60"><Timer /></el-icon>
+        </template>
+      </el-empty>
+    </div>
+    <div v-else class="problems-card">
       <table class="problems-list">
         <thead class="problems-head">
           <tr>
@@ -98,6 +105,7 @@ import {
   Trophy,
   DataLine,
   TrendCharts,
+  Timer,
 } from "@element-plus/icons-vue";
 import axios from "axios";
 
@@ -116,9 +124,17 @@ const props = defineProps({
   },
 });
 
-// 使用计算属性处理带头像的问题列表
+// 添加比赛状态判断
+const isCompetitionStarted = computed(() => {
+  if (!props.raceInfo?.value?.race_info) return false;
+  const now = new Date().getTime();
+  const startTime = new Date(props.raceInfo.value.race_info.start_time).getTime();
+  return now >= startTime;
+});
+
+// 修改题目列表计算属性
 const problemsWithAvatars = computed(() => {
-  if (!props.raceInfo?.value?.race_info?.problems) return [];
+  if (!isCompetitionStarted.value || !props.raceInfo?.value?.race_info?.problems) return [];
   
   return props.raceInfo.value.race_info.problems.map(problem => {
     // 如果已经有头像数据，直接返回
@@ -475,6 +491,18 @@ const goToQuestionDetail = (id: string, race_uid: string) => {
 
 .rate-info.high {
   color: #42b983;
+}
+
+.not-started-notice {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 400px;
+  color: #909399;
+}
+
+.not-started-notice :deep(.el-empty__image) {
+  color: #909399;
 }
 
 @media (max-width: 768px) {
