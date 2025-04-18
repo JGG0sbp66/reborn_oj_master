@@ -295,14 +295,14 @@ const userInitials = computed(() => {
 
 // 生成随机矢量图头像 - 添加缓存避免重复生成
 const avatarCache = new Map<string, string>();
-const generateAvatarSvg = (username: string): string => {
+const generateAvatarSvg = (seed: string): string => {
   // 检查缓存
-  if (avatarCache.has(username)) {
-    return avatarCache.get(username) || '';
+  if (avatarCache.has(seed)) {
+    return avatarCache.get(seed) || '';
   }
   
-  // 从用户名生成一个稳定的哈希值，确保同一用户名总是生成相同的图案
-  const hash = username.split('').reduce((acc: number, char: string, i: number) => {
+  // 从种子字符串生成一个稳定的哈希值，确保同一字符串总是生成相同的图案
+  const hash = seed.split('').reduce((acc: number, char: string, i: number) => {
     return acc + (char.charCodeAt(0) * (i + 1));
   }, 0);
   
@@ -377,23 +377,16 @@ const generateAvatarSvg = (username: string): string => {
   const svgUrl = `data:image/svg+xml;utf8,${encodeURIComponent(svg.trim())}`;
   
   // 存入缓存
-  avatarCache.set(username, svgUrl);
+  avatarCache.set(seed, svgUrl);
   
   return svgUrl;
 };
 
-// 修改refreshUserAvatar方法，使用Base64存储图片数据
-const refreshUserAvatar = async (userId?: string | number) => {
+// 获取用户头像
+const refreshUserAvatar = async (userId: string): Promise<void> => {
   try {
-    // 使用提供的userId或从localStorage获取
-    const id = userId || localStorage.getItem('uid');
-    if (!id) return;
-    
-    // 添加时间戳防止缓存
-    const timestamp = localStorage.getItem('avatar_timestamp') || Date.now().toString();
-    
-    // 获取头像
-    const avatarResponse = await axios.get(`http://localhost:5000/api/avatar-get/${id}?t=${timestamp}`, {
+    // 向服务器请求用户头像
+    const avatarResponse = await axios.get(`http://localhost:5000/api/user-avatar/${userId}`, {
       responseType: 'blob',
       withCredentials: true
     });
@@ -422,6 +415,8 @@ const refreshUserAvatar = async (userId?: string | number) => {
           localStorage.setItem('avatarBase64', reader.result.toString());
           // 更新时间戳
           localStorage.setItem('avatar_timestamp', Date.now().toString());
+          // 保存用户ID与头像的关联
+          localStorage.setItem('avatar_user_id', userId);
         }
       };
       reader.readAsDataURL(blob);
@@ -440,9 +435,12 @@ const defaultAvatarUrl = computed(() => {
   // 其次检查响应式变量中的头像
   if (avatarUrl.value) return avatarUrl.value;
   
-  // 最后才生成默认头像
-  if (!username.value) return '';
-  return generateAvatarSvg(username.value);
+  // 最后才生成默认头像，使用uid而不是username
+  const uid = localStorage.getItem('uid');
+  if (!uid) return '';
+  
+  // 使用uid生成默认头像，确保即使用户名变化，头像也保持一致
+  return generateAvatarSvg(uid);
 });
 
 // 格式化日期 - 添加缓存避免重复计算
@@ -474,24 +472,37 @@ const formatDate = (date: Date): string => {
 // 修改fetchUserProfile函数，改进头像加载逻辑
 const fetchUserProfile = async (): Promise<void> => {
   try {
+    // 获取用户ID
+    const userId = localStorage.getItem('uid');
+    
     // 先使用本地存储的数据
     username.value = localStorage.getItem('username') || '用户';
     userRole.value = localStorage.getItem('userRole') || '普通用户';
     
-    // 优先使用缓存的Base64头像，避免闪烁
-    const cachedAvatarBase64 = localStorage.getItem('avatarBase64');
-    if (cachedAvatarBase64) {
-      avatarUrl.value = cachedAvatarBase64;
+    // 验证当前缓存的头像是否属于当前登录用户
+    const cachedAvatarUserId = localStorage.getItem('avatar_user_id');
+    
+    // 如果缓存的头像不属于当前用户，则清除头像缓存
+    if (cachedAvatarUserId && cachedAvatarUserId !== userId) {
+      localStorage.removeItem('avatarBase64');
+      localStorage.removeItem('avatar_timestamp');
+      localStorage.removeItem('avatarUrl');
+      localStorage.removeItem('avatar_user_id');
+      // 重置头像URL
+      avatarUrl.value = '';
     } else {
-      // 如果没有Base64缓存，检查旧版本的Blob URL
-      const cachedAvatar = localStorage.getItem('avatarUrl');
-      if (cachedAvatar) {
-        avatarUrl.value = cachedAvatar;
+      // 如果头像属于当前用户，优先使用缓存的Base64头像，避免闪烁
+      const cachedAvatarBase64 = localStorage.getItem('avatarBase64');
+      if (cachedAvatarBase64) {
+        avatarUrl.value = cachedAvatarBase64;
+      } else {
+        // 如果没有Base64缓存，检查旧版本的Blob URL
+        const cachedAvatar = localStorage.getItem('avatarUrl');
+        if (cachedAvatar) {
+          avatarUrl.value = cachedAvatar;
+        }
       }
     }
-    
-    // 获取用户ID
-    const userId = localStorage.getItem('uid');
     
     // 始终尝试获取最新头像，但不阻塞UI显示
     if (userId) {
@@ -521,8 +532,11 @@ const fetchUserProfile = async (): Promise<void> => {
           email.value = userData.email;
         }
         
-        // 尝试获取头像 (如果有userId)
-        if (userId && !avatarUrl.value) {
+        // 记录当前头像对应的用户ID
+        if (userId) {
+          localStorage.setItem('avatar_user_id', userId);
+          
+          // 尝试获取头像
           refreshUserAvatar(userId);
         }
       }
@@ -747,7 +761,7 @@ const triggerFileUpload = (): void => {
   }
 };
 
-// 修改onFileChange函数，使用Base64存储头像
+// 修改onFileChange函数，保存用户ID与头像的关联
 const onFileChange = (event: Event): void => {
   const input = event.target as HTMLInputElement;
   if (input.files && input.files.length > 0) {
@@ -766,6 +780,16 @@ const onFileChange = (event: Event): void => {
       ElMessage({
         message: '图片大小不能超过 2MB',
         type: 'warning' as const
+      });
+      return;
+    }
+    
+    // 获取当前用户ID
+    const userId = localStorage.getItem('uid');
+    if (!userId) {
+      ElMessage({
+        message: '无法识别当前用户，请重新登录',
+        type: 'error' as const
       });
       return;
     }
@@ -805,6 +829,9 @@ const onFileChange = (event: Event): void => {
             
             // 保存Base64格式的图片到localStorage
             localStorage.setItem('avatarBase64', e.target.result);
+            
+            // 保存用户ID与头像的关联
+            localStorage.setItem('avatar_user_id', userId);
             
             // 触发全局事件，通知其他组件更新头像
             emitter.emit('avatar-updated', {

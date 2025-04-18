@@ -271,18 +271,27 @@ const tryRefreshAvatar = async (userId?: string | number) => {
   }
 };
 
-// 修改生成用户默认头像逻辑
+// 生成用户默认头像
 const defaultAvatarUrl = computed(() => {
-  // 首先检查localStorage中是否有Base64格式的头像
-  const cachedAvatarBase64 = localStorage.getItem('avatarBase64');
-  if (cachedAvatarBase64) return cachedAvatarBase64;
-  
-  // 其次检查avatarUrl
+  // 如果已有头像URL，直接返回
   if (avatarUrl.value) return avatarUrl.value;
   
-  // 最后才生成默认头像
-  if (!username.value) return '';
-  return generateAvatarSvg(username.value);
+  // 检查缓存的头像是否属于当前用户
+  const currentUserId = localStorage.getItem('uid') || localStorage.getItem('username');
+  const cachedAvatarUserId = localStorage.getItem('avatar_user_id');
+  
+  // 如果有缓存的头像，且属于当前用户，则使用缓存的头像
+  if (cachedAvatarUserId && cachedAvatarUserId === currentUserId) {
+    const cachedAvatarBase64 = localStorage.getItem('avatarBase64');
+    if (cachedAvatarBase64) return cachedAvatarBase64;
+  }
+  
+  // 否则生成默认头像，使用uid而不是username
+  const uid = localStorage.getItem('uid');
+  if (!uid) return '';
+  
+  // 使用uid生成默认头像，确保即使用户名变化，头像也保持一致
+  return generateAvatarSvg(uid);
 });
 
 // 验证用户状态
@@ -326,12 +335,30 @@ const verifyUserState = async () => {
     const { authenticated, user } = await checkAuth();
     isAuthenticated.value = authenticated;
     if (authenticated && user) {
-      username.value = user.username || '用户'; // 使用username而不是uid
+      // 优先使用API返回的用户名，而不是uid
+      // 用户名可能在不同地方有不同格式，需要适当处理
+      if (user.username) {
+        username.value = user.username;
+      } else if (user.name) {
+        username.value = user.name;
+      } else if (user.user_name) {
+        username.value = user.user_name;
+      } else if (user.uid) {
+        // 如果没有用户名，尝试使用形如"user123"的格式
+        if (typeof user.uid === 'string' && !isNaN(Number(user.uid))) {
+          username.value = 'user' + user.uid;
+        } else {
+          username.value = String(user.uid);
+        }
+      } else {
+        username.value = '用户';
+      }
+      
       userRole.value = user.role || '普通用户';
       
       // 保存用户ID，可用于头像获取
       if (user.uid) {
-        localStorage.setItem('uid', user.uid.toString());
+        localStorage.setItem('uid', String(user.uid));
         
         // 如果之前没有获取头像，尝试用获取到的ID获取
         if (!avatarUrl.value) {
@@ -341,8 +368,15 @@ const verifyUserState = async () => {
       
       // 更新localStorage
       localStorage.setItem('isLoggedIn', 'true');
-      localStorage.setItem('username', user.username); // 保存正确的username
-      localStorage.setItem('userRole', user.role);
+      localStorage.setItem('username', username.value); // 保存正确的username
+      localStorage.setItem('userRole', userRole.value);
+      
+      // 输出调试信息
+      console.log('[Header] 用户信息已更新:', { 
+        username: username.value,
+        userRole: userRole.value, 
+        uid: user.uid
+      });
     } else {
       // 如果API返回未认证，清除localStorage
       localStorage.removeItem('isLoggedIn');
@@ -360,6 +394,25 @@ const verifyUserState = async () => {
 // 退出登录
 const logout = async () => {
   try {
+    // 立即清除头像显示，防止下次登录时显示旧头像
+    avatarUrl.value = '';
+    
+    // 立即清除本地存储中的头像数据
+    localStorage.removeItem('avatarBase64');
+    localStorage.removeItem('avatar_timestamp');
+    localStorage.removeItem('avatarUrl');
+    localStorage.removeItem('avatar_user_id');
+    
+    // 释放可能存在的Blob URL资源
+    if (avatarUrl.value && avatarUrl.value.startsWith('blob:')) {
+      try {
+        URL.revokeObjectURL(avatarUrl.value);
+      } catch (e) {
+        console.log('释放头像URL资源失败:', e);
+      }
+    }
+    
+    // 发送退出登录请求
     await axios.post('http://localhost:5000/api/logout');
     isAuthenticated.value = false;
     showUserMenu.value = false;
@@ -414,16 +467,45 @@ onMounted(() => {
     // 也可以直接刷新用户状态
     verifyUserState();
   });
+  
+  // 监听用户名变更事件
+  emitter.on('username-updated', (data: any) => {
+    if (data.username) {
+      username.value = data.username;
+    }
+    
+    // 刷新用户状态以获取完整信息
+    verifyUserState();
+  });
+  
+  // 定时检查localStorage中的用户名是否发生变化
+  const usernameCheckInterval = setInterval(() => {
+    if (isAuthenticated.value) {
+      const storedUsername = localStorage.getItem('username');
+      if (storedUsername && storedUsername !== username.value) {
+        // 如果本地存储的用户名与当前显示的不一致，则更新
+        username.value = storedUsername;
+      }
+    }
+  }, 2000); // 每2秒检查一次
+  
+  // 清除定时器的逻辑移至全局的onBeforeUnmount
+  onBeforeUnmount(() => {
+    clearInterval(usernameCheckInterval);
+  });
 });
 
-// 组件销毁前清除定时器
+// 组件销毁前清除所有资源
 onBeforeUnmount(() => {
+  // 清除菜单定时器
   if (menuCloseTimer.value !== null) {
     clearTimeout(menuCloseTimer.value);
+    menuCloseTimer.value = null;
   }
   
   // 取消事件监听
   emitter.off('avatar-updated');
+  emitter.off('username-updated');
   
   // 释放blob URL
   if (avatarUrl.value && avatarUrl.value.startsWith('blob:')) {
