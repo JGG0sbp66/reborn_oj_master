@@ -90,6 +90,7 @@ import { House, Collection, Trophy, UserFilled, SwitchButton } from "@element-pl
 import { checkAuth } from '@/utils/auth';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
+import emitter from '@/utils/eventBus';
 
 const router = useRouter();
 const isAuthenticated = ref<boolean>(false);
@@ -198,30 +199,70 @@ const generateAvatarSvg = (username: string) => {
   return `data:image/svg+xml;utf8,${encodeURIComponent(svg.trim())}`;
 };
 
-// 生成用户默认头像
+// 修补：生成随机矢量图头像
+const tryRefreshAvatar = async (userId?: string | number) => {
+  try {
+    // 使用传入的userId或从localStorage获取
+    const id = userId || localStorage.getItem('uid');
+    if (!id) return;
+    
+    // 添加时间戳以防止缓存
+    const timestamp = localStorage.getItem('avatar_timestamp') || Date.now().toString();
+    
+    // 检查是否有头像
+    const avatarResponse = await axios.get(`http://localhost:5000/api/avatar-get/${id}?t=${timestamp}`, {
+      responseType: 'blob',  // 以二进制blob格式接收数据
+      withCredentials: true
+    });
+    
+    // 如果成功获取头像
+    if (avatarResponse.status === 200 && avatarResponse.data) {
+      // 释放之前的blob URL资源
+      if (avatarUrl.value && avatarUrl.value.startsWith('blob:')) {
+        try {
+          URL.revokeObjectURL(avatarUrl.value);
+        } catch (e) {
+          console.log('释放旧头像URL资源失败:', e);
+        }
+      }
+      
+      // 创建blob URL用于当前会话显示
+      const blob = new Blob([avatarResponse.data], { type: 'image/jpeg' });
+      const imageUrl = URL.createObjectURL(blob);
+      avatarUrl.value = imageUrl;
+      
+      // 将blob转换为Base64，用于持久化存储
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        if (reader.result) {
+          // 保存Base64格式的图片到localStorage
+          localStorage.setItem('avatarBase64', reader.result.toString());
+          // 更新时间戳
+          localStorage.setItem('avatar_timestamp', Date.now().toString());
+        }
+      };
+      reader.readAsDataURL(blob);
+    }
+  } catch (avatarError) {
+    console.log('没有找到用户头像或头像加载失败:', avatarError);
+  }
+};
+
+// 修改：修改生成用户默认头像逻辑
 const defaultAvatarUrl = computed(() => {
-  // 如果已有头像URL，直接返回
+  // 首先检查localStorage中是否有Base64格式的头像
+  const cachedAvatarBase64 = localStorage.getItem('avatarBase64');
+  if (cachedAvatarBase64) return cachedAvatarBase64;
+  
+  // 其次检查avatarUrl
   if (avatarUrl.value) return avatarUrl.value;
   
-  // 检查缓存的头像是否属于当前用户
-  const currentUserId = localStorage.getItem('uid') || localStorage.getItem('username');
-  const cachedAvatarUserId = localStorage.getItem('avatar_user_id');
-  
-  // 如果有缓存的头像，且属于当前用户，则使用缓存的头像
-  if (cachedAvatarUserId && cachedAvatarUserId === currentUserId) {
-    const cachedAvatarBase64 = localStorage.getItem('avatarBase64');
-    if (cachedAvatarBase64) return cachedAvatarBase64;
-  }
-  
-  // 否则生成默认头像，使用uid而不是username
-  const uid = localStorage.getItem('uid');
-  if (!uid) return '';
-  
-  // 使用uid生成默认头像，确保即使用户名变化，头像也保持一致
-  return generateAvatarSvg(uid);
+  // 最后才生成默认头像
+  if (!username.value) return '';
+  return generateAvatarSvg(username.value);
 });
 
-// 验证用户状态
+// 修改：验证用户状态方法
 const verifyUserState = async () => {
   try {
     // 先检查localStorage中是否有登录状态
@@ -234,24 +275,51 @@ const verifyUserState = async () => {
       isAuthenticated.value = true;
       username.value = usernameFromStorage;
       userRole.value = userRoleFromStorage || '普通用户';
+      
+      // 优先使用储存的Base64头像，避免闪烁
+      const cachedAvatarBase64 = localStorage.getItem('avatarBase64');
+      if (cachedAvatarBase64) {
+        avatarUrl.value = cachedAvatarBase64;
+      }
+    }
+    
+    // 获取用户ID用于头像
+    const userId = localStorage.getItem('uid');
+    
+    // 如果有用户ID，尝试从服务器获取最新头像，但不阻塞UI显示
+    if (userId) {
+      requestAnimationFrame(() => {
+        tryRefreshAvatar(userId);
+      });
     }
     
     // 然后再通过API获取最新状态
     const { authenticated, user } = await checkAuth();
     isAuthenticated.value = authenticated;
     if (authenticated && user) {
-      username.value = user.uid ? String(user.uid) : '用户'; // 确保转为字符串
+      username.value = user.username || '用户';
       userRole.value = user.role || '普通用户';
+      
+      // 保存用户ID
+      if (user.uid) {
+        localStorage.setItem('uid', user.uid.toString());
+        
+        // 如果之前没有获取头像，尝试用获取到的ID获取
+        if (!avatarUrl.value) {
+          tryRefreshAvatar(user.uid);
+        }
+      }
       
       // 更新localStorage
       localStorage.setItem('isLoggedIn', 'true');
-      localStorage.setItem('username', user.uid);
+      localStorage.setItem('username', user.username);
       localStorage.setItem('userRole', user.role);
     } else {
       // 如果API返回未认证，清除localStorage
       localStorage.removeItem('isLoggedIn');
       localStorage.removeItem('username');
       localStorage.removeItem('userRole');
+      localStorage.removeItem('uid');
     }
   } catch (error) {
     console.error('验证用户状态错误:', error);
@@ -262,25 +330,6 @@ const verifyUserState = async () => {
 // 退出登录
 const logout = async () => {
   try {
-    // 立即清除头像显示，防止下次登录时显示旧头像
-    avatarUrl.value = '';
-    
-    // 立即清除本地存储中的头像数据
-    localStorage.removeItem('avatarBase64');
-    localStorage.removeItem('avatar_timestamp');
-    localStorage.removeItem('avatarUrl');
-    localStorage.removeItem('avatar_user_id');
-    
-    // 释放可能存在的Blob URL资源
-    if (avatarUrl.value && avatarUrl.value.startsWith('blob:')) {
-      try {
-        URL.revokeObjectURL(avatarUrl.value);
-      } catch (e) {
-        console.log('释放头像URL资源失败:', e);
-      }
-    }
-    
-    // 发送退出登录请求
     await axios.post('http://localhost:5000/api/logout');
     isAuthenticated.value = false;
     showUserMenu.value = false;
@@ -321,15 +370,38 @@ const goToUserProfile = () => {
   router.push('/user/profile');
 };
 
-// 组件加载时验证用户状态
+// 修改：组件加载时添加事件监听
 onMounted(() => {
   verifyUserState();
+  
+  // 监听头像更新事件
+  emitter.on('avatar-updated', (data: any) => {
+    // 更新头像URL
+    if (data.avatarUrl) {
+      avatarUrl.value = data.avatarUrl;
+    }
+    
+    // 也可以直接刷新用户状态
+    verifyUserState();
+  });
 });
 
-// 组件销毁前清除定时器
+// 修改：组件销毁前的清理
 onBeforeUnmount(() => {
   if (menuCloseTimer.value !== null) {
     clearTimeout(menuCloseTimer.value);
+  }
+  
+  // 取消事件监听
+  emitter.off('avatar-updated');
+  
+  // 释放blob URL
+  if (avatarUrl.value && avatarUrl.value.startsWith('blob:')) {
+    try {
+      URL.revokeObjectURL(avatarUrl.value);
+    } catch (e) {
+      console.log('释放头像URL资源失败:', e);
+    }
   }
 });
 
