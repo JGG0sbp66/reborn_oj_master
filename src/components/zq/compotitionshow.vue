@@ -47,17 +47,10 @@
           </tr>
         </thead>
         <tbody class="problems-body">
-          <tr
-            v-for="(problem, index) in props.raceInfo?.value?.race_info.problems"
-            :key="index"
-            class="problem-row"
-            @click="goToQuestionDetail(problem.uid,props?.uid)"
-          >
+          <tr v-for="(problem, index) in problemsWithAvatars" :key="index" class="problem-row"
+            @click="goToQuestionDetail(problem.uid, props?.uid)">
             <td class="column-status">
-              <span
-                class="status-tag"
-                :class="getStatusClass(problem.status)"
-              >
+              <span class="status-tag" :class="getStatusClass(problem.status)">
                 {{ problem.status || '未提交' }}
               </span>
             </td>
@@ -68,14 +61,11 @@
               </div>
             </td>
             <td class="column-first">
-              <div
-                class="first-blood"
-                v-if="problem.first_blood_user"
-              >
-                <el-icon>
-                  <User />
-                </el-icon>
-                <span>{{ problem.first_blood_user }}</span>
+              <div class="first-blood" v-if="problem.first_blood_user && problem.first_blood_user.uid">
+                <div class="avatar-container">
+                  <img :src="problem.first_blood_user.avatar || defaultAvatar" class="user-avatar" alt="avatar">
+                </div>
+                <span class="username">{{ problem.first_blood_user.username }}</span>
               </div>
             </td>
             <td class="column-submit">
@@ -106,12 +96,12 @@ import {
   Trophy,
   DataLine,
   TrendCharts,
-  User,
 } from "@element-plus/icons-vue";
 import axios from "axios";
 
 const router = useRouter();
 const store = useStore();
+const defaultAvatar = ref('https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'); // 默认头像
 
 const props = defineProps({
   raceInfo: {
@@ -124,11 +114,32 @@ const props = defineProps({
   },
 });
 
-console.log("Received uid:", props);
-// 计算属性获取题目列表
-const problems = computed(() => {
-  return props.raceInfo?.race_info?.problems || [];
+// 使用计算属性处理带头像的问题列表
+const problemsWithAvatars = computed(() => {
+  if (!props.raceInfo?.value?.race_info?.problems) return [];
+  
+  return props.raceInfo.value.race_info.problems.map(problem => {
+    // 如果已经有头像数据，直接返回
+    if (problem.first_blood_user?.avatar) return problem;
+    
+    // 如果没有头像数据，但有一血用户，尝试获取头像
+    if (problem.first_blood_user?.uid) {
+      return {
+        ...problem,
+        first_blood_user: {
+          ...problem.first_blood_user,
+          avatar: getAvatarUrl(problem.first_blood_user.uid)
+        }
+      };
+    }
+    return problem;
+  });
 });
+
+// 获取头像URL
+const getAvatarUrl = (uid: string) => {
+  return `http://localhost:5000/api/avatar-get/${uid}`;
+};
 
 // 获取字母索引（A, B, C...）
 const getAlphabetIndex = (index: number) => {
@@ -158,14 +169,12 @@ const formatPassRate = (solveNum: number, submitNum: number) => {
 // 跳转到题目详情
 const goToQuestionDetail = (id: string, race_uid: string) => {
   store.dispatch("setCurrentQuestionId", id);
-  router.push({ 
-    name: "questions_detail", 
-    params: { id },          // 传递题目 ID
-    query: { race_uid },     // 通过 query 传递 race_uid
+  router.push({
+    name: "questions_detail",
+    params: { id },
+    query: { race_uid },
   });
-  console.log("跳转参数:", { id, race_uid });
 };
-console.log("props:", props.raceInfo);
 </script>
 
 <style scoped>
@@ -196,11 +205,9 @@ console.log("props:", props.raceInfo);
 }
 
 .problems-head {
-  background: linear-gradient(
-    to right,
-    rgba(248, 250, 252, 0.8),
-    rgba(241, 245, 249, 0.8)
-  );
+  background: linear-gradient(to right,
+      rgba(248, 250, 252, 0.8),
+      rgba(241, 245, 249, 0.8));
   border-bottom: 1px solid #e2e8f0;
   position: sticky;
   top: 0;
@@ -355,12 +362,39 @@ console.log("props:", props.raceInfo);
   align-items: center;
   gap: 8px;
   color: #6b7280;
-  height: 24px;
+  padding: 4px;
+  border-radius: 4px;
   transition: all 0.3s ease;
 }
 
 .first-blood:hover {
+  background-color: rgba(66, 185, 131, 0.1);
   color: #42b983;
+}
+
+.avatar-container {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f3f4f6;
+}
+
+.user-avatar {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.username {
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .submit-info {
@@ -415,6 +449,7 @@ console.log("props:", props.raceInfo);
 }
 
 @media (max-width: 768px) {
+
   .problems-head th,
   .problem-row td {
     padding: 12px;

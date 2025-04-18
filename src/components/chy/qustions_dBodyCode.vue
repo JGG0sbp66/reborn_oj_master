@@ -1246,6 +1246,10 @@ export default {
         if (!authenticated) {
           throw new Error("用户未登录");
         }
+        this.$emit("show-alert", {
+          type: "success",
+          message: "提交成功",
+        });
         // 如果已登录，继续提交流程
         const pendingSubmission = {
           status: `
@@ -1273,26 +1277,26 @@ export default {
         this.$emit("add-pending-submission", pendingSubmission);
 
         // 模拟API请求延迟
-        await new Promise((resolve) => setTimeout(resolve, 1500));
+        // await new Promise((resolve) => setTimeout(resolve, 1500));
 
-        // const formData = new FormData();
-        // formData.append("question_uid", this.id);
-        // formData.append("question", JSON.stringify(this.questionDetail));
-        // formData.append("prompt", this.codeLines.join("\n"));
-        // formData.append("race_uid", this.race_uid);
+        const formData = new FormData();
+        formData.append("question_uid", this.id);
+        formData.append("question", JSON.stringify(this.questionDetail));
+        formData.append("prompt", this.codeLines.join("\n"));
+        formData.append("race_uid", this.race_uid);
 
-        // const { data: response } = await axios({
-        //   url: "http://localhost:5000/api/askAi-question",
-        //   method: "post",
-        //   data: formData,
-        //   headers: {
-        //     "Content-Type": "multipart/form-data",
-        //   },
-        // });
+        const { data: response } = await axios({
+          url: "http://localhost:5000/api/askAi-question",
+          method: "post",
+          data: formData,
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        });
 
         // 解析AI返回的结果
-        // const aiResponse = response.message;
-        const aiResponse = "编译错误"; // 测试用的假数据
+        const aiResponse = response.message;
+        // const aiResponse = "编译错误"; // 测试用的假数据
         // console.log(aiResponse);
         let statusOption = this.stateOptions.find((option) =>
           option.status.includes(this.getStatusFromAiResponse(aiResponse))

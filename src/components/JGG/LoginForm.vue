@@ -139,7 +139,7 @@
       const isUsernameValid = usernameInput.value?.validate();
       const isPasswordValid = passwordInput.value?.validate();
       if (!isUsernameValid || !isPasswordValid) {
-        alertboxRef.value?.show("登陆失败，账号或密码不能为空", 2);
+        alertboxRef.value?.show("登录失败，账号或密码不能为空", 2);
         return;
       }
       
@@ -160,7 +160,7 @@
       });
   
       if (userData.success) {
-        alertboxRef.value?.show("登陆成功！", 0);
+        alertboxRef.value?.show("登录成功！", 0);
   
         // 更新登录状态并存储在localStorage
         localStorage.setItem("isLoggedIn", "true");
@@ -216,7 +216,7 @@
     } catch (error) {
       if ((error as any).response) {
         alertboxRef.value?.show(
-          "登陆失败，" + (error as any).response.data.message,
+          "登录失败，" + (error as any).response.data.message,
           2
         );
       } else {

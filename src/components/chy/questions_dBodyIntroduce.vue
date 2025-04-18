@@ -72,7 +72,6 @@
           </svg>
           <span>我的提交</span>
         </div>
-        <span>{{this.isAuthenticated}}</span>
       </div>
       <div
         v-if="questionDetail"
@@ -265,6 +264,19 @@ export default {
     };
   },
   created() {
+    // 检查本地存储中是否存在 uid
+    const hasUid = localStorage.getItem("uid") !== null;
+    const UidCode = localStorage.getItem("uid");
+    const prevUidCode = localStorage.getItem("prev_uid_code"); // 获取之前存储的 uid
+    console.log(hasUid);
+    console.log("Current uid:", UidCode, "Previous uid:", prevUidCode);
+
+    if (!hasUid || prevUidCode !== UidCode) {
+      this.clearAllLocalSubmissions();
+      // 在清理完成后，更新上一次的 uid 记录
+      localStorage.setItem("prev_uid_code", UidCode || "");
+    }
+
     this.questionId =
       this.$route.params.id ||
       this.$store.getters.currentQuestionId ||
@@ -292,8 +304,8 @@ export default {
         if (savedSubmissions) {
           this.localSubmissions = JSON.parse(savedSubmissions);
           // 按时间排序确保最新的记录在前面
-          this.localSubmissions.sort((a, b) => 
-            new Date(b.submitTime) - new Date(a.submitTime)
+          this.localSubmissions.sort(
+            (a, b) => new Date(b.submitTime) - new Date(a.submitTime)
           );
           console.log("Loaded from local storage:", this.localSubmissions);
         }
@@ -302,35 +314,44 @@ export default {
 
     // 修改保存提交记录到本地存储的方法
     saveSubmissionsToLocal() {
-      if (this.isAuthenticated && this.questionId && this.submissions.length > 0) {
+      if (
+        this.isAuthenticated &&
+        this.questionId &&
+        this.submissions.length > 0
+      ) {
         const storageKey = `submissions_${this.questionId}`;
         // 获取现有的提交记录
-        let existingSubmissions = JSON.parse(localStorage.getItem(storageKey)) || [];
-    
+        let existingSubmissions =
+          JSON.parse(localStorage.getItem(storageKey)) || [];
+
         // 过滤出新的、非评测中的提交记录
-        const newSubmissions = this.submissions.filter(submission => {
+        const newSubmissions = this.submissions.filter((submission) => {
           // 排除评测中的状态
-          if (submission.isPending || submission.status.includes('评测中')) {
+          if (submission.isPending || submission.status.includes("评测中")) {
             return false;
           }
-          
+
           // 检查是否已存在相同的提交记录
-          return !existingSubmissions.some(existing => 
-            existing.submitTime === submission.submitTime && 
-            existing.status === submission.status &&
-            existing.language === submission.language
+          return !existingSubmissions.some(
+            (existing) =>
+              existing.submitTime === submission.submitTime &&
+              existing.status === submission.status &&
+              existing.language === submission.language
           );
         });
-    
+
         if (newSubmissions.length > 0) {
           // 合并新的提交记录到现有记录中
-          const updatedSubmissions = [...existingSubmissions, ...newSubmissions];
-          
+          const updatedSubmissions = [
+            ...existingSubmissions,
+            ...newSubmissions,
+          ];
+
           // 按提交时间降序排序
-          updatedSubmissions.sort((a, b) => 
-            new Date(b.submitTime) - new Date(a.submitTime)
+          updatedSubmissions.sort(
+            (a, b) => new Date(b.submitTime) - new Date(a.submitTime)
           );
-          
+
           // 存储更新后的提交记录
           localStorage.setItem(storageKey, JSON.stringify(updatedSubmissions));
           console.log("保存新的提交记录到本地存储:", newSubmissions);
@@ -450,14 +471,14 @@ export default {
           console.log("User logged out, clearing submissions...");
           this.clearAllLocalSubmissions();
         }
-      }
-    }
+      },
+    },
   },
   computed: {
     displayedSubmissions() {
       // 获取待评测的提交
-      const pendingSubmissions = this.submissions.filter(s => s.isPending);
-      
+      const pendingSubmissions = this.submissions.filter((s) => s.isPending);
+
       // 获取已完成的提交
       let completedSubmissions = [];
       if (this.isAuthenticated) {
@@ -468,14 +489,14 @@ export default {
           completedSubmissions = JSON.parse(storedData);
         }
       } else {
-        completedSubmissions = this.submissions.filter(s => !s.isPending);
+        completedSubmissions = this.submissions.filter((s) => !s.isPending);
       }
 
       // 合并并按时间排序
-      return [...pendingSubmissions, ...completedSubmissions].sort((a, b) => 
-        new Date(b.submitTime) - new Date(a.submitTime)
+      return [...pendingSubmissions, ...completedSubmissions].sort(
+        (a, b) => new Date(b.submitTime) - new Date(a.submitTime)
       );
-    }
+    },
   },
 };
 </script>
