@@ -44,7 +44,7 @@
                     <div class="contact-info">
                         <div class="contact-item">
                             <span class="contact-icon">💌</span>
-                            <span>support@ojmastr.com</span>
+                            <span>oj_master@163.com</span>
                         </div>
                         <div class="contact-item">
                             <span class="contact-icon">🔗</span>
@@ -74,9 +74,17 @@
                 <div class="footer-credits">
                     <span class="credit-item">所谓混学</span>
                     <span class="link-divider">·</span>
-                    <span class="credit-item">OJmaster</span>
+                    <span class="credit-item">OJ Master</span>
                     <span class="link-divider">·</span>
-                    <span class="credit-item">J-C-Z-V</span>
+                    <div class="team-credits">
+                        <span class="team-member" data-full="JGG0sbp66">J</span>
+                        <span>-</span>
+                        <span class="team-member" data-full="CHY">C</span>
+                        <span>-</span>
+                        <span class="team-member" data-full="ZQ">Z</span>
+                        <span>-</span>
+                        <span class="team-member" data-full="Violety">V</span>
+                    </div>
                 </div>
                 <div class="footer-links">
                     <a href="#" class="footer-link">问题反馈</a>
@@ -445,6 +453,65 @@ footer {
 
 .credit-item:hover {
     color: #42b983;
+}
+
+/* 团队成员动画样式 */
+.team-credits {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+}
+
+.team-member {
+    position: relative;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-block;
+}
+
+.team-member::after {
+    content: attr(data-full);
+    position: absolute;
+    left: 0;
+    top: 0;
+    color: #42b983;
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+    transform: translateX(-10px);
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.team-member:hover {
+    color: transparent;
+}
+
+.team-member:hover::after {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+/* 为了让其他字母在展开时不重叠 */
+.team-member:hover ~ span {
+    transform: translateX(40px);
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* 根据不同字母调整位移距离 */
+.team-member[data-full="JGG0sbp66"]:hover ~ span {
+    transform: translateX(65px);
+}
+
+.team-member[data-full="CHY"]:hover ~ span {
+    transform: translateX(18px);
+}
+
+.team-member[data-full="ZQ"]:hover ~ span {
+    transform: translateX(10px);
+}
+
+.team-member[data-full="Violety"]:hover ~ span {
+    transform: translateX(40px);
 }
 
 /* 响应式设计 */
