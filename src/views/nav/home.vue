@@ -78,6 +78,7 @@
               :competition="item"
               :appear="true"
               :index="index"
+              :actionLink="`/contest/problems?uid=${item.race_uid}`"
             />
           </div>
         </div>
@@ -240,11 +241,11 @@ const statsData = [
 
 // 推荐题库数据
 const recommendedSites = [
-  { name: "LibreOJ", url: "#" },
-  { name: "Vijos", url: "#" },
-  { name: "Luogu", url: "#" },
-  { name: "CodeForces", url: "#" },
-  { name: "AtCoder", url: "#" },
+  { name: "LibreOJ", url: "https://loj.ac" },
+  { name: "Vijos", url: "https://vijos.org" },
+  { name: "Luogu", url: "https://www.luogu.com.cn" },
+  { name: "CodeForces", url: "https://codeforces.com" },
+  { name: "AtCoder", url: "https://atcoder.jp" },
 ];
 
 // 开源项目数据
@@ -252,12 +253,12 @@ const openSourceProjects = [
   {
     title: "CYaRon 测试数据生成器",
     description: "自动生成高质量的测试数据",
-    url: "#",
+    url: "https://github.com/luogu-dev/cyaron/wiki",
   },
   {
     title: "Markdown+Palettes",
     description: "增强的Markdown编辑器",
-    url: "#",
+    url: "https://github.com/luogu-dev/markdown-palettes",
   },
 ];
 
@@ -286,9 +287,11 @@ const fetchCompetitions = async () => {
 
     if (data && data.race_info && Array.isArray(data.race_info)) {
       // 将获取到的竞赛数据赋值给competitions
-      competitions.value = data.race_info.map((race) => {
+      competitions.value = data.race_info.map((race: any) => {
         // 转换API返回的数据格式为组件需要的格式
         return {
+          uid: race.race_uid, // 使用API返回的race_uid作为uid
+          race_uid: race.race_uid, // 同时保留原始的race_uid
           title: race.title,
           logos: race.logos || [],
           startTime: race.startTime,

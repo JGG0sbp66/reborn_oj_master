@@ -12,6 +12,8 @@
         }"
         @mouseenter="handleMouseEnter"
         @mouseleave="handleMouseLeave"
+        target="_blank"
+        rel="noopener noreferrer"
       >
         {{ site.name }}
         <span class="site-tag-hover-effect"></span>
