@@ -36,6 +36,8 @@ console.log("接收到的参数:", { race_uid });
   min-height: calc(100vh - 100px); /* 确保内容区域高度减去 footer 的高度 */
   padding-bottom: 50px; /* 给 footer 留出空间 */
   padding-top: 40px; /* 给 headerheader 留出空间 */
+  position: relative; /* 添加相对定位 */
+  z-index: 1; /* 设置基础层级 */
 }
 .footer-wrapper {
   position: fixed;
@@ -44,6 +46,7 @@ console.log("接收到的参数:", { race_uid });
   right: 0;
   clip-path: inset(calc(100% - 60px) 0 0 0);
   transition: clip-path 0.3s ease-in-out;
+  z-index: 1000; /* 添加较高的层级 */
 }
 
 .footer-wrapper:hover {
@@ -54,4 +57,3 @@ console.log("接收到的参数:", { race_uid });
   width: 100%;
 }
 </style>
-  

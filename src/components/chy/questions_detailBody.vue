@@ -186,19 +186,25 @@ export default {
   margin: 50px 0px;
   min-height: 892px;
   position: relative;
-  height: calc(100vh - 20px); /* 确保有明确高度 */
+  height: calc(100vh - 20px);
+  z-index: 1; /* 添加基础层级 */
 }
+
 .left-panel {
   flex: 0 0 auto;
   overflow: hidden;
   transition: width 0.1s ease;
-  height: 100%; /* 添加高度 */
+  height: 100%;
+  position: relative; /* 添加相对定位 */
+  z-index: 2; /* 设置层级 */
 }
 
 .right-panel {
   flex: 1;
   min-width: 0;
   overflow: hidden;
-  height: 100%; /* 添加高度 */
+  height: 100%;
+  position: relative; /* 添加相对定位 */
+  z-index: 2; /* 设置层级 */
 }
 </style>
