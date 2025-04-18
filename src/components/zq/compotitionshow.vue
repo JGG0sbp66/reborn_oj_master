@@ -47,17 +47,10 @@
           </tr>
         </thead>
         <tbody class="problems-body">
-          <tr
-            v-for="(problem, index) in props.raceInfo?.value?.race_info.problems"
-            :key="index"
-            class="problem-row"
-            @click="goToQuestionDetail(problem.uid,props?.uid)"
-          >
+          <tr v-for="(problem, index) in props.raceInfo?.value?.race_info.problems" :key="index" class="problem-row"
+            @click="goToQuestionDetail(problem.uid, props?.uid)">
             <td class="column-status">
-              <span
-                class="status-tag"
-                :class="getStatusClass(problem.status)"
-              >
+              <span class="status-tag" :class="getStatusClass(problem.status)">
                 {{ problem.status || '未提交' }}
               </span>
             </td>
@@ -68,14 +61,11 @@
               </div>
             </td>
             <td class="column-first">
-              <div
-                class="first-blood"
-                v-if="problem.first_blood_user"
-              >
+              <div class="first-blood" v-if="problem.first_blood_user">
                 <el-icon>
-                  <User />
+                  <img :src='avatar' alt="">
                 </el-icon>
-                <span>{{ problem.first_blood_user }}</span>
+                <span></span>
               </div>
             </td>
             <td class="column-submit">
@@ -100,6 +90,7 @@ import { ref, onMounted, computed } from "vue";
 import { useRouter } from "vue-router";
 import { useStore } from "vuex";
 import { defineProps } from "vue";
+import { toRefs } from 'vue';
 import {
   Document,
   Edit,
@@ -112,6 +103,7 @@ import axios from "axios";
 
 const router = useRouter();
 const store = useStore();
+const avatar = ref('');
 
 const props = defineProps({
   raceInfo: {
@@ -123,13 +115,29 @@ const props = defineProps({
     required: true,
   },
 });
+onMounted(() => {
+  console.log("Received raceInfo:", props.raceInfo);
+  console.log("Received uid:", props.uid);
+  console.log(props.raceInfo?.value?.race_info?.problems)
+  for (let i = 0; i < props.raceInfo?.value?.race_info?.problems.length; i++) {
+    if (props.raceInfo?.value?.race_info?.problems[i].status === '已通过') {
+      const user_id = props.raceInfo?.value?.race_info?.problems[i].first_blood_user;
+      console.log("user_id:", user_id);
+    }
+  }
+})
 
-console.log("Received uid:", props);
-// 计算属性获取题目列表
-const problems = computed(() => {
-  return props.raceInfo?.race_info?.problems || [];
+const avater_get = async () => {
+  const { data: userData } = await axios({
+    url: `http://localhost:5000/api/avatar-get/${user_id}`,
+    method: "get",
+  });
+  return { userData };
+}
+onMounted(async () => {
+  const { userData } = await avater_get();
+  avatar.value = userData;
 });
-
 // 获取字母索引（A, B, C...）
 const getAlphabetIndex = (index: number) => {
   return String.fromCharCode(65 + index);
@@ -158,14 +166,13 @@ const formatPassRate = (solveNum: number, submitNum: number) => {
 // 跳转到题目详情
 const goToQuestionDetail = (id: string, race_uid: string) => {
   store.dispatch("setCurrentQuestionId", id);
-  router.push({ 
-    name: "questions_detail", 
+  router.push({
+    name: "questions_detail",
     params: { id },          // 传递题目 ID
     query: { race_uid },     // 通过 query 传递 race_uid
   });
   console.log("跳转参数:", { id, race_uid });
 };
-console.log("props:", props.raceInfo);
 </script>
 
 <style scoped>
@@ -196,11 +203,9 @@ console.log("props:", props.raceInfo);
 }
 
 .problems-head {
-  background: linear-gradient(
-    to right,
-    rgba(248, 250, 252, 0.8),
-    rgba(241, 245, 249, 0.8)
-  );
+  background: linear-gradient(to right,
+      rgba(248, 250, 252, 0.8),
+      rgba(241, 245, 249, 0.8));
   border-bottom: 1px solid #e2e8f0;
   position: sticky;
   top: 0;
@@ -415,6 +420,7 @@ console.log("props:", props.raceInfo);
 }
 
 @media (max-width: 768px) {
+
   .problems-head th,
   .problem-row td {
     padding: 12px;
