@@ -12,6 +12,21 @@
 import managerhead from '@/components/zq/manager-head.vue';
 import managerslider from '@/components/zq/manager-sidebar.vue';
 import managerproblem from '@/components/zq/manager-problem.vue';
+import { useRouter, useRoute } from 'vue-router';
+import { checkAuth } from '@/utils/auth';
+
+const router = useRouter();
+const route = useRoute();
+
+const verifyAuth = async () => {
+    const { authenticated } = await checkAuth();
+    if (!authenticated) {
+        router.push({
+            path: '/account/login',
+            query: { redirect: route.fullPath }
+        });
+    }
+};
 </script>
 
 <style scoped>

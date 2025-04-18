@@ -50,28 +50,40 @@
         <div class="advanced-search-content">
             <div class="search-row">
                 <div class="search-item">
-                    <span class="search-label">难度等级:</span>
-                    <el-select v-model="difficultyFilter" placeholder="难度等级" clearable @change="handleSearch"
+                    <span class="search-label">题目标签:</span>
+                    <el-select v-model="difficultyFilter" placeholder="题目标签" clearable @change="handleSearch"
                         style="flex: 1;">
                         <el-option label="全部" value="" />
-                        <el-option label="入门" value="入门" />
-                        <el-option label="普及" value="普及" />
-                        <el-option label="提高" value="提高" />
-                        <el-option label="省选" value="省选" />
-                        <el-option label="NOI" value="NOI" />
-                        <el-option label="CTSC" value="CTSC" />
-                    </el-select>
-                </div>
-                <div class="search-item">
-                    <span class="search-label">题目分类:</span>
-                    <el-select v-model="categoryFilter" placeholder="题目分类" clearable @change="handleSearch"
-                        style="flex: 1;">
-                        <el-option label="全部" value="" />
-                        <el-option label="算法" value="算法" />
-                        <el-option label="数据结构" value="数据结构" />
-                        <el-option label="数学" value="数学" />
-                        <el-option label="字符串" value="字符串" />
-                        <el-option label="动态规划" value="动态规划" />
+                        <el-option label="入门" value="入门">
+                            <template #default>
+                                <el-tag size="small" type="success">入门</el-tag>
+                            </template>
+                        </el-option>
+                        <el-option label="普及" value="普及">
+                            <template #default>
+                                <el-tag size="small" type="success">普及</el-tag>
+                            </template>
+                        </el-option>
+                        <el-option label="提高" value="提高">
+                            <template #default>
+                                <el-tag size="small" type="warning">提高</el-tag>
+                            </template>
+                        </el-option>
+                        <el-option label="省选" value="省选">
+                            <template #default>
+                                <el-tag size="small" type="warning">省选</el-tag>
+                            </template>
+                        </el-option>
+                        <el-option label="NOI" value="NOI">
+                            <template #default>
+                                <el-tag size="small" type="danger">NOI</el-tag>
+                            </template>
+                        </el-option>
+                        <el-option label="CTSC" value="CTSC">
+                            <template #default>
+                                <el-tag size="small" type="danger">CTSC</el-tag>
+                            </template>
+                        </el-option>
                     </el-select>
                 </div>
             </div>
@@ -111,11 +123,11 @@
 
     <div class="batch-operations" v-if="selectedProblems.length > 0">
         <div class="selected-count">已选择 {{ selectedProblems.length }} 题</div>
-        <div class="batch-actions">
+        <!-- <div class="batch-actions">
             <el-button type="primary" plain size="small" @click="batchExport">批量导出</el-button>
             <el-button type="warning" plain size="small" @click="batchChangeCategory">修改分类</el-button>
             <el-button type="danger" plain size="small" @click="batchDelete">批量删除</el-button>
-        </div>
+        </div> -->
     </div>
 
     <div class="problem-table">
@@ -151,16 +163,9 @@
                     </div>
                 </template>
             </el-table-column>
-            <el-table-column prop="category" label="分类" width="120" align="center">
+            <el-table-column prop="topic" label="标签" width="120" align="center">
                 <template #default="scope">
-                    <el-tag size="small" type="info">{{ scope.row.category }}</el-tag>
-                </template>
-            </el-table-column>
-            <el-table-column prop="difficulty" label="难度" width="100" align="center">
-                <template #default="scope">
-                    <el-tag :type="getDifficultyType(scope.row.difficulty)" size="small">
-                        {{ scope.row.difficulty }}
-                    </el-tag>
+                    <el-tag size="small" :type="getTagType(scope.row.topic)">{{ scope.row.topic }}</el-tag>
                 </template>
             </el-table-column>
             <el-table-column prop="passRate" label="通过率" width="100" align="center">
@@ -405,13 +410,12 @@ const fetchData = async () => {
             return {
                 id: `P${1001 + index}`, // 生成ID，从P1001开始
                 title: item.question.title,
-                category: item.topic || '未分类',
+                topic: item.topic || '未分类',
                 difficulty: getDifficultyByComplexity(item.question), // 根据题目复杂度推断难度
                 passRate: passRate,
                 submissionCount: submissionCount,
                 createTime: new Date().toISOString().split('T')[0], // 使用当前日期
-                question: item.question,
-                topic: item.topic
+                question: item.question
             };
         });
 
@@ -503,7 +507,7 @@ const filteredProblems = computed(() => {
 
         // 分类过滤
         const matchesCategory = categoryFilter.value ?
-            problem.category === categoryFilter.value :
+            problem.topic === categoryFilter.value :
             true;
 
         // 通过率范围过滤
@@ -600,6 +604,27 @@ const getDifficultyType = (difficulty: string) => {
     }
 };
 
+// 获取标签类型
+const getTagType = (tag: string) => {
+    switch (tag) {
+        case '入门': return 'success';
+        case '普及': return 'success';
+        case '提高': return 'warning';
+        case '省选': return 'warning';
+        case 'NOI': return 'danger';
+        case 'CTSC': return 'danger';
+        case '算法': return 'primary';
+        case '数据结构': return 'info';
+        case '字符串': return 'warning';
+        case '数学': return '';
+        case '动态规划': return 'danger';
+        case 'ACM': return 'primary';
+        case 'ICPC': return 'primary';
+        case '蓝桥杯': return 'success';
+        default: return 'info';
+    }
+};
+
 // 获取通过率颜色
 const getPassRateColor = (rate: number) => {
     if (rate >= 70) return '#18a058';  // 蓝绿色
@@ -660,7 +685,7 @@ const handleEditFromDetail = (problemData: any) => {
             id: problemData.id,
             title: problemData.title || '',
             description: problemData.description || '',
-            topic: problemData.category || '入门',
+            topic: problemData.topic || '入门',
             time_limit: problemData.time_limit || 1000,
             memory_limit: problemData.memory_limit || 128,
             input_format: problemData.input_format || '',
@@ -1409,6 +1434,59 @@ const applyAdvancedSearch = () => {
     margin-left: 4px;
     color: #18a058;
 }
+
+/* 标签样式增强 */
+.el-tag {
+    font-weight: 500;
+    border-radius: 12px;
+    padding: 0 10px;
+    height: 24px;
+    line-height: 24px;
+    transition: all 0.3s;
+}
+
+.el-tag:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.el-tag--success {
+    background-color: rgba(24, 160, 88, 0.1);
+    color: #18a058;
+    border-color: rgba(24, 160, 88, 0.2);
+}
+
+.el-tag--warning {
+    background-color: rgba(230, 162, 60, 0.1);
+    color: #e6a23c;
+    border-color: rgba(230, 162, 60, 0.2);
+}
+
+.el-tag--danger {
+    background-color: rgba(245, 108, 108, 0.1);
+    color: #f56c6c;
+    border-color: rgba(245, 108, 108, 0.2);
+}
+
+.el-tag--info {
+    background-color: rgba(144, 147, 153, 0.1);
+    color: #909399;
+    border-color: rgba(144, 147, 153, 0.2);
+}
+
+.el-tag--primary {
+    background-color: rgba(64, 158, 255, 0.1);
+    color: #409eff;
+    border-color: rgba(64, 158, 255, 0.2);
+}
+
+/* 下拉选项中的标签样式 */
+.el-select-dropdown__item .el-tag {
+    width: 100%;
+    text-align: center;
+}
+
+/* 页面标题部分样式 */
 </style>
 
 
