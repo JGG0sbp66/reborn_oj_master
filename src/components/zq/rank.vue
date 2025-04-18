@@ -48,9 +48,13 @@
                             <td class="column-player">
                                 <div class="player-info">
                                     <div class="player-avatar">
-                                        <el-icon><User /></el-icon>
+                                        <img 
+                                            :src="`http://localhost:5000/api/avatar-get/${rank.user_info.uid}`" 
+                                            :alt="rank.user_info.username"
+                                            @error="handleAvatarError"
+                                        />
                                     </div>
-                                    <span class="player-name">选手 {{ rank.user_id }}</span>
+                                    <span class="player-name">{{ rank.user_info.username }}</span>
                                 </div>
                             </td>
                             <td class="column-solved">
@@ -119,11 +123,9 @@ const problemColumns = computed(() => {
 // 获取比赛题目的实际数量
 function getProblemCount() {
     if (!props.raceRank || !props.raceRank.race_info || !props.raceRank.race_info.problems) {
-        // 如果没有题目信息，默认显示5道题
-        return 5;
+        console.warn('无法获取题目信息，当前props:', props.raceRank);
+        return 0;
     }
-    
-    // 返回实际的题目数量
     return props.raceRank.race_info.problems.length;
 }
 
@@ -162,6 +164,13 @@ const hasRankData = computed(() => {
            Array.isArray(raceRank.value.race_rank) && 
            raceRank.value.race_rank.length > 0;
 });
+
+// 头像加载错误处理函数
+const handleAvatarError = (e) => {
+    // 头像加载失败时使用默认的用户图标
+    e.target.style.display = 'none';
+    e.target.parentElement.innerHTML = '<el-icon><User /></el-icon>';
+};
 
 console.log('Rank组件接收到的数据:', raceRank.value);
 </script>
@@ -310,6 +319,13 @@ console.log('Rank组件接收到的数据:', raceRank.value);
     align-items: center;
     justify-content: center;
     color: #0284c7;
+    overflow: hidden; /* 添加此行确保图片不会溢出圆形边框 */
+}
+
+.player-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
 }
 
 .player-name {
