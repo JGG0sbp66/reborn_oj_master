@@ -123,11 +123,11 @@
 
             <div class="batch-operations" v-if="selectedCompetitions.length > 0">
                 <div class="selected-count">已选择 {{ selectedCompetitions.length }} 场竞赛</div>
-                <div class="batch-actions">
+                <!-- <div class="batch-actions">
                     <el-button type="primary" plain size="small" @click="batchExport">批量导出</el-button>
                     <el-button type="warning" plain size="small" @click="batchChangeStatus">修改状态</el-button>
                     <el-button type="danger" plain size="small" @click="batchDelete">批量删除</el-button>
-                </div>
+                </div> -->
             </div>
 
             <div class="competition-table">
@@ -140,7 +140,7 @@
                     :border="false"
                     stripe
                     :cell-style="{ textAlign: 'center', padding: '12px 0' }"
-                    :header-cell-style="{ backgroundColor: '#f8f9fa', color: '#2c3e50', fontWeight: '600', textAlign: 'center' }"
+                    :header-cell-style="{ backgroundColor: '#f8f9fa', color: '#2c3e50', fontWeight: '600'}"
                     :show-overflow-tooltip="false"
                     :max-height="'none'"
                     :height="'auto'"

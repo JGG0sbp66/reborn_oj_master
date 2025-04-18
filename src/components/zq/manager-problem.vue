@@ -119,79 +119,51 @@
     </div>
 
     <div class="problem-table">
-        <el-table :data="filteredProblems" style="width: 100%" :row-class-name="tableRowClassName" v-loading="loading"
-            @selection-change="handleSelectionChange">
-            <el-table-column type="selection" width="55" />
-            <el-table-column prop="id" label="ID" width="80" sortable />
-            <el-table-column prop="title" label="题目名称" min-width="200">
-                <template #header>
-                    <div class="table-header" @click="toggleSort('title')">
-                        题目名称
-                        <span class="sort-icon" v-if="sortBy === 'title'">
-                            <el-icon v-if="sortOrder === 'ascending'">
-                                <ArrowUp />
-                            </el-icon>
-                            <el-icon v-else>
-                                <ArrowDown />
-                            </el-icon>
-                        </span>
-                    </div>
-                </template>
+        <el-table :data="filteredProblems" 
+            style="width: 100%" 
+            :row-class-name="tableRowClassName" 
+            v-loading="loading"
+            @selection-change="handleSelectionChange"
+            :border="false"
+            stripe
+            :cell-style="{ textAlign: 'center', padding: '12px 0' }"
+            :header-cell-style="{ backgroundColor: '#f8f9fa', color: '#2c3e50', fontWeight: '600'}"
+            :show-overflow-tooltip="false"
+            :max-height="'none'"
+            :height="'auto'"
+        >
+            <el-table-column type="selection" width="50" align="center" />
+            <el-table-column prop="id" label="ID" width="90" align="center" />
+            <el-table-column prop="title" label="题目名称" min-width="220" align="left">
                 <template #default="scope">
                     <div class="problem-title">
                         <span>{{ scope.row.title }}</span>
+                        <div class="problem-meta" v-if="scope.row.description">
+                            <span class="meta-item">
+                                <el-icon><Timer /></el-icon> 
+                                {{ scope.row.time_limit || 1000 }}ms
+                            </span>
+                            <span class="meta-item">
+                                <el-icon><Collection /></el-icon> 
+                                {{ scope.row.memory_limit || 128 }}MB
+                            </span>
+                        </div>
                     </div>
                 </template>
             </el-table-column>
-            <el-table-column prop="category" label="分类" width="120">
-                <template #header>
-                    <div class="table-header" @click="toggleSort('category')">
-                        分类
-                        <span class="sort-icon" v-if="sortBy === 'category'">
-                            <el-icon v-if="sortOrder === 'ascending'">
-                                <ArrowUp />
-                            </el-icon>
-                            <el-icon v-else>
-                                <ArrowDown />
-                            </el-icon>
-                        </span>
-                    </div>
+            <el-table-column prop="category" label="分类" width="120" align="center">
+                <template #default="scope">
+                    <el-tag size="small" type="info">{{ scope.row.category }}</el-tag>
                 </template>
             </el-table-column>
-            <el-table-column prop="difficulty" label="难度" width="100">
-                <template #header>
-                    <div class="table-header" @click="toggleSort('difficulty')">
-                        难度
-                        <span class="sort-icon" v-if="sortBy === 'difficulty'">
-                            <el-icon v-if="sortOrder === 'ascending'">
-                                <ArrowUp />
-                            </el-icon>
-                            <el-icon v-else>
-                                <ArrowDown />
-                            </el-icon>
-                        </span>
-                    </div>
-                </template>
+            <el-table-column prop="difficulty" label="难度" width="100" align="center">
                 <template #default="scope">
                     <el-tag :type="getDifficultyType(scope.row.difficulty)" size="small">
                         {{ scope.row.difficulty }}
                     </el-tag>
                 </template>
             </el-table-column>
-            <el-table-column prop="passRate" label="通过率" width="100">
-                <template #header>
-                    <div class="table-header" @click="toggleSort('passRate')">
-                        通过率
-                        <span class="sort-icon" v-if="sortBy === 'passRate'">
-                            <el-icon v-if="sortOrder === 'ascending'">
-                                <ArrowUp />
-                            </el-icon>
-                            <el-icon v-else>
-                                <ArrowDown />
-                            </el-icon>
-                        </span>
-                    </div>
-                </template>
+            <el-table-column prop="passRate" label="通过率" width="100" align="center">
                 <template #default="scope">
                     <div class="pass-rate">
                         {{ scope.row.passRate }}%
@@ -203,46 +175,33 @@
                     </div>
                 </template>
             </el-table-column>
-            <el-table-column prop="submissionCount" label="提交次数" width="120">
-                <template #header>
-                    <div class="table-header" @click="toggleSort('submissionCount')">
-                        提交次数
-                        <span class="sort-icon" v-if="sortBy === 'submissionCount'">
-                            <el-icon v-if="sortOrder === 'ascending'">
-                                <ArrowUp />
-                            </el-icon>
-                            <el-icon v-else>
-                                <ArrowDown />
-                            </el-icon>
-                        </span>
-                    </div>
-                </template>
-            </el-table-column>
-            <el-table-column prop="createTime" label="创建时间" width="180">
-                <template #header>
-                    <div class="table-header" @click="toggleSort('createTime')">
-                        创建时间
-                        <span class="sort-icon" v-if="sortBy === 'createTime'">
-                            <el-icon v-if="sortOrder === 'ascending'">
-                                <ArrowUp />
-                            </el-icon>
-                            <el-icon v-else>
-                                <ArrowDown />
-                            </el-icon>
-                        </span>
-                    </div>
-                </template>
-            </el-table-column>
-            <el-table-column label="操作" width="200" fixed="right">
+            <el-table-column prop="submissionCount" label="提交次数" width="120" align="center" />
+            <el-table-column prop="createTime" label="创建时间" width="170" align="center" />
+            <el-table-column label="操作" width="180" fixed="right" align="center">
                 <template #default="scope">
                     <div class="action-buttons">
-                        <el-button type="primary" size="small" text @click="viewProblemDetails(scope.row.id)">
+                        <el-button 
+                            type="primary" 
+                            size="small" 
+                            text
+                            @click="viewProblemDetails(scope.row.id)"
+                        >
                             查看
                         </el-button>
-                        <el-button type="primary" size="small" text @click="editProblem(scope.row.id)">
+                        <el-button 
+                            type="primary" 
+                            size="small" 
+                            text
+                            @click="editProblem(scope.row.id)"
+                        >
                             编辑
                         </el-button>
-                        <el-button type="danger" size="small" text @click="deleteProblem(scope.row.id)">
+                        <el-button 
+                            type="danger" 
+                            size="small" 
+                            text
+                            @click="deleteProblem(scope.row.id)"
+                        >
                             删除
                         </el-button>
                     </div>
@@ -274,7 +233,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
-import { Plus, Search, ArrowUp, ArrowDown, Refresh } from '@element-plus/icons-vue';
+import { Plus, Search, ArrowUp, ArrowDown, Refresh, Timer, Collection } from '@element-plus/icons-vue';
 import AlertBox from '../JGG/alertbox.vue';
 import axios from 'axios';
 import ProblemCreate from './problem-create.vue';
@@ -993,24 +952,68 @@ const applyAdvancedSearch = () => {
     overflow: hidden;
     box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
     margin-bottom: 24px;
-    border: 1px solid rgba(24, 160, 88, 0.1);
+    border: none;
+}
+
+.problem-table :deep(.el-table__inner-wrapper) {
+    border: none;
+}
+
+.problem-table :deep(.el-scrollbar__bar.is-horizontal) {
+    display: none;
+}
+
+.problem-table :deep(.el-scrollbar__bar.is-vertical) {
+    display: none;
+}
+
+.problem-table :deep(.el-table__border-left),
+.problem-table :deep(.el-table__border-right),
+.problem-table :deep(.el-table__border-top),
+.problem-table :deep(.el-table__border-bottom) {
+    display: none;
+}
+
+.problem-table :deep(.el-table__row) {
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.problem-table :deep(.el-table__row:last-child) {
+    border-bottom: none;
+}
+
+.problem-table :deep(.el-table__header) {
+    border-bottom: 1px solid #ebeef5;
+}
+
+.problem-table :deep(.el-table__cell) {
+    border: none;
+}
+
+.problem-table :deep(.el-table--stripe .el-table__body tr.el-table__row--striped) {
+    background: rgba(24, 160, 88, 0.02);
+}
+
+.problem-table :deep(.el-table__fixed-right),
+.problem-table :deep(.el-table__fixed) {
+    box-shadow: none;
+    border-right: none;
+    border-left: none;
 }
 
 /* 为表格添加行高和单元格内边距控制 */
 .problem-table :deep(.el-table__row) {
-    height: 60px;
-    /* 统一行高 */
+    height: 70px; /* 增加行高 */
 }
 
 .problem-table :deep(.el-table__cell) {
-    padding: 8px 0;
-    /* 统一单元格内边距 */
+    padding: 10px 0; /* 增加单元格内边距 */
+    vertical-align: middle;
 }
 
 /* 统一表头样式 */
 .problem-table :deep(.el-table__header-row) {
-    height: 56px;
-    /* 表头行高 */
+    height: 60px; /* 增加表头行高 */
 }
 
 .problem-table :deep(.el-table__header-cell) {
@@ -1019,41 +1022,57 @@ const applyAdvancedSearch = () => {
     color: #2c3e50;
 }
 
-/* 表格中的操作列样式 */
-.problem-table :deep(.el-button.el-button--text) {
-    padding: 6px 8px;
-}
-
 .problem-title {
     display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.pass-rate {
-    display: flex;
+    align-items: flex-start;
     flex-direction: column;
+    gap: 6px;
+}
+
+.problem-meta {
+    display: flex;
+    gap: 12px;
+    font-size: 12px;
+    color: #909399;
+    margin-top: 2px;
+}
+
+.meta-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.meta-item .el-icon {
     font-size: 14px;
-}
-
-.progress-bar {
-    width: 100%;
-    height: 4px;
-    background-color: #f0f0f0;
-    border-radius: 2px;
-    margin-top: 4px;
-    overflow: hidden;
-}
-
-.progress {
-    height: 100%;
-    border-radius: 2px;
-    transition: width 0.3s ease;
 }
 
 .action-buttons {
     display: flex;
-    gap: 8px;
+    justify-content: center;
+    align-items: center;
+    gap: 5px;
+}
+
+.action-buttons :deep(.el-button) {
+    margin: 0;
+    padding: 4px 8px;
+    font-size: 12px;
+    min-height: 28px;
+    line-height: 1;
+}
+
+.action-buttons :deep(.el-button--text) {
+    color: #18a058;
+}
+
+.action-buttons :deep(.el-button--text.el-button--danger) {
+    color: #F56C6C;
+}
+
+/* 表格行样式 */
+:deep(.featured-row) {
+    background-color: rgba(24, 160, 88, 0.05);  /* 更浅的蓝绿色 */
 }
 
 .pagination-container {
@@ -1200,11 +1219,6 @@ const applyAdvancedSearch = () => {
 
 .next-btn:hover .chevron-right {
     transform: rotate(45deg) translateX(3px);
-}
-
-/* 表格行样式 */
-:deep(.featured-row) {
-    background-color: transparent;
 }
 
 /* 响应式调整 */
@@ -1397,3 +1411,4 @@ const applyAdvancedSearch = () => {
     color: #18a058;
 }
 </style>
+

@@ -13,53 +13,147 @@
             
             <!-- 报名按钮 -->
             <div v-if="competitionStatus.status === 'signup'" class="signup-button-container">
-                <button class="signup-button" @click="handleSignup">
-                    <el-icon class="button-icon"><Plus /></el-icon>
-                    <span>立即报名</span>
+                <button 
+                    class="signup-button" 
+                    @click="handleSignup"
+                    :disabled="loading || isSignedUp"
+                    :class="{ 'signup-button-disabled': isSignedUp }"
+                >
+                    <el-icon v-if="loading" class="button-icon is-loading"><Loading /></el-icon>
+                    <el-icon v-else-if="isSignedUp" class="button-icon"><Check /></el-icon>
+                    <el-icon v-else class="button-icon"><Plus /></el-icon>
+                    <span>{{ buttonText }}</span>
                 </button>
             </div>
         </div>
+        <!-- 添加AlertBox组件 -->
+        <AlertBox ref="alertBoxRef" />
     </div>
 </template>
 
-<script lang="ts" setup>
+<script setup>
 import { ref, computed, onMounted } from 'vue';
-import type { ComputedRef } from 'vue';
-import { Timer, Plus } from '@element-plus/icons-vue';  
+import { Timer, Plus, Check, Loading } from '@element-plus/icons-vue';  
+import axios from 'axios';
+import AlertBox from '../JGG/alertbox.vue';
 
-// 定义类型
-interface RaceInfo {
-    value: {
-        race_info: {
-            tags: Array<{ name: string }>;
-            start_time: string;
-            end_time: string;
-        }
-    }
-}
-
-// 使用defineProps接收传递过来的raceInfo
 const props = defineProps({
     raceInfo: {
         type: Object,
         required: true
+    },
+    uid: {
+        type: String,
+        required: true
     }
 });
-console.log(props.raceInfo);
 
-// 处理报名点击事件
-const handleSignup = () => {
-    // 在这里添加报名逻辑
-    console.log('用户点击了报名按钮');
-    // 可以触发事件通知父组件
-    emit('signup-clicked');
+// 状态变量
+const loading = ref(false);
+const isSignedUp = ref(false);
+const userRaces = ref([]);
+const alertBoxRef = ref(null);
+
+// 按钮文本
+const buttonText = computed(() => {
+    if (loading.value) return '报名中...';
+    if (isSignedUp.value) return '已报名';
+    return '立即报名';
+});
+
+// 报名函数
+const handleSignup = async () => {
+    if (loading.value || isSignedUp.value) return;
+    
+    try {
+        loading.value = true;
+        // 输出调试信息
+        console.log('开始报名，使用的比赛ID:', props.uid);
+        console.log('完整raceInfo:', props.raceInfo);
+
+        // 使用正确的参数 - 尝试从props.raceInfo中获取race_id或使用props.uid
+        const raceId = props.raceInfo?.value?.race_info?.uid || props.uid;
+        console.log('最终使用的raceId:', raceId);
+        
+        const { data } = await axios({
+            url: "http://localhost:5000/api/race-register", 
+            method: "post",
+            data: { race_uid: raceId },
+            withCredentials: true
+        });
+        
+        console.log('报名结果:', data);
+        
+        if (data.success) {
+            isSignedUp.value = true;
+            alertBoxRef.value?.show('报名成功！', 0);
+            // 重新获取用户比赛数据
+            fetchUserRaces();
+        } else {
+            alertBoxRef.value?.show(data.message || '报名失败，请稍后重试', 2);
+        }
+    } catch (error) {
+        console.error('报名失败:', error);
+        // 输出更详细的错误信息
+        if (error.response) {
+            console.error('错误响应数据:', error.response.data);
+            console.error('错误状态码:', error.response.status);
+            
+            // 如果是401或403，可能是未登录
+            if (error.response.status === 401 || error.response.status === 403) {
+                alertBoxRef.value?.show('请先登录后再报名', 2);
+                return;
+            }
+        }
+        
+        alertBoxRef.value?.show('报名失败，请检查网络连接', 2);
+    } finally {
+        loading.value = false;
+    }
 };
 
-// 定义emit
-const emit = defineEmits(['signup-clicked']);
+// 获取用户参加的比赛列表
+const fetchUserRaces = async () => {
+    try {
+        console.log('获取用户比赛数据...');
+        const { data } = await axios.get('http://localhost:5000/api/user-race', {
+            // 确保携带用户认证信息
+            withCredentials: true
+        });
+        console.log('获取到的用户比赛数据:', data);
+        userRaces.value = data;
+        
+        // 检查用户是否已报名当前比赛
+        checkIfUserRegistered();
+    } catch (error) {
+        console.error('获取用户比赛数据失败:', error);
+        if (error.response) {
+            console.error('错误响应数据:', error.response.data);
+            console.error('错误状态码:', error.response.status);
+        }
+    }
+};
+
+// 检查用户是否已报名当前比赛
+const checkIfUserRegistered = () => {
+    // 获取正确的raceId
+    const raceId = props.raceInfo?.value?.race_info?.uid || props.uid;
+    console.log('检查是否已报名比赛:', raceId);
+    console.log('当前用户比赛数据:', userRaces.value);
+    
+    // 通过比较用户的比赛数据中的race_uid与当前比赛ID是否相同
+    const isRegistered = Array.isArray(userRaces.value) && 
+                        userRaces.value.some(race => race.race_uid === raceId || race.race_id === raceId);
+    
+    console.log('是否已报名:', isRegistered);
+    
+    if (isRegistered) {
+        isSignedUp.value = true;
+    }
+};
 
 // 格式化日期时间
-const formatDateTime = (dateStr: string): string => {
+const formatDateTime = (dateStr) => {
     const date = new Date(dateStr);
     return date.toLocaleString('zh-CN', {
         year: 'numeric',
@@ -129,6 +223,10 @@ const competitionStatusClass = computed(() => ({
     'status-signup': competitionStatus.value.status === 'signup'
 }));
 
+// 初始化时获取用户比赛数据
+onMounted(() => {
+    fetchUserRaces();
+});
 </script>
 
 <style scoped>
@@ -187,6 +285,10 @@ const competitionStatusClass = computed(() => ({
 /* 报名按钮样式 */
 .signup-button-container {
     text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
 }
 
 .signup-button {
@@ -207,12 +309,34 @@ const competitionStatusClass = computed(() => ({
     max-width: 220px;
 }
 
-.signup-button:hover {
+.signup-button:hover:not(:disabled) {
     background: #b45309;
+}
+
+.signup-button:disabled {
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+.signup-button-disabled {
+    background: #10b981;
+}
+
+.signup-button-disabled:hover {
+    background: #059669;
 }
 
 .button-icon {
     font-size: 18px;
+}
+
+.button-icon.is-loading {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }
 
 /* 未开始状态 */
