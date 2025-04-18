@@ -355,7 +355,6 @@ const batchChangeCategory = () => {
         cancelButtonText: '取消',
     }).then(({ value }) => {
         const ids = selectedProblems.value.map((problem: any) => problem.id).join(', ');
-        // ElMessage.success(`已将题目 ${ids} 的分类修改为 ${value}`);
         alertBox.value.show(`已将题目 ${ids} 的分类修改为 ${value}`, 0);
     }).catch(() => {
         // ElMessage.info('已取消操作');
@@ -1411,4 +1410,5 @@ const applyAdvancedSearch = () => {
     color: #18a058;
 }
 </style>
+
 
