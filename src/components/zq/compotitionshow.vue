@@ -47,7 +47,7 @@
           </tr>
         </thead>
         <tbody class="problems-body">
-          <tr v-for="(problem, index) in props.raceInfo?.value?.race_info.problems" :key="index" class="problem-row"
+          <tr v-for="(problem, index) in problemsWithAvatars" :key="index" class="problem-row"
             @click="goToQuestionDetail(problem.uid, props?.uid)">
             <td class="column-status">
               <span class="status-tag" :class="getStatusClass(problem.status)">
@@ -61,11 +61,11 @@
               </div>
             </td>
             <td class="column-first">
-              <div class="first-blood" v-if="problem.first_blood_user">
-                <el-icon>
-                  <img :src='avatar' alt="">
-                </el-icon>
-                <span></span>
+              <div class="first-blood" v-if="problem.first_blood_user && problem.first_blood_user.uid">
+                <div class="avatar-container">
+                  <img :src="problem.first_blood_user.avatar || defaultAvatar" class="user-avatar" alt="avatar">
+                </div>
+                <span class="username">{{ problem.first_blood_user.username }}</span>
               </div>
             </td>
             <td class="column-submit">
@@ -90,20 +90,18 @@ import { ref, onMounted, computed } from "vue";
 import { useRouter } from "vue-router";
 import { useStore } from "vuex";
 import { defineProps } from "vue";
-import { toRefs } from 'vue';
 import {
   Document,
   Edit,
   Trophy,
   DataLine,
   TrendCharts,
-  User,
 } from "@element-plus/icons-vue";
 import axios from "axios";
 
 const router = useRouter();
 const store = useStore();
-const avatar = ref('');
+const defaultAvatar = ref('https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'); // 默认头像
 
 const props = defineProps({
   raceInfo: {
@@ -115,29 +113,34 @@ const props = defineProps({
     required: true,
   },
 });
-onMounted(() => {
-  console.log("Received raceInfo:", props.raceInfo);
-  console.log("Received uid:", props.uid);
-  console.log(props.raceInfo?.value?.race_info?.problems)
-  for (let i = 0; i < props.raceInfo?.value?.race_info?.problems.length; i++) {
-    if (props.raceInfo?.value?.race_info?.problems[i].status === '已通过') {
-      const user_id = props.raceInfo?.value?.race_info?.problems[i].first_blood_user;
-      console.log("user_id:", user_id);
-    }
-  }
-})
 
-const avater_get = async () => {
-  const { data: userData } = await axios({
-    url: `http://localhost:5000/api/avatar-get/${user_id}`,
-    method: "get",
+// 使用计算属性处理带头像的问题列表
+const problemsWithAvatars = computed(() => {
+  if (!props.raceInfo?.value?.race_info?.problems) return [];
+  
+  return props.raceInfo.value.race_info.problems.map(problem => {
+    // 如果已经有头像数据，直接返回
+    if (problem.first_blood_user?.avatar) return problem;
+    
+    // 如果没有头像数据，但有一血用户，尝试获取头像
+    if (problem.first_blood_user?.uid) {
+      return {
+        ...problem,
+        first_blood_user: {
+          ...problem.first_blood_user,
+          avatar: getAvatarUrl(problem.first_blood_user.uid)
+        }
+      };
+    }
+    return problem;
   });
-  return { userData };
-}
-onMounted(async () => {
-  const { userData } = await avater_get();
-  avatar.value = userData;
 });
+
+// 获取头像URL
+const getAvatarUrl = (uid: string) => {
+  return `http://localhost:5000/api/avatar-get/${uid}`;
+};
+
 // 获取字母索引（A, B, C...）
 const getAlphabetIndex = (index: number) => {
   return String.fromCharCode(65 + index);
@@ -168,10 +171,9 @@ const goToQuestionDetail = (id: string, race_uid: string) => {
   store.dispatch("setCurrentQuestionId", id);
   router.push({
     name: "questions_detail",
-    params: { id },          // 传递题目 ID
-    query: { race_uid },     // 通过 query 传递 race_uid
+    params: { id },
+    query: { race_uid },
   });
-  console.log("跳转参数:", { id, race_uid });
 };
 </script>
 
@@ -360,12 +362,39 @@ const goToQuestionDetail = (id: string, race_uid: string) => {
   align-items: center;
   gap: 8px;
   color: #6b7280;
-  height: 24px;
+  padding: 4px;
+  border-radius: 4px;
   transition: all 0.3s ease;
 }
 
 .first-blood:hover {
+  background-color: rgba(66, 185, 131, 0.1);
   color: #42b983;
+}
+
+.avatar-container {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f3f4f6;
+}
+
+.user-avatar {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.username {
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .submit-info {
