@@ -61,11 +61,13 @@
               </div>
             </td>
             <td class="column-first">
-              <div class="first-blood" v-if="problem.first_blood_user && problem.first_blood_user.uid">
-                <div class="avatar-container">
-                  <img :src="problem.first_blood_user.avatar || defaultAvatar" class="user-avatar" alt="avatar">
+              <div class="first-blood-wrapper">
+                <div class="first-blood" v-if="problem.first_blood_user && problem.first_blood_user.uid">
+                  <div class="avatar-container">
+                    <img :src="problem.first_blood_user.avatar || defaultAvatar" class="user-avatar" alt="avatar">
+                  </div>
+                  <span class="username">{{ problem.first_blood_user.username }}</span>
                 </div>
-                <span class="username">{{ problem.first_blood_user.username }}</span>
               </div>
             </td>
             <td class="column-submit">
@@ -254,6 +256,13 @@ const goToQuestionDetail = (id: string, race_uid: string) => {
 
 .column-first {
   width: 160px;
+  text-align: center;
+}
+
+.column-first > * {
+  display: flex;
+  justify-content: center;
+  width: 100%;
 }
 
 .column-submit {
@@ -278,6 +287,10 @@ const goToQuestionDetail = (id: string, race_uid: string) => {
   align-items: center;
   gap: 8px;
   transition: all 0.3s ease;
+}
+
+.column-first .th-content {
+  justify-content: center;
 }
 
 .th-content:hover {
@@ -357,14 +370,26 @@ const goToQuestionDetail = (id: string, race_uid: string) => {
   color: #6b7280;
 }
 
+.first-blood-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+}
+
 .first-blood {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
   color: #6b7280;
   padding: 4px;
   border-radius: 4px;
   transition: all 0.3s ease;
+  text-align: center;
+  max-width: 140px;
+  margin: 0 auto;
 }
 
 .first-blood:hover {
@@ -381,6 +406,7 @@ const goToQuestionDetail = (id: string, race_uid: string) => {
   align-items: center;
   justify-content: center;
   background-color: #f3f4f6;
+  flex-shrink: 0;
 }
 
 .user-avatar {
@@ -395,6 +421,9 @@ const goToQuestionDetail = (id: string, race_uid: string) => {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  display: inline-block;
+  vertical-align: middle;
+  max-width: 80px;
 }
 
 .submit-info {
