@@ -21,12 +21,17 @@
         
         <el-form-item label="题目难度" prop="topic">
           <el-select v-model="problem.topic" placeholder="请选择题目难度" style="width: 100%">
-            <el-option label="入门" value="入门"></el-option>
-            <el-option label="普及" value="普及"></el-option>
-            <el-option label="提高" value="提高"></el-option>
-            <el-option label="省选" value="省选"></el-option>
-            <el-option label="NOI" value="NOI"></el-option>
-            <el-option label="CTSC" value="CTSC"></el-option>
+            <el-option
+              v-for="item in difficultyOptions"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value"
+            >
+              <div class="difficulty-option">
+                <div :class="['difficulty-indicator', item.class]"></div>
+                <span>{{ item.label }}</span>
+              </div>
+            </el-option>
           </el-select>
         </el-form-item>
         
@@ -225,6 +230,16 @@ const problemRules = reactive<FormRules>({
     { required: true, message: '请输入输出格式', trigger: 'blur' }
   ]
 });
+
+// 难度选项配置
+const difficultyOptions = [
+  { label: '入门', value: '入门', class: 'easy' },
+  { label: '普及', value: '普及', class: 'popularize' },
+  { label: '提高', value: '提高', class: 'improve' },
+  { label: '省选', value: '省选', class: 'provincial' },
+  { label: 'NOI', value: 'NOI', class: 'noi' },
+  { label: 'CTSC', value: 'CTSC', class: 'ctsc' }
+];
 
 // 当前正在编辑的约束条件和示例
 const constraint = ref('');
@@ -461,6 +476,45 @@ defineExpose({
   font-size: 12px;
   color: #909399;
   margin-top: 6px;
+}
+
+/* 难度选择器样式 */
+.difficulty-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+  line-height: 25px; /* 添加行高与difficulty-indicator高度一致 */
+  margin-left: -10px;
+}
+
+.difficulty-option span {
+  vertical-align: middle; /* 确保文字垂直居中 */
+}
+
+/* 难度指示器基础样式 */
+.difficulty-indicator {
+  width: 4px;
+  height: 20px;
+  border-radius: 2px;
+}
+
+/* 难度指示器颜色 */
+.difficulty-indicator.easy { background-color: #fe4c61; }
+.difficulty-indicator.popularize { background-color: #f39c11; }
+.difficulty-indicator.improve { background-color: #ffc116; }
+.difficulty-indicator.provincial { background-color: #52c41a; }
+.difficulty-indicator.noi { background-color: #9d3dcf; }
+.difficulty-indicator.ctsc { background-color: #0e1d69; }
+
+/* 选项悬停效果 */
+:deep(.el-select-dropdown__item:hover) {
+  background-color: rgba(0, 0, 0, 0.04);
+}
+
+/* 当前选中项样式 */
+:deep(.el-select-dropdown__item.selected) {
+  font-weight: bold;
 }
 
 /* Responsive styles */

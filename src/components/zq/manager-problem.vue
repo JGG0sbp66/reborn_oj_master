@@ -54,37 +54,47 @@
                     <div class="search-item">
                         <span class="search-label">题目标签:</span>
                         <el-select v-model="difficultyFilter" placeholder="题目标签" clearable @change="handleSearch"
-                            style="flex: 1;">
-                            <el-option label="全部" value="" />
+                            class="tag-select">
+                            <el-option label="全部" value="">
+                                <div style="margin-left: -5px;" class="difficulty-option">
+                                    <span>全部</span>
+                                </div>
+                            </el-option>
                             <el-option label="入门" value="入门">
-                                <template #default>
-                                    <el-tag size="small" type="success">入门</el-tag>
-                                </template>
+                                <div class="difficulty-option">
+                                    <div class="difficulty-indicator easy"></div>
+                                    <span>入门</span>
+                                </div>
                             </el-option>
                             <el-option label="普及" value="普及">
-                                <template #default>
-                                    <el-tag size="small" type="success">普及</el-tag>
-                                </template>
+                                <div class="difficulty-option">
+                                    <div class="difficulty-indicator popularize"></div>
+                                    <span>普及</span>
+                                </div>
                             </el-option>
                             <el-option label="提高" value="提高">
-                                <template #default>
-                                    <el-tag size="small" type="warning">提高</el-tag>
-                                </template>
+                                <div class="difficulty-option">
+                                    <div class="difficulty-indicator improve"></div>
+                                    <span>提高</span>
+                                </div>
                             </el-option>
                             <el-option label="省选" value="省选">
-                                <template #default>
-                                    <el-tag size="small" type="warning">省选</el-tag>
-                                </template>
+                                <div class="difficulty-option">
+                                    <div class="difficulty-indicator provincial"></div>
+                                    <span>省选</span>
+                                </div>
                             </el-option>
                             <el-option label="NOI" value="NOI">
-                                <template #default>
-                                    <el-tag size="small" type="danger">NOI</el-tag>
-                                </template>
+                                <div class="difficulty-option">
+                                    <div class="difficulty-indicator noi"></div>
+                                    <span>NOI</span>
+                                </div>
                             </el-option>
                             <el-option label="CTSC" value="CTSC">
-                                <template #default>
-                                    <el-tag size="small" type="danger">CTSC</el-tag>
-                                </template>
+                                <div class="difficulty-option">
+                                    <div class="difficulty-indicator ctsc"></div>
+                                    <span>CTSC</span>
+                                </div>
                             </el-option>
                         </el-select>
                     </div>
@@ -99,7 +109,7 @@
                     <div class="search-item">
                         <span class="search-label">提交次数:</span>
                         <el-select v-model="submissionCountFilter" placeholder="提交次数" clearable @change="handleSearch"
-                            style="flex: 1;">
+                            class="submission-select">
                             <el-option label="全部" value="" />
                             <el-option label="1000以下" value="<1000" />
                             <el-option label="1000-5000" value="1000-5000" />
@@ -485,9 +495,9 @@ const filteredProblems = computed(() => {
             problem.id.toLowerCase().includes(searchQuery.value.toLowerCase()) :
             true;
 
-        // 难度过滤
+        // 难度过滤 - 修改这里使用topic而不是difficulty
         const matchesDifficulty = difficultyFilter.value ?
-            problem.difficulty === difficultyFilter.value :
+            problem.topic === difficultyFilter.value :
             true;
 
         // 分类过滤
@@ -591,23 +601,15 @@ const getDifficultyType = (difficulty: string) => {
 
 // 获取标签类型
 const getTagType = (tag: string) => {
-    switch (tag) {
-        case '入门': return 'success';
-        case '普及': return 'success';
-        case '提高': return 'warning';
-        case '省选': return 'warning';
-        case 'NOI': return 'danger';
-        case 'CTSC': return 'danger';
-        case '算法': return 'primary';
-        case '数据结构': return 'info';
-        case '字符串': return 'warning';
-        case '数学': return '';
-        case '动态规划': return 'danger';
-        case 'ACM': return 'primary';
-        case 'ICPC': return 'primary';
-        case '蓝桥杯': return 'success';
-        default: return 'info';
-    }
+  switch (tag) {
+    case '入门': return 'success';  // 对应 :deep(.el-tag--success)
+    case '普及': return 'warning';  // 对应 :deep(.el-tag--warning)
+    case '提高': return 'info';     // 对应 :deep(.el-tag--info)
+    case '省选': return 'primary';  // 对应 :deep(.el-tag--primary)
+    case 'NOI': return 'danger';    // 对应 :deep(.el-tag--danger)
+    case 'CTSC': return 'ctsc';     // 对应 :deep(.el-tag--ctsc)
+    default: return 'info';
+  }
 };
 
 // 获取通过率颜色
@@ -912,6 +914,178 @@ const applyAdvancedSearch = () => {
     color: #606266;
     white-space: nowrap;
     min-width: 80px;
+}
+
+/* 重新设计的难度选择器样式 */
+.tag-select {
+    width: 200px !important;
+}
+
+.difficulty-option {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 12px;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: 4px;
+    cursor: pointer;
+    margin-left: -20px; /* 向左对齐 */
+    width: calc(100% + 24px); /* 确保宽度填满 */
+}
+
+.difficulty-option:hover {
+    transform: translateY(-2px);
+    background-color: rgba(24, 160, 88, 0.08);
+}
+
+.difficulty-indicator {
+    width: 4px;
+    height: 20px;
+    border-radius: 2px;
+    transition: all 0.3s ease;
+    flex-shrink: 0; /* 防止压缩 */
+}
+
+/* 让选项文本垂直居中 */
+.difficulty-option span {
+    display: flex;
+    align-items: center;
+    height: 20px;
+}
+
+.difficulty-indicator.easy { background-color: #fe4c61; }
+.difficulty-indicator.popularize { background-color: #f39c11; }
+.difficulty-indicator.improve { background-color: #ffc116; }
+.difficulty-indicator.provincial { background-color: #52c41a; }
+.difficulty-indicator.noi { background-color: #9d3dcf; }
+.difficulty-indicator.ctsc { background-color: #0e1d69; }
+
+/* 下拉选项悬停效果 */
+:deep(.el-select-dropdown__item:hover) .difficulty-option {
+    background-color: rgba(0, 0, 0, 0.04);
+}
+
+:deep(.el-select-dropdown__item.selected) .difficulty-option {
+    background-color: rgba(0, 0, 0, 0.08);
+}
+
+/* 为每个难度级别设置不同的悬停背景色 */
+:deep(.el-select-dropdown__item:hover) .difficulty-option:has(.easy) {
+    background-color: rgba(254, 76, 97, 0.1);
+}
+
+:deep(.el-select-dropdown__item:hover) .difficulty-option:has(.popularize) {
+    background-color: rgba(243, 156, 17, 0.1);
+}
+
+:deep(.el-select-dropdown__item:hover) .difficulty-option:has(.improve) {
+    background-color: rgba(255, 193, 22, 0.1);
+}
+
+:deep(.el-select-dropdown__item:hover) .difficulty-option:has(.provincial) {
+    background-color: rgba(82, 196, 26, 0.1);
+}
+
+:deep(.el-select-dropdown__item:hover) .difficulty-option:has(.noi) {
+    background-color: rgba(157, 61, 207, 0.1);
+}
+
+:deep(.el-select-dropdown__item:hover) .difficulty-option:has(.ctsc) {
+    background-color: rgba(14, 29, 105, 0.1);
+}
+
+/* 选中状态的样式 */
+:deep(.el-select-dropdown__item.selected) .difficulty-option {
+    font-weight: 600;
+}
+
+:deep(.el-select-dropdown__item.selected) .difficulty-indicator {
+    height: 24px;
+}
+
+/* 下拉框样式优化 */
+:deep(.el-select-dropdown) {
+    border-radius: 8px;
+    padding: 4px;
+}
+
+:deep(.el-select-dropdown__item) {
+    height: auto;
+    padding: 0;
+}
+
+.submission-select {
+    width: 200px !important;
+}
+
+.tag-option {
+    display: flex;
+    align-items: center;
+    padding: 6px 0;
+    width: 100%;
+}
+
+.difficulty-tag {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    color: white;
+    min-width: 60px;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    width: 100%;
+}
+
+/* 难度标签颜色 */
+.difficulty-tag.easy {
+    background-color: #fe4c61;
+}
+
+.difficulty-tag.popularize {
+    background-color: #f39c11;
+}
+
+.difficulty-tag.improve {
+    background-color: #ffc116;
+}
+
+.difficulty-tag.provincial-election {
+    background-color: #52c41a;
+}
+
+.difficulty-tag.noi {
+    background-color: #9d3dcf;
+}
+
+.difficulty-tag.ctsc {
+    background-color: #0e1d69;
+}
+
+/* 下拉选项hover效果优化 */
+:deep(.el-select-dropdown__item:hover) {
+    background-color: rgba(0, 0, 0, 0.04);
+}
+
+:deep(.el-select-dropdown__item.selected) {
+    background-color: rgba(0, 0, 0, 0.08);
+    font-weight: bold;
+}
+
+/* 选择框样式优化 */
+:deep(.el-select .el-input__wrapper) {
+    border-radius: 8px;
+}
+
+:deep(.el-select-dropdown) {
+    border-radius: 8px;
+    padding: 8px 0;
+}
+
+:deep(.el-select-dropdown__item) {
+    height: 40px;
+    line-height: 40px;
 }
 
 .advanced-search-footer {
@@ -1439,34 +1613,42 @@ const applyAdvancedSearch = () => {
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
 
-.el-tag--success {
-    background-color: rgba(24, 160, 88, 0.1);
-    color: #18a058;
-    border-color: rgba(24, 160, 88, 0.2);
+/* 修改标签颜色以匹配难度指示器 */
+:deep(.el-tag--success) {
+    background-color: rgba(254, 76, 97, 0.1);  /* 入门 */
+    color: #fe4c61;
+    border-color: rgba(254, 76, 97, 0.2);
 }
 
-.el-tag--warning {
-    background-color: rgba(230, 162, 60, 0.1);
-    color: #e6a23c;
-    border-color: rgba(230, 162, 60, 0.2);
+:deep(.el-tag--warning) {
+    background-color: rgba(243, 156, 17, 0.1);  /* 普及 */
+    color: #f39c11;
+    border-color: rgba(243, 156, 17, 0.2);
 }
 
-.el-tag--danger {
-    background-color: rgba(245, 108, 108, 0.1);
-    color: #f56c6c;
-    border-color: rgba(245, 108, 108, 0.2);
+:deep(.el-tag--info) {
+    background-color: rgba(255, 193, 22, 0.1);  /* 提高 */
+    color: #ffc116;
+    border-color: rgba(255, 193, 22, 0.2);
 }
 
-.el-tag--info {
-    background-color: rgba(144, 147, 153, 0.1);
-    color: #909399;
-    border-color: rgba(144, 147, 153, 0.2);
+:deep(.el-tag--primary) {
+    background-color: rgba(82, 196, 26, 0.1);  /* 省选 */
+    color: #52c41a;
+    border-color: rgba(82, 196, 26, 0.2);
 }
 
-.el-tag--primary {
-    background-color: rgba(64, 158, 255, 0.1);
-    color: #409eff;
-    border-color: rgba(64, 158, 255, 0.2);
+:deep(.el-tag--danger) {
+    background-color: rgba(157, 61, 207, 0.1);  /* NOI */
+    color: #9d3dcf;
+    border-color: rgba(157, 61, 207, 0.2);
+}
+
+/* 添加 CTSC 深蓝色样式 */
+:deep(.el-tag--ctsc) {
+    background-color: rgba(14, 29, 105, 0.1);
+    color: #0e1d69;
+    border-color: rgba(14, 29, 105, 0.2);
 }
 
 /* 下拉选项中的标签样式 */

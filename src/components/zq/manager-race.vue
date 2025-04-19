@@ -52,17 +52,16 @@
                         <div class="search-row">
                             <div class="search-item">
                                 <span class="search-label">竞赛状态:</span>
-                                <el-select v-model="statusFilter" placeholder="竞赛状态" clearable @change="handleSearch" style="flex: 1;">
+                                <el-select v-model="statusFilter" placeholder="竞赛状态" clearable @change="handleSearch" style="flex: 1; max-width: 200px;">
                                     <el-option label="全部" value="" />
-                                    <el-option label="进行中" value="进行中" />
-                                    <el-option label="报名中" value="报名中" />
-                                    <el-option label="未开始" value="未开始" />
-                                    <el-option label="已结束" value="已结束" />
+                                    <el-option label="报名中" value="upcoming" />
+                                    <el-option label="进行中" value="running" />
+                                    <el-option label="已结束" value="ended" />
                                 </el-select>
                             </div>
                             <div class="search-item">
                                 <span class="search-label">竞赛时长:</span>
-                                <el-select v-model="durationFilter" placeholder="竞赛时长" clearable @change="handleSearch" style="flex: 1;">
+                                <el-select v-model="durationFilter" placeholder="竞赛时长" clearable @change="handleSearch" style="flex: 1; max-width: 200px;">
                                     <el-option label="全部" value="" />
                                     <el-option label="1天以内" value="<1" />
                                     <el-option label="1-3天" value="1-3" />
@@ -73,7 +72,7 @@
                         <div class="search-row">
                             <div class="search-item">
                                 <span class="search-label">竞赛类型:</span>
-                                <el-select v-model="competitionTypeFilter" placeholder="竞赛类型" clearable @change="handleSearch" style="flex: 1;">
+                                <el-select v-model="competitionTypeFilter" placeholder="竞赛类型" clearable @change="handleSearch" style="flex: 1; max-width: 200px;">
                                     <el-option label="全部" value="" />
                                     <el-option label="个人赛" value="individual" />
                                     <el-option label="团队赛" value="team" />
@@ -81,7 +80,7 @@
                             </div>
                             <div class="search-item">
                                 <span class="search-label">赛制类型:</span>
-                                <el-select v-model="competitionModeFilter" placeholder="赛制类型" clearable @change="handleSearch" style="flex: 1;">
+                                <el-select v-model="competitionModeFilter" placeholder="赛制类型" clearable @change="handleSearch" style="flex: 1; max-width: 200px;">
                                     <el-option label="全部" value="" />
                                     <el-option label="ACM赛制" value="acm" />
                                     <el-option label="OI赛制" value="oi" />
@@ -98,7 +97,7 @@
                                 end-placeholder="结束日期"
                                 format="YYYY-MM-DD"
                                 @change="handleSearch"
-                                style="flex: 1;"
+                                style="flex: 1; max-width: 400px;"
                             />
                         </div>
                         <div class="search-item full-width">
@@ -338,13 +337,11 @@ const get_race_info = async (): Promise<ApiCompetition[]> => {
 const formatCompetitionData = (data: ApiCompetition[]): FormattedCompetition[] => {
   return data.map(item => {
     // 处理状态映射
-    let status = '未开始';
+    let status = '报名中';
     if (item.status === 'upcoming') {
-      status = '未开始';
-    } else if (item.status === 'in_progress') {
-      status = '进行中';
-    } else if (item.status === 'registration') {
       status = '报名中';
+    } else if (item.status === 'running') {
+      status = '进行中';
     } else if (item.status === 'ended') {
       status = '已结束';
     }
@@ -491,9 +488,9 @@ const filteredCompetitions = computed(() => {
             competition.id.toLowerCase().includes(searchQuery.value.toLowerCase()) : 
             true;
         
-        // 状态过滤
+        // 状态过滤 - 修改这里的逻辑
         const matchesStatus = statusFilter.value ? 
-            competition.status === statusFilter.value : 
+            competition.raw?.status === statusFilter.value : 
             true;
             
         // 日期过滤
@@ -570,9 +567,8 @@ const tableRowClassName = ({ row }: { row: any }) => {
 const getStatusType = (status: string) => {
     switch (status) {
         case '进行中': return 'success';
-        case '未开始': return 'info';
-        case '已结束': return 'danger';
         case '报名中': return 'warning';
+        case '已结束': return 'info';
         default: return 'info';
     }
 };
@@ -1558,3 +1554,4 @@ const applyAdvancedSearch = () => {
     transform: translateY(10px);
 }
 </style>
+``` 
