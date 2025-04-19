@@ -12,6 +12,7 @@
         @switch-tab="switchTab"
         @question-loaded="handleQuestionLoaded"
         @question-id="handleQuestionId"
+        @show-alert="handleCodeAlert"
       ></questions_dBodyIntroduce>
     </div>
 
@@ -87,7 +88,7 @@ export default {
   },
   methods: {
     updateAuthStatus(status) {
-      console.log(status)
+      console.log(status);
       this.isAuthenticated = status;
     },
     initDrag(e) {

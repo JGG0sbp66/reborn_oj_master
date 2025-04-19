@@ -2,7 +2,7 @@
   <!-- <showtitle text="这里是题目详情页面"/> -->
   <!-- <navlinks /> -->
   <!-- 题目详情页页眉组件 -->
-  <questions_detailHeader></questions_detailHeader>
+  <questions_detailHeader :raceUid="race_uid"></questions_detailHeader>
   <!-- 题目详情组件 -->
   <div class="content">
     <questions_detailBody :raceUid="race_uid"></questions_detailBody>

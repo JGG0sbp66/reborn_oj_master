@@ -53,7 +53,6 @@
                 x1="0%"
                 y1="0%"
                 x2="100%"
-                y2="0%"
               >
                 <stop
                   offset="0%"
@@ -447,6 +446,16 @@ export default {
         document.body.removeChild(textarea);
       }
     },
+    handleStatusClick(submission) {
+      if (!submission.isPending) {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(submission.status, "text/html");
+        const spanContent = doc.querySelector("span")?.textContent;
+        console.log("Status value:", spanContent);
+        return spanContent; // 返回解析后的内容
+      }
+      return null;
+    },
   },
   watch: {
     submissions: {
@@ -455,6 +464,25 @@ export default {
         if (this.isAuthenticated) {
           this.saveSubmissionsToLocal();
           this.loadLocalSubmissions();
+
+          // 修改这部分代码以获取 span 内容
+          newVal.forEach((submission) => {
+            if (!submission.isPending) {
+              const status = this.handleStatusClick(submission);
+              console.log("Emitted status:", status);
+              if (!status.includes("答案正确")) {
+                this.$emit("show-alert", {
+                  type: "error",
+                  message: status, // 使用解析后的 span 内容
+                });
+              } else {
+                this.$emit("show-alert", {
+                  type: "success",
+                  message: status, // 使用解析后的 span 内容
+                });
+              }
+            }
+          });
         }
       },
     },
