@@ -64,9 +64,8 @@
         
         <el-form-item label="竞赛状态" prop="status">
           <el-select v-model="competition.status" placeholder="请选择竞赛状态">
-            <el-option label="未开始" value="pending"></el-option>
-            <el-option label="报名中" value="registration"></el-option>
-            <el-option label="进行中" value="ongoing"></el-option>
+            <el-option label="未开始" value="upcoming"></el-option>
+            <el-option label="进行中" value="running"></el-option>
             <el-option label="已结束" value="ended"></el-option>
           </el-select>
         </el-form-item>
@@ -193,7 +192,7 @@ const competition = reactive<CompetitionData>({
   logos: [],
   start_time: '',
   end_time: '',
-  status: 'pending', // 默认未开始
+  status: 'upcoming', // 修改默认状态
   problems_list: [],
   user_list: []
 });
@@ -299,7 +298,7 @@ const openEditDialog = async (competitionData: CompetitionData) => {
     logos: [],
     start_time: '',
     end_time: '',
-    status: 'upcoming',
+    status: 'upcoming', // 修改默认状态
     problems_list: [],
     user_list: []
   });

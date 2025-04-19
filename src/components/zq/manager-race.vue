@@ -40,86 +40,88 @@
                 </div>
             </div>
 
-            <div class="advanced-search" v-if="showAdvancedSearch">
-                <div class="advanced-search-header">
-                    <h3 class="advanced-search-title">高级筛选</h3>
-                    <el-button type="text" @click="resetAdvancedSearch" class="reset-btn">
-                        <el-icon><Refresh /></el-icon> 重置筛选
-                    </el-button>
+            <transition name="dropdown">
+                <div class="advanced-search" v-if="showAdvancedSearch">
+                    <div class="advanced-search-header">
+                        <h3 class="advanced-search-title">高级筛选</h3>
+                        <el-button type="text" @click="resetAdvancedSearch" class="reset-btn">
+                            <el-icon><Refresh /></el-icon> 重置筛选
+                        </el-button>
+                    </div>
+                    <div class="advanced-search-content">
+                        <div class="search-row">
+                            <div class="search-item">
+                                <span class="search-label">竞赛状态:</span>
+                                <el-select v-model="statusFilter" placeholder="竞赛状态" clearable @change="handleSearch" style="flex: 1;">
+                                    <el-option label="全部" value="" />
+                                    <el-option label="进行中" value="进行中" />
+                                    <el-option label="报名中" value="报名中" />
+                                    <el-option label="未开始" value="未开始" />
+                                    <el-option label="已结束" value="已结束" />
+                                </el-select>
+                            </div>
+                            <div class="search-item">
+                                <span class="search-label">竞赛时长:</span>
+                                <el-select v-model="durationFilter" placeholder="竞赛时长" clearable @change="handleSearch" style="flex: 1;">
+                                    <el-option label="全部" value="" />
+                                    <el-option label="1天以内" value="<1" />
+                                    <el-option label="1-3天" value="1-3" />
+                                    <el-option label="3天以上" value=">3" />
+                                </el-select>
+                            </div>
+                        </div>
+                        <div class="search-row">
+                            <div class="search-item">
+                                <span class="search-label">竞赛类型:</span>
+                                <el-select v-model="competitionTypeFilter" placeholder="竞赛类型" clearable @change="handleSearch" style="flex: 1;">
+                                    <el-option label="全部" value="" />
+                                    <el-option label="个人赛" value="individual" />
+                                    <el-option label="团队赛" value="team" />
+                                </el-select>
+                            </div>
+                            <div class="search-item">
+                                <span class="search-label">赛制类型:</span>
+                                <el-select v-model="competitionModeFilter" placeholder="赛制类型" clearable @change="handleSearch" style="flex: 1;">
+                                    <el-option label="全部" value="" />
+                                    <el-option label="ACM赛制" value="acm" />
+                                    <el-option label="OI赛制" value="oi" />
+                                </el-select>
+                            </div>
+                        </div>
+                        <div class="search-item full-width">
+                            <span class="search-label">日期范围:</span>
+                            <el-date-picker
+                                v-model="dateRange"
+                                type="daterange"
+                                range-separator="至"
+                                start-placeholder="开始日期"
+                                end-placeholder="结束日期"
+                                format="YYYY-MM-DD"
+                                @change="handleSearch"
+                                style="flex: 1;"
+                            />
+                        </div>
+                        <div class="search-item full-width">
+                            <span class="search-label">参与人数:</span>
+                            <el-slider
+                                v-model="participantsRange"
+                                range
+                                :min="0"
+                                :max="200"
+                                :marks="{0: '0', 50: '50', 100: '100', 150: '150', 200: '200'}"
+                                @change="handleSearch"
+                                style="flex: 1;"
+                            />
+                        </div>
+                    </div>
+                    <div class="advanced-search-footer">
+                        <div class="search-result-info">已筛选出 {{ totalCompetitions }} 场竞赛</div>
+                        <div class="search-actions">
+                            <el-button type="primary" @click="applyAdvancedSearch">应用</el-button>
+                        </div>
+                    </div>
                 </div>
-                <div class="advanced-search-content">
-                    <div class="search-row">
-                        <div class="search-item">
-                            <span class="search-label">竞赛状态:</span>
-                            <el-select v-model="statusFilter" placeholder="竞赛状态" clearable @change="handleSearch" style="flex: 1;">
-                                <el-option label="全部" value="" />
-                                <el-option label="进行中" value="进行中" />
-                                <el-option label="报名中" value="报名中" />
-                                <el-option label="未开始" value="未开始" />
-                                <el-option label="已结束" value="已结束" />
-                            </el-select>
-                        </div>
-                        <div class="search-item">
-                            <span class="search-label">竞赛时长:</span>
-                            <el-select v-model="durationFilter" placeholder="竞赛时长" clearable @change="handleSearch" style="flex: 1;">
-                                <el-option label="全部" value="" />
-                                <el-option label="1天以内" value="<1" />
-                                <el-option label="1-3天" value="1-3" />
-                                <el-option label="3天以上" value=">3" />
-                            </el-select>
-                        </div>
-                    </div>
-                    <div class="search-row">
-                        <div class="search-item">
-                            <span class="search-label">竞赛类型:</span>
-                            <el-select v-model="competitionTypeFilter" placeholder="竞赛类型" clearable @change="handleSearch" style="flex: 1;">
-                                <el-option label="全部" value="" />
-                                <el-option label="个人赛" value="individual" />
-                                <el-option label="团队赛" value="team" />
-                            </el-select>
-                        </div>
-                        <div class="search-item">
-                            <span class="search-label">赛制类型:</span>
-                            <el-select v-model="competitionModeFilter" placeholder="赛制类型" clearable @change="handleSearch" style="flex: 1;">
-                                <el-option label="全部" value="" />
-                                <el-option label="ACM赛制" value="acm" />
-                                <el-option label="OI赛制" value="oi" />
-                            </el-select>
-                        </div>
-                    </div>
-                    <div class="search-item full-width">
-                        <span class="search-label">日期范围:</span>
-                        <el-date-picker
-                            v-model="dateRange"
-                            type="daterange"
-                            range-separator="至"
-                            start-placeholder="开始日期"
-                            end-placeholder="结束日期"
-                            format="YYYY-MM-DD"
-                            @change="handleSearch"
-                            style="flex: 1;"
-                        />
-                    </div>
-                    <div class="search-item full-width">
-                        <span class="search-label">参与人数:</span>
-                        <el-slider
-                            v-model="participantsRange"
-                            range
-                            :min="0"
-                            :max="200"
-                            :marks="{0: '0', 50: '50', 100: '100', 150: '150', 200: '200'}"
-                            @change="handleSearch"
-                            style="flex: 1;"
-                        />
-                    </div>
-                </div>
-                <div class="advanced-search-footer">
-                    <div class="search-result-info">已筛选出 {{ totalCompetitions }} 场竞赛</div>
-                    <div class="search-actions">
-                        <el-button type="primary" @click="applyAdvancedSearch">应用</el-button>
-                    </div>
-                </div>
-            </div>
+            </transition>
 
             <div class="batch-operations" v-if="selectedCompetitions.length > 0">
                 <div class="selected-count">已选择 {{ selectedCompetitions.length }} 场竞赛</div>
@@ -624,8 +626,7 @@ const editCompetition = (competition: FormattedCompetition) => {
         tags: competition.raw.tags || [],
         problems_list: competition.raw.problems_list || [],
         user_list: competition.raw.user_list || [],
-        status: competition.raw.status,
-        description: competition.raw.description || ''
+        status: competition.raw.status
     };
     
     // 打开编辑对话框
@@ -1499,5 +1500,61 @@ const applyAdvancedSearch = () => {
 .competition-table :deep(.el-table__fixed-right-patch) {
     background-color: #f8f9fa !important;
 }
-</style>
 
+/* 下拉菜单动画 */
+.dropdown-enter-active,
+.dropdown-leave-active {
+    transition: all 0.3s cubic-bezier(0.5, 0, 0.3, 1.2);
+    transform-origin: top center;
+}
+
+.dropdown-enter-from {
+    opacity: 0;
+    transform: translateY(-10px) scaleY(0.95);
+}
+
+.dropdown-enter-to {
+    opacity: 1;
+    transform: translateY(0) scaleY(1);
+}
+
+.dropdown-leave-from {
+    opacity: 1;
+    transform: translateY(0) scaleY(1);
+}
+
+.dropdown-leave-to {
+    opacity: 0;
+    transform: translateY(-10px) scaleY(0.95);
+}
+
+/* 为内容添加延迟子元素动画 */
+.advanced-search-content {
+    will-change: transform, opacity;
+}
+
+.dropdown-enter-active .advanced-search-content,
+.dropdown-leave-active .advanced-search-content {
+    transition: all 0.3s ease 0.1s;
+}
+
+.dropdown-enter-from .advanced-search-content {
+    opacity: 0;
+    transform: translateY(10px);
+}
+
+.dropdown-enter-to .advanced-search-content {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.dropdown-leave-from .advanced-search-content {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.dropdown-leave-to .advanced-search-content {
+    opacity: 0;
+    transform: translateY(10px);
+}
+</style>
