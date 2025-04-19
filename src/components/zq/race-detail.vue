@@ -56,12 +56,12 @@
           </div>
         </div>
         
-        <el-divider></el-divider>
+        <!-- <el-divider></el-divider>
         
         <div class="race-description" v-if="raceData.description">
           <h3>竞赛描述</h3>
           <p>{{ raceData.description }}</p>
-        </div>
+        </div> -->
         
         <el-divider></el-divider>
         
@@ -91,7 +91,7 @@
               effect="plain"
               class="user-tag"
             >
-              用户 {{ userId }}
+               {{ userId }}
             </el-tag>
           </div>
           <el-empty v-else description="暂无参赛用户" :image-size="80"></el-empty>
@@ -112,6 +112,7 @@
 import { ref, reactive, defineProps, defineEmits, defineExpose } from 'vue';
 import { ElMessage } from 'element-plus';
 import axios from 'axios';
+import { nextTick } from 'vue';
 
 // 定义组件的props和emits
 const props = defineProps({
@@ -269,28 +270,20 @@ const fetchRaceDetails = async (raceId: number) => {
       method: 'get'
     });
     
-    // 填充竞赛数据
-    Object.keys(raceData).forEach(key => {
-      if (key in response.data) {
-        // @ts-ignore
-        raceData[key] = response.data[key];
-      }
-    });
+    // 使用 Object.assign 一次性更新响应式数据
+    Object.assign(raceData, response.data);
     
-    // 获取题目详细信息
-    if (raceData.problems_list && raceData.problems_list.length > 0) {
-      await fetchQuestionsInfo(raceData.problems_list);
-    }
+    // 并行获取题目信息和用户信息
+    await Promise.all([
+      raceData.problems_list?.length ? fetchQuestionsInfo(raceData.problems_list) : Promise.resolve(),
+      // 可以添加其他需要并行获取的数据
+    ]);
     
-    console.log('获取到竞赛详情:', response.data);
   } catch (error) {
     console.error('获取竞赛详情失败:', error);
-    if (props.alertBoxRef) {
-      props.alertBoxRef.show('获取竞赛详情失败，请稍后重试', 1);
-    } else {
-      ElMessage.error('获取竞赛详情失败，请稍后重试');
-    }
+    props.alertBoxRef?.show('获取竞赛详情失败，请稍后重试', 1);
   } finally {
+    await nextTick();
     loading.value = false;
   }
 };

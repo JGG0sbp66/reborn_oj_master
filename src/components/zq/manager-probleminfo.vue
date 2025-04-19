@@ -2,7 +2,7 @@
     <div class="table-section recent-problems">
         <div class="table-header">
             <h3 class="table-title">最新题目</h3>
-            <router-link to="/system/problems" class="view-all">查看全部</router-link>
+            <router-link to="/nav/question" class="view-all">查看全部</router-link>
         </div>
         <div class="table-content">
             <el-table :data="recentQuestions" stripe style="width: 100%" size="small">
