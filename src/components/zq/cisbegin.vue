@@ -32,7 +32,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed } from 'vue';
 import { Timer, Plus, Check, Loading } from '@element-plus/icons-vue';  
 import axios from 'axios';
 import AlertBox from '../JGG/alertbox.vue';
@@ -48,10 +48,11 @@ const props = defineProps({
     }
 });
 
+const emit = defineEmits(['refresh']);
+
 // 状态变量
 const loading = ref(false);
-const isSignedUp = ref(false);
-const userRaces = ref([]);
+const isSignedUp = computed(() => props.raceInfo?.value?.race_info?.is_registered === '已报名');
 const alertBoxRef = ref(null);
 
 // 按钮文本
@@ -66,89 +67,29 @@ const handleSignup = async () => {
     if (loading.value || isSignedUp.value) return;
     
     try {
-        loading.value = true;
-        // 输出调试信息
-        console.log('开始报名，使用的比赛ID:', props.uid);
-        console.log('完整raceInfo:', props.raceInfo);
-
-        // 使用正确的参数 - 尝试从props.raceInfo中获取race_id或使用props.uid
-        const raceId = props.raceInfo?.value?.race_info?.uid || props.uid;
-        console.log('最终使用的raceId:', raceId);
-        
-        const { data } = await axios({
-            url: "http://localhost:5000/api/race-register", 
-            method: "post",
-            data: { race_uid: raceId },
-            withCredentials: true
-        });
-        
-        console.log('报名结果:', data);
-        
-        if (data.success) {
-            isSignedUp.value = true;
-            alertBoxRef.value?.show('报名成功！', 0);
-            // 重新获取用户比赛数据
-            fetchUserRaces();
-        } else {
-            alertBoxRef.value?.show(data.message || '报名失败，请稍后重试', 2);
-        }
-    } catch (error) {
+    loading.value = true;
+    const { data } = await axios.post("http://localhost:5000/api/race-register", { race_uid: props.uid });
+    
+    if (data.success) {
+      // 直接更新本地状态
+      if (props.raceInfo.value) {
+        props.raceInfo.value.race_info.is_registered = '已报名';
+      } else if (props.raceInfo) {
+        props.raceInfo.race_info.is_registered = '已报名';
+      }
+      
+      emit('refresh'); // 仍然通知父组件更新数据
+      alertBoxRef.value?.show('报名成功！', 0);
+    }
+  } catch (error) {
         console.error('报名失败:', error);
-        // 输出更详细的错误信息
-        if (error.response) {
-            console.error('错误响应数据:', error.response.data);
-            console.error('错误状态码:', error.response.status);
-            
-            // 如果是401或403，可能是未登录
-            if (error.response.status === 401 || error.response.status === 403) {
-                alertBoxRef.value?.show('请先登录后再报名', 2);
-                return;
-            }
+        if (error.response?.status === 401 || error.response?.status === 403) {
+            alertBoxRef.value?.show('请先登录后再报名', 2);
+            return;
         }
-        
-        alertBoxRef.value?.show('报名失败，请检查网络连接', 2);
+        alertBoxRef.value?.show(error.response.data.message, 2);
     } finally {
         loading.value = false;
-    }
-};
-
-// 获取用户参加的比赛列表
-const fetchUserRaces = async () => {
-    try {
-        console.log('获取用户比赛数据...');
-        const { data } = await axios.get('http://localhost:5000/api/user-race', {
-            // 确保携带用户认证信息
-            withCredentials: true
-        });
-        console.log('获取到的用户比赛数据:', data);
-        userRaces.value = data;
-        
-        // 检查用户是否已报名当前比赛
-        checkIfUserRegistered();
-    } catch (error) {
-        console.error('获取用户比赛数据失败:', error);
-        if (error.response) {
-            console.error('错误响应数据:', error.response.data);
-            console.error('错误状态码:', error.response.status);
-        }
-    }
-};
-
-// 检查用户是否已报名当前比赛
-const checkIfUserRegistered = () => {
-    // 获取正确的raceId
-    const raceId = props.raceInfo?.value?.race_info?.uid || props.uid;
-    console.log('检查是否已报名比赛:', raceId);
-    console.log('当前用户比赛数据:', userRaces.value);
-    
-    // 通过比较用户的比赛数据中的race_uid与当前比赛ID是否相同
-    const isRegistered = Array.isArray(userRaces.value) && 
-                        userRaces.value.some(race => race.race_uid === raceId || race.race_id === raceId);
-    
-    console.log('是否已报名:', isRegistered);
-    
-    if (isRegistered) {
-        isSignedUp.value = true;
     }
 };
 
@@ -212,11 +153,6 @@ const competitionStatusClass = computed(() => ({
     'status-ended': competitionStatus.value.status === 'ended',
     'status-signup': competitionStatus.value.status === 'signup'
 }));
-
-// 初始化时获取用户比赛数据
-onMounted(() => {
-    fetchUserRaces();
-});
 </script>
 
 <style scoped>

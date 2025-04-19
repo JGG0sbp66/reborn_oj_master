@@ -1,7 +1,11 @@
 <template>
     <div class="competition-info">
         <ctypecnum :raceInfo="props.raceInfo" />
-        <cisbegin :raceInfo="props.raceInfo" :uid="props.uid" />
+        <cisbegin 
+            :raceInfo="props.raceInfo" 
+            :uid="props.uid" 
+            @refresh="$emit('refresh')" 
+        />
         <ctime :raceInfo="props.raceInfo" />
     </div>
 </template>
@@ -37,6 +41,9 @@ const props = defineProps({
         required: true
     }
 });
+
+// 添加 emit 定义
+const emit = defineEmits(['refresh']);
 </script>
 
 <style scoped>
