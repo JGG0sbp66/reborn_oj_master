@@ -519,7 +519,7 @@ defineExpose({
 }
 
 .navbar__link:hover .menu-text {
-  color: #2b9166;
+  color: #4c5a6d;
   font-weight: 600;
   transform: translateX(2px);
 }
@@ -684,6 +684,40 @@ defineExpose({
   position: relative;
   display: flex;
   justify-content: center;
+}
+
+/* 修改导航链接激活状态样式 */
+.navbar__link.active,
+.navbar__item .navbar__link:active {
+  color: var(--primary);
+  background-color: rgba(66, 185, 131, 0.12);
+  border-radius: var(--border-radius);
+}
+
+.navbar__link.router-link-active {
+  color: var(--primary);
+  background-color: rgba(66, 185, 131, 0.12);
+  border-radius: var(--border-radius);
+}
+
+/* 统一悬停和激活状态的背景色 */
+.navbar__link:hover {
+  background: linear-gradient(145deg, rgba(226, 232, 240, 0.6), rgba(203, 213, 225, 0.7));
+  color: #475569 !important;
+  border-radius: var(--border-radius);
+  box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.1);
+  transform: translateY(-1px);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.navbar__link.active,
+.navbar__link:active {
+  background: linear-gradient(145deg, rgba(72, 187, 120, 0.08), rgba(56, 161, 105, 0.12));
+  color: #38a169 !important;
+  border-radius: var(--border-radius);
+  box-shadow: inset 0 0 0 1px rgba(72, 187, 120, 0.1),
+              0 2px 4px rgba(72, 187, 120, 0.06);
+  transform: translateY(0);
 }
 
 /* 修改导航链接激活状态样式 */
