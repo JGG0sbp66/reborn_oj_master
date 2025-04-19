@@ -14,13 +14,13 @@
         <!-- 主导航菜单 -->
         <nav class="main-nav">
           <router-link
-            to="/nav/question"
+            :to="questionRoute.path"
             class="nav-item"
           >
             <el-icon class="nav-icon">
-              <Collection />
+              <component :is="questionRoute.icon" />
             </el-icon>
-            <span class="nav-text">题库</span>
+            <span class="nav-text">{{ questionRoute.text }}</span>
             <span class="nav-hover-effect"></span>
           </router-link>
           <div
@@ -149,7 +149,7 @@ import { checkAuth } from '@/utils/auth';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
 import emitter from '@/utils/eventBus';
-import { ElMessage } from 'element-plus';
+import { ElNotification } from 'element-plus';
 
 const router = useRouter();
 const isAuthenticated = ref<boolean>(false);
@@ -158,6 +158,14 @@ const userRole = ref<string>('');
 const avatarUrl = ref<string>('');
 const showUserMenu = ref<boolean>(false);
 const menuCloseTimer = ref<number | null>(null); // 用于延迟关闭菜单
+
+// 添加 props 定义
+const props = defineProps<{
+  raceUid?: string | number
+}>();
+
+// 添加打印语句
+console.log('接收到的 raceUid:', props.raceUid);
 
 // 从用户名生成缩写
 const userInitials = computed(() => {
@@ -168,8 +176,9 @@ const userInitials = computed(() => {
 // 生成随机颜色以便为用户头像创建背景色
 const getRandomColor = () => {
   const colors = [
-    '#42b983', '#33c6aa', '#00c4ff', '#3399ff', '#2979ff',
-    '#5e72e4', '#7795f8', '#6772e5', '#7b69ee', '#6f42c1'
+    '#42b983', '#33c6aa', '#00c4ff', '#3399ff',
+    '#2979ff', '#5e72e4', '#7795f8', '#6772e5',
+    '#7b69ee', '#6f42c1'
   ];
   const randomIndex = Math.floor(Math.random() * colors.length);
   return colors[randomIndex];
@@ -216,17 +225,17 @@ const generateAvatarSvg = (username: string) => {
       const r = 10 + (shapeSeed % 40);
       shapes.push(`<circle cx="${cx}" cy="${cy}" r="${r}" fill="${color}" opacity="0.8" />`);
     } else if (shapeType === 1) {
-      // 矩形
+      // 矯形
       const x = 20 + (shapeSeed % (size - 80));
       const y = 20 + ((shapeSeed * 7) % (size - 80));
       const width = 15 + (shapeSeed % 50);
       const height = 15 + ((shapeSeed * 3) % 50);
-      const rx = shapeSeed % 15; // 圆角
+      const rx = shapeSeed % 15; // 圓角
       shapes.push(`<rect x="${x}" y="${y}" width="${width}" height="${height}" rx="${rx}" fill="${color}" opacity="0.8" />`);
     } else {
-      // 多边形 (三角形或其他简单形状)
+      // 多邊形 (三角形或其他簡單形狀)
       const points = [];
-      const sides = 3 + (shapeSeed % 3); // 3到5条边
+      const sides = 3 + (shapeSeed % 3); // 3到5條邊
       const centerX = 30 + (shapeSeed % (size - 60));
       const centerY = 30 + ((shapeSeed * 11) % (size - 60));
       const radius = 10 + (shapeSeed % 30);
@@ -445,27 +454,41 @@ const goToUserProfile = () => {
 // 分享功能
 const handleShare = async () => {
   try {
-    // 获取当前页面URL
     const currentUrl = window.location.href;
-    
-    // 复制到剪贴板
     await navigator.clipboard.writeText(currentUrl);
     
-    // 使用 Element Plus 的消息提示
-    ElMessage({
-      message: '链接已复制到剪贴板',
+    ElNotification({
+      title: '复制成功',
+      message: '内容已复制到剪贴板',
       type: 'success',
       duration: 2000
     });
   } catch (err) {
     console.error('复制失败:', err);
-    ElMessage({
-      message: '复制失败,请重试',
-      type: 'error',
+    ElNotification.error({
+      title: '复制失败',
+      message: '请手动选择文本并复制',
       duration: 2000
     });
   }
 };
+
+// 计算题库路由地址
+const questionRoute = computed(() => {
+  if (props.raceUid === undefined) {
+    return {
+      path: '/nav/question',
+      icon: Collection,
+      text: '回到题库'
+    }
+  } else {
+    return {
+      path: `/contest/problems?uid=${props.raceUid}`,
+      icon: Trophy,
+      text: '回到竞赛'
+    }
+  }
+});
 
 // 组件加载时验证用户状态
 onMounted(() => {
@@ -839,7 +862,7 @@ defineExpose({
   right: 0;
   width: 100%;
   height: 10px;
-  background: transparent; /* 保持透明 */
+  background:transparent; /* 保持透明 */
 }
 
 .user-menu-header {

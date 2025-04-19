@@ -1,166 +1,175 @@
 <template>
   <div class="code">
     <div class="headerBox">
-      <div
-        class="language-selector"
-        tabindex="0"
-        @click="toggleLanguageSelection"
-        @blur="closeLanguageSelection"
-      >
-        <span class="selected-language">{{ selectedLanguage }}</span>
-        <svg
-          class="dropdown-icon"
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 24 24"
-          :class="{ 'rotate-icon': showLanguageSelection }"
+      <div class="header-left">
+        <div
+          class="language-selector"
+          tabindex="0"
+          @click="toggleLanguageSelection"
+          @blur="closeLanguageSelection"
         >
-          <path
-            d="M6 9l6 6 6-6"
+          <span class="selected-language">{{ selectedLanguage }}</span>
+          <svg
+            class="dropdown-icon"
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            :class="{ 'rotate-icon': showLanguageSelection }"
+          >
+            <path
+              d="M6 9l6 6 6-6"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+        </div>
+
+        <div
+          class="selection"
+          v-show="showLanguageSelection"
+        >
+          <div class="selectionB">
+            <div
+              class="selectionE"
+              :class="{ yeah: selectedLanguage === 'C' }"
+              @click="selectLanguage('C')"
+            >
+              <div>C</div>
+              <div v-if="selectedLanguage === 'C'">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  style="width: 20px;height: 20px; position: relative; top: 2px;"
+                >
+                  <path
+                    d="M5 12l5 5L20 7"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+              </div>
+            </div>
+            <div
+              class="selectionE"
+              :class="{ yeah: selectedLanguage === 'C++' }"
+              @click="selectLanguage('C++')"
+            >
+              <div>C++</div>
+              <div v-if="selectedLanguage === 'C++'">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  style="width: 20px;height: 20px; position: relative; top: 2px;"
+                >
+                  <path
+                    d="M5 12l5 5L20 7"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+              </div>
+            </div>
+            <div
+              class="selectionE"
+              :class="{ yeah: selectedLanguage === 'Java' }"
+              @click="selectLanguage('Java')"
+            >
+              <div>Java</div>
+              <div v-if="selectedLanguage === 'Java'">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  style="width: 20px;height: 20px; position: relative; top: 2px;"
+                >
+                  <path
+                    d="M5 12l5 5L20 7"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+              </div>
+            </div>
+            <div
+              class="selectionE"
+              :class="{ yeah: selectedLanguage === 'Python' }"
+              @click="selectLanguage('Python')"
+            >
+              <div>Python</div>
+              <div v-if="selectedLanguage === 'Python'">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  style="width: 20px;height: 20px; position: relative; top: 2px;"
+                >
+                  <path
+                    d="M5 12l5 5L20 7"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <button
+          class="format-button"
+          @click="formatCode"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
             stroke-width="2"
             stroke-linecap="round"
             stroke-linejoin="round"
-          />
-        </svg>
+          >
+            <polyline points="16 3 21 3 21 8"></polyline>
+            <line
+              x1="4"
+              y1="20"
+              x2="21"
+              y2="3"
+            ></line>
+            <polyline points="21 16 21 21 16 21"></polyline>
+            <line
+              x1="15"
+              y1="15"
+              x2="21"
+              y2="21"
+            ></line>
+            <line
+              x1="4"
+              y1="4"
+              x2="9"
+              y2="9"
+            ></line>
+          </svg>
+          格式化
+        </button>
       </div>
-      <div
-        class="selection"
-        v-show="showLanguageSelection"
-      >
-        <div class="selectionB">
-          <div
-            class="selectionE"
-            :class="{ yeah: selectedLanguage === 'C' }"
-            @click="selectLanguage('C')"
-          >
-            <div>C</div>
-            <div v-if="selectedLanguage === 'C'">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                style="width: 20px;height: 20px; position: relative; top: 2px;"
-              >
-                <path
-                  d="M5 12l5 5L20 7"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                />
-              </svg>
-            </div>
-          </div>
-          <div
-            class="selectionE"
-            :class="{ yeah: selectedLanguage === 'C++' }"
-            @click="selectLanguage('C++')"
-          >
-            <div>C++</div>
-            <div v-if="selectedLanguage === 'C++'">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                style="width: 20px;height: 20px; position: relative; top: 2px;"
-              >
-                <path
-                  d="M5 12l5 5L20 7"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                />
-              </svg>
-            </div>
-          </div>
-          <div
-            class="selectionE"
-            :class="{ yeah: selectedLanguage === 'Java' }"
-            @click="selectLanguage('Java')"
-          >
-            <div>Java</div>
-            <div v-if="selectedLanguage === 'Java'">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                style="width: 20px;height: 20px; position: relative; top: 2px;"
-              >
-                <path
-                  d="M5 12l5 5L20 7"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                />
-              </svg>
-            </div>
-          </div>
-          <div
-            class="selectionE"
-            :class="{ yeah: selectedLanguage === 'Python' }"
-            @click="selectLanguage('Python')"
-          >
-            <div>Python</div>
-            <div v-if="selectedLanguage === 'Python'">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                style="width: 20px;height: 20px; position: relative; top: 2px;"
-              >
-                <path
-                  d="M5 12l5 5L20 7"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                />
-              </svg>
-            </div>
-          </div>
-        </div>
-      </div>
+
       <button
-        class="format-button"
-        @click="formatCode"
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-        >
-          <polyline points="16 3 21 3 21 8"></polyline>
-          <line
-            x1="4"
-            y1="20"
-            x2="21"
-            y2="3"
-          ></line>
-          <polyline points="21 16 21 21 16 21"></polyline>
-          <line
-            x1="15"
-            y1="15"
-            x2="21"
-            y2="21"
-          ></line>
-          <line
-            x1="4"
-            y1="4"
-            x2="9"
-            y2="9"
-          ></line>
-        </svg>
-        格式化
-      </button>
+        class="submit-button"
+        @click="submitCode"
+      >提交</button>
     </div>
     <div class="codeBody">
       <div class="Aline">
@@ -193,7 +202,6 @@
         </div>
       </div>
     </div>
-    <div class="codefooter"><button @click="submitCode">提交</button></div>
   </div>
 </template>
   
@@ -1910,15 +1918,31 @@ export default {
   color: #d73a49; /* 红色字面量 */
 }
 
-.codefooter {
+/* 添加新的样式 */
+.header-left {
   display: flex;
-  justify-content: flex-end;
-  padding: 12px 16px;
-  border-top: 1px solid #f0f0f0;
-  background-color: #f9f9f9;
+  align-items: center;
+  gap: 12px;
 }
 
-.codefooter button {
+/* 修改格式化按钮样式 */
+.format-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 12px;
+  background-color: #f0f0f0;
+  border: 1px solid #d9d9d9;
+  border-radius: 4px;
+  font-size: 13px;
+  color: #333;
+  cursor: pointer;
+  transition: all 0.2s;
+  height: 36px; /* 匹配语言选择器的高度 */
+}
+
+/* 提交按钮样式(原格式化按钮的样式) */
+.submit-button {
   width: 80px;
   height: 34px;
   font-size: 14px;
@@ -1931,39 +1955,19 @@ export default {
   transition: all 0.2s ease;
 }
 
-.codefooter button:hover {
+.submit-button:hover {
   transform: translateY(-2px);
   box-shadow: 0 1px 5px rgba(0, 0, 0, 0.5);
 }
 
-.codefooter button:active {
+.submit-button:active {
   box-shadow: 0 4px 12px rgba(66, 185, 131, 0.3);
   transform: translateY(0px);
 }
 
-/* 格式化按钮样式 */
-.format-button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-left: 12px;
-  padding: 6px 12px;
-  background-color: #f0f0f0;
-  border: 1px solid #d9d9d9;
-  border-radius: 4px;
-  font-size: 13px;
-  color: #333;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.format-button:hover {
-  background-color: #e6e6e6;
-  border-color: #c0c0c0;
-}
-
-.format-button svg {
-  margin-right: 6px;
+/* 删除原来的 codefooter 相关样式 */
+.codefooter {
+  display: none;
 }
 
 .spinner {
