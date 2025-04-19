@@ -166,8 +166,10 @@ const formatDateTime = (dateStr) => {
 
 // 计算比赛状态
 const competitionStatus = computed(() => {
-    // 检查是否有tags数据
-    if (!props.raceInfo?.value?.race_info.tags || props.raceInfo?.value?.race_info.tags.length === 0) {
+    // 获取比赛状态
+    const status = props.raceInfo?.value?.race_info?.status;
+    
+    if (!status) {
         return {
             status: 'not-started',
             title: '加载中',
@@ -175,43 +177,31 @@ const competitionStatus = computed(() => {
         };
     }
 
-    // 获取第一个tag的name
-    const firstTagName = props.raceInfo?.value?.race_info.tags[0].name;
-
-    // 根据tag name判断状态
-    if (firstTagName === '未开始') {
-        return {
-            status: 'not-started',
-            title: '比赛未开始',
-            subtitle: `将于 ${formatDateTime(props.raceInfo?.value?.race_info.start_time)} 开始`
-        };
-    } 
-    else if (firstTagName === '报名中') {
-        return {
-            status: 'signup',
-            title: '比赛报名中',
-            subtitle: `将于 ${formatDateTime(props.raceInfo?.value?.race_info.end_time)} 结束`
-        };
-    }
-    else if (firstTagName === '进行中') {
-        return {
-            status: 'in-progress',
-            title: '比赛进行中',
-            subtitle: `将于 ${formatDateTime(props.raceInfo?.value?.race_info.end_time)} 结束`
-        };
-    } else if (firstTagName === '已结束') {
-        return {
-            status: 'ended',
-            title: '比赛已结束',
-            subtitle: `于 ${formatDateTime(props.raceInfo?.value?.race_info.end_time)} 结束`
-        };
-    } else {
-        // 默认状态
-        return {
-            status: 'not-started',
-            title: '状态未知',
-            subtitle: '请刷新页面重试'
-        };
+    switch (status) {
+        case 'upcoming':
+            return {
+                status: 'signup',  // 保持 CSS 类名不变
+                title: '比赛报名中',
+                subtitle: `将于 ${formatDateTime(props.raceInfo?.value?.race_info.start_time)} 开始`
+            };
+        case 'running':
+            return {
+                status: 'in-progress',
+                title: '比赛进行中',
+                subtitle: `将于 ${formatDateTime(props.raceInfo?.value?.race_info.end_time)} 结束`
+            };
+        case 'ended':
+            return {
+                status: 'ended',
+                title: '比赛已结束',
+                subtitle: `于 ${formatDateTime(props.raceInfo?.value?.race_info.end_time)} 结束`
+            };
+        default:
+            return {
+                status: 'not-started',
+                title: '状态未知',
+                subtitle: '请刷新页面重试'
+            };
     }
 });
 

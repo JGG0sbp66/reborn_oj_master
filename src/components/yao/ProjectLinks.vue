@@ -10,6 +10,8 @@
         :style="{ animationDelay: `${0.05 * index}s` }"
         @mouseenter="handleMouseEnter"
         @mouseleave="handleMouseLeave"
+        target="_blank"
+        rel="noopener noreferrer"
       >
         <span class="link-title">{{ project.title }}</span>
         <span v-if="project.description" class="link-desc">{{ project.description }}</span>

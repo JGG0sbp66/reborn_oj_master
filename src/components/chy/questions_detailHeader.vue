@@ -304,18 +304,27 @@ const tryRefreshAvatar = async (userId?: string | number) => {
   }
 };
 
-// 修改生成用户默认头像逻辑
+// 生成用户默认头像
 const defaultAvatarUrl = computed(() => {
-  // 首先检查localStorage中是否有Base64格式的头像
-  const cachedAvatarBase64 = localStorage.getItem('avatarBase64');
-  if (cachedAvatarBase64) return cachedAvatarBase64;
-  
-  // 其次检查avatarUrl
+  // 如果已有头像URL，直接返回
   if (avatarUrl.value) return avatarUrl.value;
   
-  // 最后才生成默认头像
-  if (!username.value) return '';
-  return generateAvatarSvg(username.value);
+  // 检查缓存的头像是否属于当前用户
+  const currentUserId = localStorage.getItem('uid') || localStorage.getItem('username');
+  const cachedAvatarUserId = localStorage.getItem('avatar_user_id');
+  
+  // 如果有缓存的头像，且属于当前用户，则使用缓存的头像
+  if (cachedAvatarUserId && cachedAvatarUserId === currentUserId) {
+    const cachedAvatarBase64 = localStorage.getItem('avatarBase64');
+    if (cachedAvatarBase64) return cachedAvatarBase64;
+  }
+  
+  // 否则生成默认头像，使用uid而不是username
+  const uid = localStorage.getItem('uid');
+  if (!uid) return '';
+  
+  // 使用uid生成默认头像，确保即使用户名变化，头像也保持一致
+  return generateAvatarSvg(uid);
 });
 
 // 验证用户状态
@@ -393,7 +402,7 @@ const verifyUserState = async () => {
 // 退出登录
 const logout = async () => {
   try {
-    await axios.post('http://localhost:5000/api/logout');
+    await axios.post("http://localhost:5000/api/logout");
     isAuthenticated.value = false;
     showUserMenu.value = false;
     

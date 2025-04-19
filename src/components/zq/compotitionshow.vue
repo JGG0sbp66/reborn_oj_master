@@ -1,6 +1,13 @@
 <template>
   <div class="competition-problems">
-    <div class="problems-card">
+    <div v-if="!isCompetitionStarted" class="not-started-notice">
+      <el-empty description="比赛未开始，题目将在开始后显示">
+        <template #image>
+          <el-icon :size="60"><Timer /></el-icon>
+        </template>
+      </el-empty>
+    </div>
+    <div v-else class="problems-card">
       <table class="problems-list">
         <thead class="problems-head">
           <tr>
@@ -61,11 +68,13 @@
               </div>
             </td>
             <td class="column-first">
-              <div class="first-blood" v-if="problem.first_blood_user && problem.first_blood_user.uid">
-                <div class="avatar-container">
-                  <img :src="problem.first_blood_user.avatar || defaultAvatar" class="user-avatar" alt="avatar">
+              <div class="first-blood-wrapper">
+                <div class="first-blood" v-if="problem.first_blood_user && problem.first_blood_user.uid">
+                  <div class="avatar-container">
+                    <img :src="problem.first_blood_user.avatar || defaultAvatar" class="user-avatar" alt="avatar">
+                  </div>
+                  <span class="username">{{ problem.first_blood_user.username }}</span>
                 </div>
-                <span class="username">{{ problem.first_blood_user.username }}</span>
               </div>
             </td>
             <td class="column-submit">
@@ -96,6 +105,7 @@ import {
   Trophy,
   DataLine,
   TrendCharts,
+  Timer,
 } from "@element-plus/icons-vue";
 import axios from "axios";
 
@@ -114,9 +124,17 @@ const props = defineProps({
   },
 });
 
-// 使用计算属性处理带头像的问题列表
+// 添加比赛状态判断
+const isCompetitionStarted = computed(() => {
+  if (!props.raceInfo?.value?.race_info) return false;
+  const now = new Date().getTime();
+  const startTime = new Date(props.raceInfo.value.race_info.start_time).getTime();
+  return now >= startTime;
+});
+
+// 修改题目列表计算属性
 const problemsWithAvatars = computed(() => {
-  if (!props.raceInfo?.value?.race_info?.problems) return [];
+  if (!isCompetitionStarted.value || !props.raceInfo?.value?.race_info?.problems) return [];
   
   return props.raceInfo.value.race_info.problems.map(problem => {
     // 如果已经有头像数据，直接返回
@@ -254,6 +272,13 @@ const goToQuestionDetail = (id: string, race_uid: string) => {
 
 .column-first {
   width: 160px;
+  text-align: center;
+}
+
+.column-first > * {
+  display: flex;
+  justify-content: center;
+  width: 100%;
 }
 
 .column-submit {
@@ -278,6 +303,10 @@ const goToQuestionDetail = (id: string, race_uid: string) => {
   align-items: center;
   gap: 8px;
   transition: all 0.3s ease;
+}
+
+.column-first .th-content {
+  justify-content: center;
 }
 
 .th-content:hover {
@@ -357,14 +386,26 @@ const goToQuestionDetail = (id: string, race_uid: string) => {
   color: #6b7280;
 }
 
+.first-blood-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+}
+
 .first-blood {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
   color: #6b7280;
   padding: 4px;
   border-radius: 4px;
   transition: all 0.3s ease;
+  text-align: center;
+  max-width: 140px;
+  margin: 0 auto;
 }
 
 .first-blood:hover {
@@ -381,6 +422,7 @@ const goToQuestionDetail = (id: string, race_uid: string) => {
   align-items: center;
   justify-content: center;
   background-color: #f3f4f6;
+  flex-shrink: 0;
 }
 
 .user-avatar {
@@ -395,6 +437,9 @@ const goToQuestionDetail = (id: string, race_uid: string) => {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  display: inline-block;
+  vertical-align: middle;
+  max-width: 80px;
 }
 
 .submit-info {
@@ -446,6 +491,18 @@ const goToQuestionDetail = (id: string, race_uid: string) => {
 
 .rate-info.high {
   color: #42b983;
+}
+
+.not-started-notice {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 400px;
+  color: #909399;
+}
+
+.not-started-notice :deep(.el-empty__image) {
+  color: #909399;
 }
 
 @media (max-width: 768px) {

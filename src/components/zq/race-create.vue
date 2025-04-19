@@ -4,7 +4,7 @@
     <el-dialog
       v-model="dialogVisible"
       title="创建新竞赛"
-      width="80%"
+      width="600px"
       :close-on-click-modal="false"
       :close-on-press-escape="false"
     >
@@ -12,7 +12,8 @@
         ref="competitionFormRef" 
         :model="competition" 
         :rules="competitionRules" 
-        label-width="100px"
+        label-width="120px"
+        label-position="top"
       >
         <el-form-item label="竞赛名称" prop="title">
           <el-input v-model="competition.title" placeholder="请输入竞赛名称"></el-input>
@@ -25,6 +26,18 @@
             <el-option label="蓝桥杯" value="蓝桥杯"></el-option>
             <el-option label="NOI" value="NOI"></el-option>
           </el-select>
+          <div class="custom-tag-input" v-if="showCustomTagInput">
+            <el-input 
+              v-model="customTagName" 
+              placeholder="输入自定义标签名称" 
+              @keyup.enter="addCustomTag"
+            ></el-input>
+            <el-button @click="addCustomTag" :disabled="!customTagName.trim()">添加</el-button>
+            <el-button @click="showCustomTagInput = false">取消</el-button>
+          </div>
+          <el-button size="small" @click="showCustomTagInput = true" v-if="!showCustomTagInput" class="mt-2">
+            + 添加自定义标签
+          </el-button>
         </el-form-item>
         
         <div class="form-row">
@@ -48,30 +61,6 @@
             ></el-date-picker>
           </el-form-item>
         </div>
-        
-        <el-form-item label="竞赛状态" prop="tags">
-          <el-tag v-for="(tag, index) in competition.tags" :key="index" 
-                  :type="getTagType(tag.type)" class="competition-tag" closable
-                  @close="removeTag(index)">
-            {{ tag.name }}
-          </el-tag>
-          <el-button size="small" @click="showTagInput = true" v-if="!showTagInput">
-            + 添加标签
-          </el-button>
-          <div v-else class="tag-input">
-            <el-select v-model="newTag.type" placeholder="标签类型">
-              <el-option label="未开始" value="pending"></el-option>
-              <el-option label="进行中" value="ongoing"></el-option>
-              <el-option label="报名中" value="registration"></el-option>
-              <el-option label="已结束" value="ended"></el-option>
-              <el-option label="个人赛" value="individual"></el-option>
-              <el-option label="团队赛" value="team"></el-option>
-            </el-select>
-            <el-input v-model="newTag.name" placeholder="标签名称"></el-input>
-            <el-button @click="addTag">添加</el-button>
-            <el-button @click="showTagInput = false">取消</el-button>
-          </div>
-        </el-form-item>
         
         <el-form-item label="题目列表" prop="problems_list">
           <el-select 
@@ -98,15 +87,6 @@
           </el-select>
           <div class="tip-text">* 可以输入题目ID或标题进行搜索</div>
         </el-form-item>
-        
-        <el-form-item label="竞赛描述" prop="description">
-          <el-input 
-            v-model="competition.description" 
-            type="textarea" 
-            :rows="3" 
-            placeholder="请输入竞赛描述"
-          ></el-input>
-        </el-form-item>
       </el-form>
       
       <template #footer>
@@ -126,12 +106,6 @@ import type { FormInstance, FormRules } from 'element-plus';
 import { Plus, Delete } from '@element-plus/icons-vue';
 import axios from 'axios';
 
-// 定义竞赛标签类型
-interface CompetitionTag {
-  name: string;
-  type: string;
-}
-
 // 定义新建竞赛中示例类型
 interface ExampleItem {
   input: string;
@@ -145,16 +119,7 @@ interface CreateCompetitionData {
   logos: string[];
   start_time: string;
   end_time: string;
-  tags: CompetitionTag[];
   problems_list: number[];
-  status?: string;
-  description?: string;
-  time_limit?: number;
-  memory_limit?: number;
-  input_format?: string;
-  output_format?: string;
-  constraints?: string[];
-  examples?: ExampleItem[];
   topic?: string;
 }
 
@@ -162,12 +127,6 @@ interface CreateCompetitionData {
 interface QuestionInfo {
   id: number;
   title: string;
-}
-
-// 新标签类型
-interface NewTag {
-  name: string;
-  type: string;
 }
 
 // 当前示例类型
@@ -199,14 +158,7 @@ const competition = reactive<CreateCompetitionData>({
   logos: [],
   start_time: '',
   end_time: '',
-  tags: [
-    {
-      name: '未开始',
-      type: 'pending'
-    }
-  ],
   problems_list: [],
-  status: 'upcoming',
   description: '',
   time_limit: 1000,
   memory_limit: 128,
@@ -239,35 +191,15 @@ const currentExample = reactive<CurrentExample>({
   explanation: ''
 });
 
-// 创建标签相关
-const showTagInput = ref(false);
-const newTag = reactive<NewTag>({
-  name: '',
-  type: 'pending'
-});
+// 自定义标签相关
+const showCustomTagInput = ref(false);
+const customTagName = ref('');
 
 // 题目数据
 const problemsInfo = ref<QuestionInfo[]>([]);
 const filteredProblems = ref<QuestionInfo[]>([]);
 const problemsLoading = ref(false);
 const allProblems = ref<QuestionInfo[]>([]);
-
-// 获取标签类型
-const getTagType = (type: string): string => {
-  switch (type) {
-    case 'pending': return 'info';       // 未开始
-    case 'registration': return 'info';  // 报名中
-    case 'ongoing': return 'success';    // 进行中
-    case 'ended': return 'warning';      // 已结束
-    case 'individual': return 'success'; // 个人赛
-    case 'team': return 'success';       // 团队赛
-    case 'oi': return 'primary';         // OI赛制
-    case 'acm': return 'primary';        // ACM赛制
-    case 'difficulty': return 'danger';  // 难度相关
-    case 'category': return 'warning';   // 分类相关
-    default: return 'info';
-  }
-};
 
 // 搜索题目
 const searchProblems = (query: string): void => {
@@ -318,6 +250,41 @@ const fetchQuestionsInfo = async (problemIds: number[] = []): Promise<void> => {
   }
 };
 
+// 添加自定义标签
+const addCustomTag = (): void => {
+  const tagName = customTagName.value.trim();
+  if (!tagName) {
+    if (props.alertBoxRef) {
+      props.alertBoxRef.show('标签名称不能为空', 1);
+    } else {
+      ElMessage.warning('标签名称不能为空');
+    }
+    return;
+  }
+  
+  // 检查是否已有相同名称的标签
+  if (competition.logos.includes(tagName)) {
+    if (props.alertBoxRef) {
+      props.alertBoxRef.show(`标签 "${tagName}" 已存在`, 1);
+    } else {
+      ElMessage.warning(`标签 "${tagName}" 已存在`);
+    }
+    return;
+  }
+  
+  // 添加自定义标签
+  competition.logos.push(tagName);
+  if (props.alertBoxRef) {
+    props.alertBoxRef.show(`添加了自定义标签 "${tagName}"`, 0);
+  } else {
+    ElMessage.success(`添加了自定义标签 "${tagName}"`);
+  }
+  
+  // 重置表单
+  customTagName.value = '';
+  showCustomTagInput.value = false;
+};
+
 // 打开创建竞赛对话框
 const openCreateDialog = async (): Promise<void> => {
   console.log('openCreateDialog被调用，正在打开创建竞赛对话框');
@@ -327,17 +294,7 @@ const openCreateDialog = async (): Promise<void> => {
     logos: [],
     start_time: '',
     end_time: '',
-    tags: [
-      {
-        name: '未开始',
-        type: 'pending'
-      }
-    ],
     problems_list: [],
-    status: 'upcoming',
-    description: '',
-    time_limit: 1000,
-    memory_limit: 128
   });
   
   // 获取题目数据
@@ -353,33 +310,10 @@ const openCreateDialog = async (): Promise<void> => {
     output: '',
     explanation: ''
   });
-  showTagInput.value = false;
-  Object.assign(newTag, {
-    name: '',
-    type: 'pending'
-  });
-};
-
-// 添加标签
-const addTag = (): void => {
-  if (newTag.name.trim() === '') {
-    ElMessage.warning('标签名称不能为空');
-    return;
-  }
   
-  competition.tags.push({
-    name: newTag.name,
-    type: newTag.type
-  });
-  
-  // 重置新标签
-  newTag.name = '';
-  showTagInput.value = false;
-};
-
-// 删除标签
-const removeTag = (index: number): void => {
-  competition.tags.splice(index, 1);
+  // 重置自定义标签表单
+  customTagName.value = '';
+  showCustomTagInput.value = false;
 };
 
 // 提交创建竞赛表单
@@ -427,7 +361,11 @@ const submitCompetition = async (): Promise<void> => {
     
   } catch (error: any) {
     if (error.message?.includes('validate')) {
-      ElMessage.error('请填写所有必填字段');
+      if (props.alertBoxRef) {
+        props.alertBoxRef.show('请填写所有必填字段', 1);
+      } else {
+        ElMessage.error('请填写所有必填字段');
+      }
     } else {
       console.error('创建竞赛失败:', error);
       if (props.alertBoxRef) {
@@ -530,6 +468,22 @@ defineExpose({
   width: 150px;
 }
 
+.custom-tag-input {
+  margin-top: 12px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.custom-tag-input .el-input {
+  width: 200px;
+}
+
+.mt-2 {
+  margin-top: 8px;
+}
+
 .tip-text {
   font-size: 12px;
   color: #909399;
@@ -544,12 +498,11 @@ defineExpose({
 
 .problem-id {
   font-size: 12px;
-  color: #909399;
+  color: #999;
 }
 
 .problem-title {
   font-size: 14px;
-  color: #606266;
-  margin-left: 8px;
+  font-weight: bold;
 }
 </style>
