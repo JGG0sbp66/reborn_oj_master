@@ -154,4 +154,9 @@ const handleRangeChange = (value: string) => {
     filter: brightness(1.1);
     transform: scaleY(1.02);
 }
+
+.chart-actions :deep(.el-select--small .el-select__wrapper) {
+    padding:0px 8px 0px 6px ;
+}
+
 </style>

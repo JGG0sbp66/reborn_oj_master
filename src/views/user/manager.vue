@@ -1,7 +1,7 @@
 <template>
     <managerhead />
     <div class="manager-container">
-        <managerslider />
+        <managerslider @sidebar-state-change="handleSidebarStateChange" />
         <div class="manager-content" :class="{ 'collapsed-content': isCollapsed }">
             <div class="dashboard">
                 <!-- 欢迎信息 -->
@@ -38,7 +38,12 @@ import {
 import axios from 'axios';
 
 // 获取侧边栏折叠状态
-const isCollapsed = ref<boolean>(false);
+const isCollapsed = ref<boolean>(true);
+
+// 监听managerslider组件的折叠状态
+const handleSidebarStateChange = (collapsed: boolean) => {
+    isCollapsed.value = collapsed;
+};
 
 // 当前日期
 const currentDate = ref(new Date().toLocaleDateString('zh-CN', {
@@ -96,6 +101,9 @@ onMounted(() => {
     document.addEventListener('sliderToggle', (e: any) => {
         isCollapsed.value = e.detail.collapsed;
     });
+
+    // 初始设置为收缩状态
+    isCollapsed.value = true;
 });
 
 const router = useRouter();
@@ -125,14 +133,12 @@ verifyAuth();
 .manager-content {
     flex: 1;
     padding: 20px;
-    margin-left: 220px;
-    /* 侧边栏宽度 */
+    margin-left: 220px; /* 展开时的宽度 */
     transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 
 .collapsed-content {
-    margin-left: 60px;
-    /* 折叠后的侧边栏宽度 */
+    margin-left: 80px; /* 折叠时的宽度 */
 }
 
 .dashboard {
