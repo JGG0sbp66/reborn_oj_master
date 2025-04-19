@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from "vue-router";
+import AccountLayout from "@/layouts/AccountLayout.vue";
 
 // 定义路由规则
 const routes = [
@@ -19,19 +20,28 @@ const routes = [
         path: "/nav/questions_detail",
         name: "questions_detail",
         component: () => import("@/views/nav/questions_detail.vue"),
-    }, {
-        path: "/account/login",
-        name: "login",
-        component: () => import("@/views/account/login.vue"),
-    }, {
-        path: "/account/register",
-        name: "register",
-        component: () => import("@/views/account/register.vue"),
-    }, {
-        path: "/account/repassword",
-        name: "repassword",
-        component: () => import("@/views/account/repassword.vue"),
-    }, {
+    }, 
+    // 账户路由使用布局组件与嵌套路由
+    {
+        path: "/account",
+        component: AccountLayout,
+        children: [
+            {
+                path: "login",
+                name: "login",
+                component: () => import("@/views/account/login.vue"),
+            }, {
+                path: "register",
+                name: "register",
+                component: () => import("@/views/account/register.vue"),
+            }, {
+                path: "repassword",
+                name: "repassword",
+                component: () => import("@/views/account/repassword.vue"),
+            }
+        ]
+    },
+    {
         path: "/contest/problems",
         name: "problems",
         component: () => import("@/views/contest/problems.vue"),

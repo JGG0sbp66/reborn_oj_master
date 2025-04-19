@@ -6,9 +6,15 @@ import 'element-plus/dist/index.css'
 // 引入自定义全局样式（放在Element Plus样式之后以便覆盖）
 import './assets/styles.css'
 import store from './utils/store'  // 导入 Vuex store
+import backgroundState from './utils/backgroundState'; // 导入背景状态管理
 
 const app = createApp(App)
 app.use(router)  // 使用路由
 app.use(ElementPlus)  // 使用 Element Plus
 app.use(store)
 app.mount('#app')
+
+// 在窗口卸载前清理资源
+window.addEventListener('beforeunload', () => {
+  backgroundState.cleanup();
+});

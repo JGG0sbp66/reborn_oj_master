@@ -4,7 +4,19 @@
       <alertbox ref="alertboxRef" />
       <main>
         <div class="register-card">
-          <div class="register-card-title">OJ Master</div>
+          <div class="register-card-title">
+            <div class="text-container">
+              <div class="typing-text">
+                <template v-for="(char, index) in processedTitle" :key="index">
+                  <span 
+                    class="title-char"
+                    :class="{ 'visible': index < visibleChars }"
+                  >{{ char === ' ' ? '\u00A0' : char }}</span>
+                </template>
+                <span class="cursor" :style="{ left: cursorPosition + 'px' }">|</span>
+              </div>
+            </div>
+          </div>
           <form
             @submit.prevent="handleSubmit"
             @keydown.enter.prevent="handleKeyDown"
@@ -143,7 +155,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, onMounted, computed, watch } from "vue";
 import { useRouter } from "vue-router";
 import axios from "axios";
 import cfCAPTCHA from "@/components/JGG/cfCAPTCHA.vue";
@@ -304,6 +316,58 @@ const handleSubmit = async () => {
     isSubmitting.value = false;
   }
 };
+
+// 打字效果相关
+const title = "OJ Master";
+const processedTitle = computed(() => title.split(''));
+const visibleChars = ref(0);
+const typingSpeed = 200; // 每个字符显示间隔(毫秒)
+const cursorPosition = ref(0);
+
+// 监视可见字符数的变化，更新光标位置
+watch(visibleChars, (newVal) => {
+  updateCursorPosition();
+});
+
+// 更新光标位置
+const updateCursorPosition = () => {
+  // 在下一个微任务中执行，确保DOM已更新
+  setTimeout(() => {
+    const visibleSpans = document.querySelectorAll('.title-char.visible');
+    if (visibleSpans.length > 0) {
+      const lastVisibleSpan = visibleSpans[visibleSpans.length - 1];
+      const rect = lastVisibleSpan.getBoundingClientRect();
+      const containerRect = document.querySelector('.typing-text')?.getBoundingClientRect();
+      
+      if (containerRect) {
+        // 计算相对于容器的位置
+        cursorPosition.value = rect.right - containerRect.left;
+      }
+    } else {
+      cursorPosition.value = 0;
+    }
+  }, 0);
+};
+
+onMounted(() => {
+  // 启动打字效果
+  startTypingEffect();
+});
+
+const startTypingEffect = () => {
+  // 重置
+  visibleChars.value = 0;
+  cursorPosition.value = 0;
+  
+  // 打字效果计时器
+  const typingTimer = setInterval(() => {
+    if (visibleChars.value < processedTitle.value.length) {
+      visibleChars.value++;
+    } else {
+      clearInterval(typingTimer);
+    }
+  }, typingSpeed);
+};
 </script>
 
 <style scoped>
@@ -352,7 +416,7 @@ const handleSubmit = async () => {
   background-color: #ffffff;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1), 0 4px 8px rgba(0, 0, 0, 0.1);
   margin: 0 auto;
-  margin-top: 200px;
+  margin-top: 0;
   border-radius: 20px;
   display: flex;
   flex-direction: column;
@@ -365,6 +429,9 @@ const handleSubmit = async () => {
   font-weight: bolder;
   color: #1f2225;
   margin-top: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .register-card-form {
@@ -447,5 +514,55 @@ const handleSubmit = async () => {
 .fade-leave-to {
   opacity: 0;
   transform: translateY(20px);
+}
+
+main {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 重新设计打字效果样式 */
+.text-container {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.typing-text {
+  position: relative;
+  display: inline-block;
+  white-space: nowrap;
+}
+
+.title-char {
+  display: inline-block;
+  font-weight: 700;
+  color: #18a058;
+  opacity: 0;
+  transition: opacity 0.1s ease;
+  text-shadow: 0 0 5px rgba(24, 160, 88, 0.3);
+}
+
+.title-char.visible {
+  opacity: 1;
+}
+
+.cursor {
+  position: absolute;
+  top: 0;
+  color: #18a058;
+  font-weight: 700;
+  animation: blink 0.7s infinite;
+  transition: left 0.1s ease;
+  text-shadow: 0 0 6px rgba(24, 160, 88, 0.4), 0 0 12px rgba(24, 160, 88, 0.2);
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
 }
 </style>
