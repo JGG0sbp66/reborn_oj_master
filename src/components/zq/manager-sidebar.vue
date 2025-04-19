@@ -1,46 +1,83 @@
 <template>
-  <div 
-    class="manager-sidebar" 
+  <div
+    class="manager-sidebar"
     :class="{ 'collapsed': collapsed }"
     @mouseenter="handleMouseEnter"
     @mouseleave="handleMouseLeave"
   >
     <div class="sidebar-header">
-      <div class="collapse-btn" @click="toggleCollapse">
-        <el-icon class="collapse-icon">{{ collapsed ? 'CaretRight' : 'CaretLeft' }}</el-icon>
+      <div class="collapse-btn">
+        <el-icon class="collapse-icon">{{'manager'}}</el-icon>
       </div>
     </div>
-    
+
     <div class="sidebar-menu navbar">
       <ul class="navbar__menu">
-        <li 
-          v-for="(item, index) in menuItems" 
-          :key="index" 
+        <li
+          v-for="(item, index) in menuItems"
+          :key="index"
           class="navbar__item"
           :class="{ 'active': isActive(item) }"
         >
-          <router-link v-if="!item.children || !item.children.length" :to="item.route" class="navbar__link" active-class="active">
-            <div class="item-icon" :class="[item.iconClass, { 'active': isActive(item) }]">
-              <component :is="item.icon" v-if="item.icon" />
-              <i v-else class="default-icon"></i>
+          <router-link
+            v-if="!item.children || !item.children.length"
+            :to="item.route"
+            class="navbar__link"
+            active-class="active"
+          >
+            <div
+              class="item-icon"
+              :class="[item.iconClass, { 'active': isActive(item) }]"
+            >
+              <component
+                :is="item.icon"
+                v-if="item.icon"
+              />
+              <i
+                v-else
+                class="default-icon"
+              ></i>
             </div>
-            <span v-show="!collapsed">{{ item.title }}</span>
+            <span
+              class="menu-text"
+              :class="{ 'collapsed': collapsed }"
+            >{{ item.title }}</span>
           </router-link>
-          
-          <div v-else class="navbar__link" :class="{ 'active': isActive(item) }" @click="toggleMenuItem(index)">
-            <div class="item-icon" :class="[item.iconClass, { 'active': isActive(item) }]">
-              <component :is="item.icon" v-if="item.icon" />
-              <i v-else class="default-icon"></i>
+
+          <div
+            v-else
+            class="navbar__link"
+            :class="{ 'active': isActive(item) }"
+            @click="toggleMenuItem(index)"
+          >
+            <div
+              class="item-icon"
+              :class="[item.iconClass, { 'active': isActive(item) }]"
+            >
+              <component
+                :is="item.icon"
+                v-if="item.icon"
+              />
+              <i
+                v-else
+                class="default-icon"
+              ></i>
             </div>
-            <span v-show="!collapsed">{{ item.title }}</span>
+            <span
+              class="menu-text"
+              :class="{ 'collapsed': collapsed }"
+            >{{ item.title }}</span>
           </div>
-          
+
           <transition name="submenu">
-            <div class="submenu" v-if="item.children && item.children.length && (item.expanded || isAnyChildActive(item)) && !collapsed">
-              <router-link 
-                v-for="(subItem, subIndex) in item.children" 
-                :key="subIndex" 
-                :to="subItem.route" 
+            <div
+              class="submenu"
+              v-if="item.children && item.children.length && (item.expanded || isAnyChildActive(item)) && !collapsed"
+            >
+              <router-link
+                v-for="(subItem, subIndex) in item.children"
+                :key="subIndex"
+                :to="subItem.route"
                 class="submenu-item"
                 active-class="active"
               >
@@ -52,9 +89,12 @@
         </li>
       </ul>
     </div>
-    
+
     <div class="sidebar-footer">
-      <div class="copyright" v-show="!collapsed">
+      <div
+        class="copyright"
+        v-show="!collapsed"
+      >
         Copyright © 2025 <span class="highlight">所谓混学</span> All rights reserved.
       </div>
     </div>
@@ -62,48 +102,56 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, watch } from 'vue';
-import { useRouter, useRoute } from 'vue-router';
-import { Setting, Document, CaretLeft, CaretRight } from '@element-plus/icons-vue';
+import { ref, reactive, onMounted, watch } from "vue";
+import { useRouter, useRoute } from "vue-router";
+import {
+  Setting,
+  Document,
+  CaretLeft,
+  CaretRight,
+  House,
+} from "@element-plus/icons-vue";
 
 // 获取路由实例
 const router = useRouter();
 const route = useRoute();
 
 // 控制侧边栏折叠状态
-const collapsed = ref(false);
+const collapsed = ref(true);
 const hoverMode = ref(true); // 控制是否启用悬浮模式
+
+const emit = defineEmits(["sidebar-state-change"]);
 
 // 菜单数据
 const menuItems = reactive([
   {
-    title: '首页',
-    icon: Document,
-    iconClass: 'home-icon',
-    route: '/user/manager',
+    title: "首页",
+    icon: House,
+    iconClass: "home-icon",
+    route: "/user/manager",
     active: false,
     expanded: false,
-    children: []
+    children: [],
   },
   {
-    title: '系统管理',
+    title: "系统管理",
     icon: Setting,
-    iconClass: 'setting-icon',
-    route: '',
+    iconClass: "setting-icon",
+    route: "",
     active: false,
     expanded: false,
     children: [
-      { title: '题库管理', route: '/user/mproblem', active: false },
-      { title: '竞赛管理', route: '/user/mrace', active: false },
-    ]
-  }
+      { title: "题库管理", route: "/user/mproblem", active: false },
+      { title: "竞赛管理", route: "/user/mrace", active: false },
+    ],
+  },
 ]);
 
 // 根据当前路由更新菜单项的活动状态
 const updateActiveState = () => {
   const currentPath = route.path;
 
-  menuItems.forEach(item => {
+  menuItems.forEach((item) => {
     // 直接检查主菜单项是否匹配
     if (item.route === currentPath) {
       item.active = true;
@@ -115,7 +163,7 @@ const updateActiveState = () => {
     if (item.children && item.children.length) {
       let hasActiveChild = false;
 
-      item.children.forEach(child => {
+      item.children.forEach((child) => {
         if (child.route === currentPath) {
           child.active = true;
           hasActiveChild = true;
@@ -136,30 +184,32 @@ const updateActiveState = () => {
 // 检查菜单项是否处于活动状态
 const isActive = (item) => {
   if (item.active) return true;
-  
+
   if (item.children && item.children.length) {
-    return item.children.some(child => child.active);
+    return item.children.some((child) => child.active);
   }
-  
+
   return false;
 };
 
 // 检查菜单项的任何子项是否活动
 const isAnyChildActive = (item) => {
   if (!item.children || !item.children.length) return false;
-  return item.children.some(child => child.active);
+  return item.children.some((child) => child.active);
 };
 
 // 鼠标悬浮处理
 const handleMouseEnter = () => {
   if (hoverMode.value) {
     collapsed.value = false;
+    emit("sidebar-state-change", false);
   }
 };
 
 const handleMouseLeave = () => {
   if (hoverMode.value) {
     collapsed.value = true;
+    emit("sidebar-state-change", true);
   }
 };
 
@@ -167,12 +217,13 @@ const handleMouseLeave = () => {
 const toggleCollapse = () => {
   collapsed.value = !collapsed.value;
   hoverMode.value = false; // 手动点击后禁用悬浮模式
+  emit("sidebar-state-change", collapsed.value);
 };
 
 // 切换菜单项展开状态
 const toggleMenuItem = (index) => {
   if (collapsed.value) return;
-  
+
   // 如果菜单项没有子菜单或子菜单为空，则直接导航到对应路由
   if (!menuItems[index].children || menuItems[index].children.length === 0) {
     if (menuItems[index].route) {
@@ -180,7 +231,7 @@ const toggleMenuItem = (index) => {
     }
     return;
   }
-  
+
   menuItems[index].expanded = !menuItems[index].expanded;
 };
 
@@ -200,9 +251,8 @@ watch(
 // 组件挂载时更新活动状态
 onMounted(() => {
   updateActiveState();
-  
-  // 初始设置为收缩状态
-  collapsed.value = true;
+  // 不需要在这里设置初始折叠状态，因为已经通过 ref 的初始值设置了
+  emit("sidebar-state-change", collapsed.value);
 });
 
 // 提供给模板使用的变量和方法
@@ -212,19 +262,19 @@ defineExpose({
   toggleCollapse,
   toggleMenuItem,
   isActive,
-  isAnyChildActive
+  isAnyChildActive,
 });
 </script>
 
 <style scoped>
-@import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@600&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Open+Sans:wght@600&display=swap");
 
 /* 变量定义 */
 :root {
   --border-radius: 10px;
   --spacer: 1rem;
-  --primary: #42b983;
-  --primary-hover: #33a06f;
+  --primary: #2b9166; /* 加深的绿色 */
+  --primary-hover: #217a54;
   --primary-gradient: linear-gradient(135deg, #42b983, #33c6aa);
   --text: #6a778e;
   --link-height: calc(var(--spacer) * 3.5);
@@ -234,15 +284,27 @@ defineExpose({
 
 /* Gooey Effect Keyframes */
 @keyframes gooeyEffect-1 {
-  0% { transform: scale(1, 1); }
-  50% { transform: scale(0.5, 1.5); }
-  100% { transform: scale(1, 1); }
+  0% {
+    transform: scale(1, 1);
+  }
+  50% {
+    transform: scale(0.5, 1.5);
+  }
+  100% {
+    transform: scale(1, 1);
+  }
 }
 
 @keyframes gooeyEffect-2 {
-  0% { transform: scale(1, 1); }
-  50% { transform: scale(0.5, 1.5); }
-  100% { transform: scale(1, 1); }
+  0% {
+    transform: scale(1, 1);
+  }
+  50% {
+    transform: scale(0.5, 1.5);
+  }
+  100% {
+    transform: scale(1, 1);
+  }
 }
 
 .manager-sidebar {
@@ -252,7 +314,7 @@ defineExpose({
   display: flex;
   flex-direction: column;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1) 0.1s;
   position: fixed; /* 改为固定定位 */
   left: 0;
   top: 80px; /* 设置顶部距离为头部组件高度 */
@@ -260,10 +322,18 @@ defineExpose({
   z-index: 999; /* 确保在大多数内容之上，但在头部之下 */
   border-radius: var(--border-radius);
   /* font-family: 'Open Sans', sans-serif; */
+  will-change: width;
 }
 
 .manager-sidebar.collapsed {
   width: 80px;
+  /* 添加初始状态类 */
+  transition: none;
+}
+
+/* 添加初始状态类，用于页面加载时避免动画 */
+.manager-sidebar:not(.initial-load) {
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .sidebar-header {
@@ -282,25 +352,35 @@ defineExpose({
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
+  cursor: default;
   border-radius: 50%;
-  background: linear-gradient(135deg, rgba(66, 185, 131, 0.1), rgba(0, 196, 255, 0.1));
+  background: linear-gradient(
+    135deg,
+    rgba(66, 185, 131, 0.1),
+    rgba(0, 196, 255, 0.1)
+  );
   border: 1px solid rgba(66, 185, 131, 0.2);
   transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
   position: absolute;
-  right: -16px;
+  left: -16px;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
 }
 
 .collapse-btn:hover {
-  background: linear-gradient(135deg, rgba(66, 185, 131, 0.15), rgba(0, 196, 255, 0.15));
+  background: linear-gradient(
+    135deg,
+    rgba(66, 185, 131, 0.15),
+    rgba(0, 196, 255, 0.15)
+  );
   transform: scale(1.05);
   box-shadow: 0 3px 8px rgba(66, 185, 131, 0.25);
 }
 
 .collapse-icon {
+  position: absolute;
+  right: -25px;
   color: #42b983;
-  font-size: 16px;
+  font-size: 14px;
   transition: all 0.3s ease;
 }
 
@@ -324,7 +404,7 @@ defineExpose({
 }
 
 .navbar__item:last-child:before {
-  content: '';
+  content: "";
   position: absolute;
   opacity: 0;
   z-index: -1;
@@ -358,6 +438,7 @@ defineExpose({
   animation: gooeyEffect-2 var(--timing) 1;
 }
 
+/* 删除重复的悬停样式，统一处理所有导航链接 */
 .navbar__link {
   position: relative;
   display: flex;
@@ -368,14 +449,49 @@ defineExpose({
   transition: var(--transition);
   cursor: pointer;
   text-decoration: none;
+  overflow: visible;
 }
 
-.navbar__link span {
+/* 统一的悬停效果，同时作用于router-link和div */
+.navbar__link:hover,
+.navbar__link:hover .item-icon,
+.navbar__link:hover .menu-text {
+  color: var(--primary);
+}
+
+.navbar__link:hover {
+  background-color: rgba(66, 185, 131, 0.12);
+  border-radius: var(--border-radius);
+}
+
+.navbar__link:hover .item-icon {
+  transform: scale(1.1);
+}
+
+.navbar__link:hover .menu-text {
+  font-weight: 600;
+  transform: translateX(2px);
+}
+
+/* 修改菜单文字样式 */
+.menu-text {
   margin-left: 12px;
-  transition: var(--transition);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) 0.1s;
   color: #333;
   font-size: 14px;
   font-weight: 500;
+  white-space: nowrap;
+  opacity: 1;
+  position: absolute;
+  left: 48px; /* 图标宽度(24px) + 左内边距(16px) + 间距(8px) */
+  transform: translateX(0);
+  pointer-events: auto;
+}
+
+.menu-text.collapsed {
+  opacity: 0;
+  transform: translateX(-20px);
+  pointer-events: none;
 }
 
 .navbar__link:hover {
@@ -390,31 +506,28 @@ defineExpose({
   transform: translateX(2px);
 }
 
+/* 修改导航链接悬停样式 */
+.navbar__link:hover {
+  color: #2b9166;
+  background-color: rgba(66, 185, 131, 0.12);
+  border-radius: var(--border-radius);
+}
+
 .navbar__link:hover .item-icon {
-  color: var(--primary);
+  color: #2b9166;
   transform: scale(1.1);
 }
 
-/* 高亮当前选中的菜单 */
-.navbar__link.active {
-  color: var(--primary);
-  background-color: rgba(66, 185, 131, 0.15);
-  border-radius: var(--border-radius);
-}
-
-.navbar__link.active span {
-  color: var(--primary);
+.navbar__link:hover .menu-text {
+  color: #2b9166;
   font-weight: 600;
-  text-shadow: 0 0 1px rgba(66, 185, 131, 0.3);
+  transform: translateX(2px);
 }
 
-.navbar__item.active {
-  background-color: rgba(66, 185, 131, 0.08);
-  border-radius: var(--border-radius);
-}
-
-/* 图标样式 */
+/* 图标容器样式 */
 .item-icon {
+  position: relative;
+  z-index: 2; /* 确保图标始终在文字上层 */
   width: 24px;
   height: 24px;
   display: flex;
@@ -422,6 +535,8 @@ defineExpose({
   justify-content: center;
   color: #64748b;
   transition: all 0.3s ease;
+  flex-shrink: 0;
+  will-change: transform;
 }
 
 .item-icon.active {
@@ -431,7 +546,7 @@ defineExpose({
 }
 
 .default-icon:before {
-  content: '•';
+  content: "•";
   font-size: 24px;
 }
 
@@ -452,15 +567,16 @@ defineExpose({
 }
 
 .submenu-item:hover {
-  color: var(--primary);
+  color: #2b9166;
 }
 
 .submenu-dot {
   width: 5px;
   height: 5px;
   border-radius: 50%;
-  background-color: #cbd5e1;
-  margin-right: 8px;
+  background-color: #a9b0b8;
+  margin-right: 10px;
+  margin-top: 2px;
   transition: all 0.2s ease;
 }
 
@@ -470,18 +586,18 @@ defineExpose({
 }
 
 .submenu-item:hover .submenu-dot {
-  background-color: var(--primary);
+  background-color: #2b9166;;
 }
 
 .submenu-item.active {
   color: var(--primary);
-  font-weight: 600;
+  font-weight: 100;
 }
 
 .submenu-item.active .submenu-dot {
   background-color: var(--primary);
   transform: scale(1.4);
-  box-shadow: 0 0 3px rgba(66, 185, 131, 0.5);
+  box-shadow: 0 0 3px rgba(0, 255, 140, 0.5);
 }
 
 /* 图标激活样式 */
@@ -554,7 +670,7 @@ defineExpose({
     top: 64px; /* 移动端头部高度通常较小 */
     height: calc(100vh - 64px);
   }
-  
+
   .manager-sidebar.collapsed {
     left: -80px;
   }
@@ -568,5 +684,33 @@ defineExpose({
   position: relative;
   display: flex;
   justify-content: center;
+}
+
+/* 修改导航链接激活状态样式 */
+.navbar__link.active {
+  color: var(--primary);
+}
+
+.navbar__link.active .menu-text {
+  color: var(--primary);
+  font-weight: 600;
+}
+
+/* 修改图标激活状态样式 */
+.navbar__link.active .item-icon {
+  color: var(--primary);
+  transform: scale(1.1);
+}
+
+/* 确保子菜单项激活状态样式 */
+.submenu-item.active {
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.submenu-item.active .submenu-dot {
+  background-color: var(--primary);
+  transform: scale(1.4);
+  box-shadow: 0 0 3px rgba(66, 185, 131, 0.5);
 }
 </style>
