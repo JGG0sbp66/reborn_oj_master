@@ -167,7 +167,7 @@ const loading = ref(false);
 
 // 题目数据
 const problemData = reactive<ProblemData>({
-    id: '',
+    id: 0,
     title: '',
     description: '',
     difficulty: '',
@@ -184,7 +184,7 @@ const problemData = reactive<ProblemData>({
 });
 
 // 打开题目详情对话框
-const openDetailDialog = async (problemId: string) => {
+const openDetailDialog = async (problemId: number) => {
     dialogVisible.value = true;
     loading.value = true;
     await fetchProblemDetails(problemId);
@@ -192,13 +192,11 @@ const openDetailDialog = async (problemId: string) => {
 };
 
 // 获取题目详情
-const fetchProblemDetails = async (problemId: string) => {
+const fetchProblemDetails = async (problemId: number) => {
     try {
-        // P1XXX格式，需要提取出XXX部分对应的数字
-        const matches = problemId.match(/P1(\d+)/);
-        const numericId = matches ? parseInt(matches[1], 10) : 0;
+        const numericId = problemId;
 
-        console.log(`正在获取题目详情，原始ID: ${problemId}, 实际ID: ${numericId}`);
+        console.log(`正在获取题目详情,ID: ${numericId}`);
 
         const response = await axios({
             url: `http://localhost:5000/api/admin-question/${numericId}`,
