@@ -127,8 +127,21 @@ const props = defineProps({
 // 添加比赛状态判断
 const isCompetitionStarted = computed(() => {
   if (!props.raceInfo?.value?.race_info) return false;
+  
+  // 检查比赛标签，查找是否有"已开始"、"进行中"或"已结束"状态
+  const hasValidTag = props.raceInfo.value.race_info.tags?.some(
+    tag => tag.type === 'started' || tag.type === 'ongoing' || tag.type === 'ended'
+  );
+  
+  // 如果标签显示已开始/进行中/已结束，直接返回true
+  if (hasValidTag) return true;
+  
+  // 否则检查时间
   const now = new Date().getTime();
   const startTime = new Date(props.raceInfo.value.race_info.start_time).getTime();
+  const endTime = new Date(props.raceInfo.value.race_info.end_time).getTime();
+  
+  // 如果当前时间在开始时间之后（包括已结束的情况），也显示题目
   return now >= startTime;
 });
 

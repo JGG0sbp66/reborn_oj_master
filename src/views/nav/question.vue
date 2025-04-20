@@ -39,6 +39,7 @@ onMounted(() => {
   min-height: calc(100vh - 100px); /* 确保内容区域高度减去 footer 的高度 */
   padding-bottom: 50px; /* 给 footer 留出空间 */
   padding-top: 50px; /* 给 headerheader 留出空间 */
+  background-color: #f7f9fc; /* 添加背景颜色 */
 }
 
 /* 渐入渐出动画 */

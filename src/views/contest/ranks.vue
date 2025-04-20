@@ -103,12 +103,12 @@ onMounted(() => {
 <style scoped>
 .main-content {
   display: flex;
-  height: calc(100vh - 52px);
-  background-color: #f8fafc;
+  flex: 1;
+  background-color: #f7f9fc;
   animation: fadeIn 0.6s ease-out;
   position: relative;
-  top: 70px;
-  overflow: hidden;
+  overflow: auto;
+  min-height: calc(100vh - 70px);
 }
 
 .page-title {
@@ -153,8 +153,9 @@ onMounted(() => {
   justify-content: center;
   position: relative;
   z-index: 1;
-  background-color: #f1f5f9;
+  background-color: #f7f9fc;
   overflow: auto;
+  margin-top: 70px;
 }
 
 .content-wrapper {
@@ -379,9 +380,12 @@ onMounted(() => {
 }
 
 main {
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  background: #f7f9fc;
   position: relative;
   overflow: hidden;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
 main::before {
