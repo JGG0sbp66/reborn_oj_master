@@ -185,6 +185,23 @@ interface QuestionInfo {
   title: string;
 }
 
+// API响应数据接口
+interface ApiProblemItem {
+  uid: number;
+  id?: number;
+  question: {
+    title: string;
+    description?: string;
+    time_limit?: number;
+    memory_limit?: number;
+    input_format?: string;
+    output_format?: string;
+    constraints?: string[];
+    examples?: any[];
+  };
+  topic?: string;
+}
+
 // 表单和对话框状态
 const dialogVisible = ref(false);
 const competitionFormRef = ref<FormInstance | null>(null);
@@ -247,7 +264,7 @@ const searchProblems = async (query: string): Promise<void> => {
     }
     
     // 本地搜索已加载的题目
-    filteredProblems.value = allProblems.value.filter(problem => 
+    filteredProblems.value = allProblems.value.filter((problem: QuestionInfo) => 
       problem.title.toLowerCase().includes(query.toLowerCase()) || 
       problem.id.toString().includes(query)
     );
@@ -261,7 +278,7 @@ const searchProblems = async (query: string): Promise<void> => {
         
         if (response.data && Array.isArray(response.data)) {
           const newProblems = response.data.map((item: any, index: number) => ({
-            id: item.id || index + 1,
+            id: item.uid || item.id || index + 1,
             title: item.title || `题目 ${index + 1}`
           }));
           
@@ -270,7 +287,7 @@ const searchProblems = async (query: string): Promise<void> => {
           allProblems.value = Array.from(new Map(combinedProblems.map(item => [item.id, item])).values());
           
           // 重新过滤
-          filteredProblems.value = allProblems.value.filter(problem => 
+          filteredProblems.value = allProblems.value.filter((problem: QuestionInfo) => 
             problem.title.toLowerCase().includes(query.toLowerCase()) || 
             problem.id.toString().includes(query)
           );
@@ -304,12 +321,12 @@ const fetchQuestionsInfo = async (problemIds: number[] = []) => {
     }
     
     // 获取所有可用题目
-    const response = await axios.get("http://localhost:5000/api/");
-    const apiData = response.data;
+    const response = await axios.get("http://localhost:5000/api/admin-question");
+    const apiData = response.data as ApiProblemItem[];
     
     // 处理API返回的数据
-    const results = apiData.map((item, index) => ({
-      id: index + 1,
+    const results = apiData.map((item: ApiProblemItem, index: number) => ({
+      id: item.uid || index + 1,
       title: item.question?.title || `题目 ${index + 1}`
     }));
     
