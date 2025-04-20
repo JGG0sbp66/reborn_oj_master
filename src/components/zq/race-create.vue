@@ -7,87 +7,91 @@
       width="600px"
       :close-on-click-modal="false"
       :close-on-press-escape="false"
+      class="race-create-dialog"
     >
-      <el-form 
-        ref="competitionFormRef" 
-        :model="competition" 
-        :rules="competitionRules" 
-        label-width="120px"
-        label-position="top"
-      >
-        <el-form-item label="竞赛名称" prop="title">
-          <el-input v-model="competition.title" placeholder="请输入竞赛名称"></el-input>
-        </el-form-item>
-        
-        <el-form-item label="竞赛标签" prop="logos">
-          <el-select v-model="competition.logos" multiple placeholder="请选择竞赛标签">
-            <el-option label="ACM" value="ACM"></el-option>
-            <el-option label="ICPC" value="ICPC"></el-option>
-            <el-option label="蓝桥杯" value="蓝桥杯"></el-option>
-            <el-option label="NOI" value="NOI"></el-option>
-          </el-select>
-          <div class="custom-tag-input" v-if="showCustomTagInput">
-            <el-input 
-              v-model="customTagName" 
-              placeholder="输入自定义标签名称" 
-              @keyup.enter="addCustomTag"
-            ></el-input>
-            <el-button @click="addCustomTag" :disabled="!customTagName.trim()">添加</el-button>
-            <el-button @click="showCustomTagInput = false">取消</el-button>
-          </div>
-          <el-button size="small" @click="showCustomTagInput = true" v-if="!showCustomTagInput" class="mt-2">
-            + 添加自定义标签
-          </el-button>
-        </el-form-item>
-        
-        <div class="form-row">
-          <el-form-item label="开始时间" prop="start_time">
-            <el-date-picker
-              v-model="competition.start_time"
-              type="datetime"
-              placeholder="选择开始时间"
-              format="YYYY-MM-DD HH:mm:ss"
-              value-format="YYYY-MM-DD HH:mm:ss"
-            ></el-date-picker>
+      <div class="dialog-content-wrapper">
+        <el-form 
+          ref="competitionFormRef" 
+          :model="competition" 
+          :rules="competitionRules" 
+          label-width="120px"
+          label-position="top"
+          class="scrollable-form"
+        >
+          <el-form-item label="竞赛名称" prop="title">
+            <el-input v-model="competition.title" placeholder="请输入竞赛名称"></el-input>
           </el-form-item>
           
-          <el-form-item label="结束时间" prop="end_time">
-            <el-date-picker
-              v-model="competition.end_time"
-              type="datetime"
-              placeholder="选择结束时间"
-              format="YYYY-MM-DD HH:mm:ss"
-              value-format="YYYY-MM-DD HH:mm:ss"
-            ></el-date-picker>
+          <el-form-item label="竞赛标签" prop="logos">
+            <el-select v-model="competition.logos" multiple placeholder="请选择竞赛标签">
+              <el-option label="ACM" value="ACM"></el-option>
+              <el-option label="ICPC" value="ICPC"></el-option>
+              <el-option label="蓝桥杯" value="蓝桥杯"></el-option>
+              <el-option label="NOI" value="NOI"></el-option>
+            </el-select>
+            <div class="custom-tag-input" v-if="showCustomTagInput">
+              <el-input 
+                v-model="customTagName" 
+                placeholder="输入自定义标签名称" 
+                @keyup.enter="addCustomTag"
+              ></el-input>
+              <el-button @click="addCustomTag" :disabled="!customTagName.trim()">添加</el-button>
+              <el-button @click="showCustomTagInput = false">取消</el-button>
+            </div>
+            <el-button size="small" @click="showCustomTagInput = true" v-if="!showCustomTagInput" class="mt-2">
+              + 添加自定义标签
+            </el-button>
           </el-form-item>
-        </div>
-        
-        <el-form-item label="题目列表" prop="problems_list">
-          <el-select 
-            v-model="competition.problems_list" 
-            multiple 
-            filterable 
-            remote 
-            :remote-method="searchProblems"
-            :loading="problemsLoading"
-            placeholder="选择或搜索题目"
-            style="width: 100%"
-          >
-            <el-option 
-              v-for="problem in filteredProblems" 
-              :key="problem.id" 
-              :label="problem.title" 
-              :value="problem.id"
+          
+          <div class="form-row">
+            <el-form-item label="开始时间" prop="start_time">
+              <el-date-picker
+                v-model="competition.start_time"
+                type="datetime"
+                placeholder="选择开始时间"
+                format="YYYY-MM-DD HH:mm:ss"
+                value-format="YYYY-MM-DD HH:mm:ss"
+              ></el-date-picker>
+            </el-form-item>
+            
+            <el-form-item label="结束时间" prop="end_time">
+              <el-date-picker
+                v-model="competition.end_time"
+                type="datetime"
+                placeholder="选择结束时间"
+                format="YYYY-MM-DD HH:mm:ss"
+                value-format="YYYY-MM-DD HH:mm:ss"
+              ></el-date-picker>
+            </el-form-item>
+          </div>
+          
+          <el-form-item label="题目列表" prop="problems_list">
+            <el-select 
+              v-model="competition.problems_list" 
+              multiple 
+              filterable 
+              remote 
+              :remote-method="searchProblems"
+              :loading="problemsLoading"
+              placeholder="选择或搜索题目"
+              style="width: 100%"
             >
-              <div class="problem-option">
-                <span class="problem-id">题目 {{ problem.id }}</span>
-                <span class="problem-title">{{ problem.title }}</span>
-              </div>
-            </el-option>
-          </el-select>
-          <div class="tip-text">* 可以输入题目ID或标题进行搜索</div>
-        </el-form-item>
-      </el-form>
+              <el-option 
+                v-for="problem in filteredProblems" 
+                :key="problem.id" 
+                :label="problem.title" 
+                :value="problem.id"
+              >
+                <div class="problem-option">
+                  <span class="problem-id">题目 {{ problem.id }}</span>
+                  <span class="problem-title">{{ problem.title }}</span>
+                </div>
+              </el-option>
+            </el-select>
+            <div class="tip-text">* 可以输入题目ID或标题进行搜索</div>
+          </el-form-item>
+        </el-form>
+      </div>
       
       <template #footer>
         <span class="dialog-footer">
@@ -127,6 +131,23 @@ interface CreateCompetitionData {
 interface QuestionInfo {
   id: number;
   title: string;
+}
+
+// API响应数据结构
+interface ApiProblemItem {
+  uid: number;
+  id?: number;
+  question: {
+    title: string;
+    description?: string;
+    time_limit?: number;
+    memory_limit?: number;
+    input_format?: string;
+    output_format?: string;
+    constraints?: string[];
+    examples?: ExampleItem[];
+  };
+  topic?: string;
 }
 
 // 当前示例类型
@@ -230,12 +251,12 @@ const fetchQuestionsInfo = async (problemIds: number[] = []): Promise<void> => {
     }
     
     // 获取所有可用题目
-    const response = await axios.get("http://localhost:5000/api/");
-    const apiData = response.data;
+    const response = await axios.get("http://localhost:5000/api/admin-question");
+    const apiData = response.data as ApiProblemItem[];
     
     // 处理API返回的数据
-    const results = apiData.map(item => ({
-      id: item.id || apiData.indexOf(item) + 1,
+    const results = apiData.map((item: ApiProblemItem) => ({
+      id: item.uid || apiData.indexOf(item) + 1,
       title: item.question?.title || `题目 ${apiData.indexOf(item) + 1}`
     }));
     
@@ -386,6 +407,45 @@ defineExpose({
 </script>
 
 <style scoped>
+.race-create-dialog :deep(.el-dialog__body) {
+  padding: 0;
+  max-height: calc(80vh - 120px);
+  overflow: hidden;
+}
+
+.dialog-content-wrapper {
+  padding: 20px;
+  max-height: calc(80vh - 120px);
+  overflow: hidden;
+}
+
+.scrollable-form {
+  height: 100%;
+  max-height: calc(80vh - 160px);
+  overflow-y: auto;
+  padding-right: 10px;
+}
+
+.scrollable-form::-webkit-scrollbar {
+  width: 6px;
+}
+
+.scrollable-form::-webkit-scrollbar-thumb {
+  background-color: #dcdfe6;
+  border-radius: 3px;
+}
+
+.scrollable-form::-webkit-scrollbar-track {
+  background-color: #f5f7fa;
+}
+
+.dialog-footer {
+  padding: 10px 20px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
 .form-row {
   display: flex;
   gap: 24px;
@@ -469,25 +529,9 @@ defineExpose({
 }
 
 .custom-tag-input {
-  margin-top: 12px;
+  margin-top: 10px;
   display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  align-items: center;
-}
-
-.custom-tag-input .el-input {
-  width: 200px;
-}
-
-.mt-2 {
-  margin-top: 8px;
-}
-
-.tip-text {
-  font-size: 12px;
-  color: #909399;
-  margin-top: 4px;
+  gap: 10px;
 }
 
 .problem-option {
@@ -504,5 +548,15 @@ defineExpose({
 .problem-title {
   font-size: 14px;
   font-weight: bold;
+}
+
+.tip-text {
+  font-size: 12px;
+  color: #999;
+  margin-top: 4px;
+}
+
+.mt-2 {
+  margin-top: 8px;
 }
 </style>

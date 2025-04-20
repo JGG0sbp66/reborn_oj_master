@@ -2,106 +2,134 @@
   <div>
     <!-- 编辑竞赛表单弹窗 -->
     <el-dialog
+      style="margin-top: 100px;"
       v-model="dialogVisible"
       title="编辑竞赛"
       width="600px"
       :close-on-click-modal="false"
       :close-on-press-escape="false"
+      class="race-edit-dialog"
     >
-      <el-form 
-        ref="competitionFormRef" 
-        :model="competition" 
-        :rules="competitionRules" 
-        label-width="120px"
-        label-position="top"
-      >
-        <el-form-item label="竞赛名称" prop="title">
-          <el-input v-model="competition.title" placeholder="请输入竞赛名称"></el-input>
-        </el-form-item>
-        
-        <el-form-item label="竞赛标签" prop="logos">
-          <el-select v-model="competition.logos" multiple placeholder="请选择竞赛标签">
-            <el-option label="ACM" value="ACM"></el-option>
-            <el-option label="ICPC" value="ICPC"></el-option>
-            <el-option label="蓝桥杯" value="蓝桥杯"></el-option>
-            <el-option label="NOI" value="NOI"></el-option>
-          </el-select>
-          <div class="custom-tag-input" v-if="showCustomTagInput">
-            <el-input 
-              v-model="customTagName" 
-              placeholder="输入自定义标签名称" 
-              @keyup.enter="addCustomTag"
-            ></el-input>
-            <el-button @click="addCustomTag" :disabled="!customTagName.trim()">添加</el-button>
-            <el-button @click="showCustomTagInput = false">取消</el-button>
-          </div>
-          <el-button size="small" @click="showCustomTagInput = true" v-if="!showCustomTagInput" class="mt-2">
-            + 添加自定义标签
-          </el-button>
-        </el-form-item>
-        
-        <div class="form-row">
-          <el-form-item label="开始时间" prop="start_time">
-            <el-date-picker
-              v-model="competition.start_time"
-              type="datetime"
-              placeholder="选择开始时间"
-              format="YYYY-MM-DD HH:mm:ss"
-              value-format="YYYY-MM-DD HH:mm:ss"
-            ></el-date-picker>
+      <div v-loading="loading" class="loading-container">
+        <el-form 
+          v-show="!loading"
+          ref="competitionFormRef" 
+          :model="competition" 
+          :rules="competitionRules" 
+          label-width="120px"
+          label-position="top"
+        >
+          <el-form-item label="竞赛名称" prop="title">
+            <el-input v-model="competition.title" placeholder="请输入竞赛名称"></el-input>
           </el-form-item>
           
-          <el-form-item label="结束时间" prop="end_time">
-            <el-date-picker
-              v-model="competition.end_time"
-              type="datetime"
-              placeholder="选择结束时间"
-              format="YYYY-MM-DD HH:mm:ss"
-              value-format="YYYY-MM-DD HH:mm:ss"
-            ></el-date-picker>
+          <el-form-item label="竞赛标签" prop="logos">
+            <el-select v-model="competition.logos" multiple placeholder="请选择竞赛标签">
+              <el-option label="ACM" value="ACM"></el-option>
+              <el-option label="ICPC" value="ICPC"></el-option>
+              <el-option label="蓝桥杯" value="蓝桥杯"></el-option>
+              <el-option label="NOI" value="NOI"></el-option>
+            </el-select>
+            <div class="custom-tag-input" v-if="showCustomTagInput">
+              <el-input 
+                v-model="customTagName" 
+                placeholder="输入自定义标签名称" 
+                @keyup.enter="addCustomTag"
+              ></el-input>
+              <el-button @click="addCustomTag" :disabled="!customTagName.trim()">添加</el-button>
+              <el-button @click="showCustomTagInput = false">取消</el-button>
+            </div>
+            <el-button size="small" @click="showCustomTagInput = true" v-if="!showCustomTagInput" class="mt-2">
+              + 添加自定义标签
+            </el-button>
           </el-form-item>
-        </div>
-        
-        <el-form-item label="竞赛状态" prop="status">
-          <el-select v-model="competition.status" placeholder="请选择竞赛状态">
-            <el-option label="未开始" value="upcoming"></el-option>
-            <el-option label="进行中" value="running"></el-option>
-            <el-option label="已结束" value="ended"></el-option>
-          </el-select>
-        </el-form-item>
-        
-        <el-form-item label="题目列表" prop="problems_list">
-          <el-select 
-            v-model="competition.problems_list" 
-            multiple 
-            filterable 
-            remote 
-            :remote-method="searchProblems"
-            :loading="problemsLoading"
-            placeholder="选择或搜索题目"
-            style="width: 100%"
-          >
-            <el-option 
-              v-for="problem in filteredProblems" 
-              :key="problem.id" 
-              :label="problem.title" 
-              :value="problem.id"
+          
+          <div class="form-row">
+            <el-form-item label="开始时间" prop="start_time">
+              <el-date-picker
+                v-model="competition.start_time"
+                type="datetime"
+                placeholder="选择开始时间"
+                format="YYYY-MM-DD HH:mm:ss"
+                value-format="YYYY-MM-DD HH:mm:ss"
+              ></el-date-picker>
+            </el-form-item>
+            
+            <el-form-item label="结束时间" prop="end_time">
+              <el-date-picker
+                v-model="competition.end_time"
+                type="datetime"
+                placeholder="选择结束时间"
+                format="YYYY-MM-DD HH:mm:ss"
+                value-format="YYYY-MM-DD HH:mm:ss"
+              ></el-date-picker>
+            </el-form-item>
+          </div>
+          
+          <el-form-item label="竞赛状态" prop="status">
+            <el-select v-model="competition.status" placeholder="请选择竞赛状态">
+              <el-option label="报名中" value="upcoming"></el-option>
+              <el-option label="进行中" value="running"></el-option>
+              <el-option label="已结束" value="ended"></el-option>
+            </el-select>
+          </el-form-item>
+          
+          <el-form-item label="题目列表" prop="problems_list">
+            <el-select 
+              v-model="competition.problems_list" 
+              multiple 
+              filterable 
+              remote 
+              :remote-method="searchProblems"
+              :loading="problemsLoading"
+              placeholder="选择或搜索题目"
+              style="width: 100%"
             >
-              <div class="problem-option">
-                <span class="problem-id">题目 {{ problem.id }}</span>
-                <span class="problem-title">{{ problem.title }}</span>
-              </div>
-            </el-option>
-          </el-select>
-          <div class="tip-text">* 可以输入题目ID或标题进行搜索</div>
-        </el-form-item>
+              <el-option 
+                v-for="problem in filteredProblems" 
+                :key="problem.id" 
+                :label="problem.title" 
+                :value="problem.id"
+              >
+                <div class="problem-option">
+                  <span class="problem-id">题目 {{ problem.id }}</span>
+                  <span class="problem-title">{{ problem.title }}</span>
+                </div>
+              </el-option>
+            </el-select>
+            <div class="tip-text">* 可以输入题目ID或标题进行搜索</div>
+          </el-form-item>
 
-        <el-form-item label="参赛用户列表" prop="user_list">
-          <el-select v-model="competition.user_list" multiple placeholder="选择参赛用户">
-            <el-option v-for="id in availableUsers" :key="id" :label="`用户 ${id}`" :value="id"></el-option>
-          </el-select>
-        </el-form-item>
-      </el-form>
+          <el-form-item label="参赛用户列表" prop="user_list">
+            <div class="user-input-section">
+              <el-input
+                v-model="newUserId"
+                placeholder="输入用户ID并按回车添加"
+                @keyup.enter="addUser"
+                :disabled="updating"
+              >
+                <template #append>
+                  <el-button @click="addUser" :disabled="!newUserId || updating">
+                    添加
+                  </el-button>
+                </template>
+              </el-input>
+            </div>
+            
+            <div class="user-list">
+              <el-tag
+                v-for="uid in competition.user_list"
+                :key="uid"
+                closable
+                @close="removeUser(uid)"
+                class="user-tag"
+              >
+                {{ userMap.get(uid) || `用户${uid}` }}
+              </el-tag>
+            </div>
+          </el-form-item>
+        </el-form>
+      </div>
       
       <template #footer>
         <span class="dialog-footer">
@@ -141,8 +169,14 @@ interface CompetitionData {
   end_time: string;
   status: string;
   problems_list: number[];
-  user_list: number[];
+  user_list: number[]; // 改为number[]类型
   uid?: number;
+}
+
+// 添加用户信息接口
+interface UserInfo {
+  uid: number;
+  username: string;
 }
 
 // 题目信息缓存
@@ -151,10 +185,30 @@ interface QuestionInfo {
   title: string;
 }
 
+// API响应数据接口
+interface ApiProblemItem {
+  uid: number;
+  id?: number;
+  question: {
+    title: string;
+    description?: string;
+    time_limit?: number;
+    memory_limit?: number;
+    input_format?: string;
+    output_format?: string;
+    constraints?: string[];
+    examples?: any[];
+  };
+  topic?: string;
+}
+
 // 表单和对话框状态
 const dialogVisible = ref(false);
 const competitionFormRef = ref<FormInstance | null>(null);
 const updating = ref(false);
+
+// 添加加载状态
+const loading = ref(false);
 
 // 自定义标签相关
 const showCustomTagInput = ref(false);
@@ -166,8 +220,8 @@ const filteredProblems = ref<QuestionInfo[]>([]);
 const problemsLoading = ref(false);
 const allProblems = ref<QuestionInfo[]>([]);
 
-// 可选题目和用户列表（示例数据，实际应该从API获取）
-const availableUsers = ref([101, 102, 103, 104, 105, 106, 107, 108, 109, 110]);
+// 添加用户名映射
+const userMap = ref(new Map<number, string>());
 
 // 表单验证规则
 const competitionRules = reactive({
@@ -192,10 +246,12 @@ const competition = reactive<CompetitionData>({
   logos: [],
   start_time: '',
   end_time: '',
-  status: 'upcoming', // 修改默认状态
+  status: 'upcoming', // 默认为报名中状态
   problems_list: [],
-  user_list: []
+  user_list: [] // 存储uid
 });
+
+const newUserId = ref('');
 
 // 搜索题目
 const searchProblems = async (query: string): Promise<void> => {
@@ -208,7 +264,7 @@ const searchProblems = async (query: string): Promise<void> => {
     }
     
     // 本地搜索已加载的题目
-    filteredProblems.value = allProblems.value.filter(problem => 
+    filteredProblems.value = allProblems.value.filter((problem: QuestionInfo) => 
       problem.title.toLowerCase().includes(query.toLowerCase()) || 
       problem.id.toString().includes(query)
     );
@@ -222,7 +278,7 @@ const searchProblems = async (query: string): Promise<void> => {
         
         if (response.data && Array.isArray(response.data)) {
           const newProblems = response.data.map((item: any, index: number) => ({
-            id: item.id || index + 1,
+            id: item.uid || item.id || index + 1,
             title: item.title || `题目 ${index + 1}`
           }));
           
@@ -231,7 +287,7 @@ const searchProblems = async (query: string): Promise<void> => {
           allProblems.value = Array.from(new Map(combinedProblems.map(item => [item.id, item])).values());
           
           // 重新过滤
-          filteredProblems.value = allProblems.value.filter(problem => 
+          filteredProblems.value = allProblems.value.filter((problem: QuestionInfo) => 
             problem.title.toLowerCase().includes(query.toLowerCase()) || 
             problem.id.toString().includes(query)
           );
@@ -265,12 +321,12 @@ const fetchQuestionsInfo = async (problemIds: number[] = []) => {
     }
     
     // 获取所有可用题目
-    const response = await axios.get("http://localhost:5000/api/");
-    const apiData = response.data;
+    const response = await axios.get("http://localhost:5000/api/admin-question");
+    const apiData = response.data as ApiProblemItem[];
     
     // 处理API返回的数据
-    const results = apiData.map((item, index) => ({
-      id: index + 1,
+    const results = apiData.map((item: ApiProblemItem, index: number) => ({
+      id: item.uid || index + 1,
       title: item.question?.title || `题目 ${index + 1}`
     }));
     
@@ -287,48 +343,86 @@ const fetchQuestionsInfo = async (problemIds: number[] = []) => {
 
 // 打开编辑竞赛对话框
 const openEditDialog = async (competitionData: CompetitionData) => {
-  // 重置表单
-  if (competitionFormRef.value) {
-    competitionFormRef.value.resetFields();
-  }
-  
-  // 清空之前的数据
-  Object.assign(competition, {
-    title: '',
-    logos: [],
-    start_time: '',
-    end_time: '',
-    status: 'upcoming', // 修改默认状态
-    problems_list: [],
-    user_list: []
-  });
-  
-  // 填充竞赛数据
-  Object.assign(competition, competitionData);
-  
-  // 如果logos不是数组，初始化为空数组
-  if (!Array.isArray(competition.logos)) {
-    competition.logos = [];
-  }
-  
-  // 确保problems_list和user_list是数组
-  if (!Array.isArray(competition.problems_list)) {
-    competition.problems_list = [];
-  }
-  
-  if (!Array.isArray(competition.user_list)) {
-    competition.user_list = [];
-  }
-  
-  console.log('打开编辑对话框,当前竞赛数据:', JSON.stringify(competition));
-  
-  // 获取题目详细信息
-  if (competition.problems_list && competition.problems_list.length > 0) {
-    await fetchQuestionsInfo(competition.problems_list);
-  }
-  
-  // 打开对话框
+  // 立即显示对话框和加载动画
   dialogVisible.value = true;
+  loading.value = true;
+
+  try {
+    // 重置表单
+    if (competitionFormRef.value) {
+      competitionFormRef.value.resetFields();
+    }
+    
+    // 清空之前的数据
+    Object.assign(competition, {
+      title: '',
+      logos: [],
+      start_time: '',
+      end_time: '',
+      status: 'upcoming', // 修改默认状态
+      problems_list: [],
+      user_list: []
+    });
+    
+    // 填充竞赛数据
+    Object.assign(competition, competitionData);
+    
+    // 如果logos不是数组，初始化为空数组
+    if (!Array.isArray(competition.logos)) {
+      competition.logos = [];
+    }
+    
+    // 确保problems_list和user_list是数组
+    if (!Array.isArray(competition.problems_list)) {
+      competition.problems_list = [];
+    }
+    
+    if (!Array.isArray(competition.user_list)) {
+      competition.user_list = [];
+    }
+    
+    console.log('打开编辑对话框,当前竞赛数据:', JSON.stringify(competition));
+    
+    // 获取题目详细信息
+    if (competition.problems_list && competition.problems_list.length > 0) {
+      await fetchQuestionsInfo(competition.problems_list);
+    }
+
+    // 获取所有用户的用户名
+    userMap.value.clear();
+    if (competition.user_list && competition.user_list.length > 0) {
+      try {
+        const promises = competition.user_list.map(uid => 
+          axios.get(`http://localhost:5000/api/get-username/${uid}`)
+        );
+        const responses = await Promise.all(promises);
+        responses.forEach((response, index) => {
+          if (response.data.success) {
+            userMap.value.set(competition.user_list[index], response.data.message);
+          }
+        });
+      } catch (error) {
+        console.error('获取用户名列表失败:', error);
+      }
+    }
+  } catch (error) {
+    console.error('初始化竞赛数据失败:', error);
+    if (props.alertBoxRef) {
+      props.alertBoxRef.show('加载竞赛数据失败', 1);
+    } else {
+      ElMessage.error('加载竞赛数据失败');
+    }
+  } finally {
+    // 如果数据已经准备好，立即关闭加载动画
+    if (competition.title && competition.problems_list) {
+      loading.value = false;
+    } else {
+      // 否则给一个很短的延迟以确保平滑过渡
+      setTimeout(() => {
+        loading.value = false;
+      }, 100);
+    }
+  }
 };
 
 // 提交更新的竞赛信息
@@ -398,9 +492,9 @@ const updateCompetition = async () => {
     
     // 更新成功
     if (props.alertBoxRef) {
-      props.alertBoxRef.show('竞赛更新成功!', 0);
+      props.alertBoxRef.show('竞赛更新成功', 0);
     } else {
-      ElMessage.success('竞赛更新成功!');
+      ElMessage.success('竞赛更新成功');
     }
     
     dialogVisible.value = false;
@@ -516,6 +610,71 @@ const addCustomTag = () => {
   showCustomTagInput.value = false;
 };
 
+// 添加用户
+const addUser = async () => {
+  if (!newUserId.value) return;
+  
+  try {
+    const uid = parseInt(newUserId.value);
+    if (isNaN(uid)) {
+      if (props.alertBoxRef) {
+        props.alertBoxRef.show('请输入有效的用户ID', 1);
+      } else {
+        ElMessage.error('请输入有效的用户ID');
+      }
+      return;
+    }
+
+    const response = await axios.get(`http://localhost:5000/api/get-username/${uid}`);
+    
+    if (response.data.success) {
+      const username = response.data.message;
+      
+      // 检查是否已存在
+      if (!competition.user_list.includes(uid)) {
+        competition.user_list.push(uid);
+        userMap.value.set(uid, username);
+        if (props.alertBoxRef) {
+          props.alertBoxRef.show(`成功添加用户: ${username}`, 0);
+        } else {
+          ElMessage.success(`成功添加用户: ${username}`);
+        }
+      } else {
+        if (props.alertBoxRef) {
+          props.alertBoxRef.show('该用户已在列表中', 2);
+        } else {
+          ElMessage.warning('该用户已在列表中', 2);
+        }
+      }
+    } else {
+      if (props.alertBoxRef) {
+        props.alertBoxRef.show(response.data.message, 2);
+      } else {
+        ElMessage.error(response.data.message, 2);
+      }
+    }
+  } catch (error) {
+    console.error('获取用户名失败:', error);
+    if (props.alertBoxRef) {
+      const errorMessage = (error as any)?.response?.data?.message || '未知错误';
+      props.alertBoxRef.show(errorMessage, 2);
+    } else {
+      ElMessage.error('获取用户名失败', 2);
+    }
+  }
+  
+  newUserId.value = ''; // 清空输入框
+};
+
+// 移除用户
+const removeUser = (uid: number) => {
+  const index = competition.user_list.indexOf(uid);
+  if (index > -1) {
+    competition.user_list.splice(index, 1);
+    userMap.value.delete(uid);
+  }
+};
+
 // 获取当前竞赛数据
 const getCompetition = (): CompetitionData => {
   return { ...competition };
@@ -530,6 +689,28 @@ defineExpose({
 </script>
 
 <style scoped>
+/* 修改对话框样式 */
+:deep(.race-edit-dialog .el-dialog__body) {
+  height: 60vh;
+  overflow-y: auto;
+  padding: 20px;
+}
+
+/* 自定义滚动条样式 */
+:deep(.race-edit-dialog .el-dialog__body::-webkit-scrollbar) {
+  width: 6px;
+}
+
+:deep(.race-edit-dialog .el-dialog__body::-webkit-scrollbar-thumb) {
+  background: #dcdfe6;
+  border-radius: 3px;
+}
+
+:deep(.race-edit-dialog .el-dialog__body::-webkit-scrollbar-track) {
+  background: #f5f7fa;
+  border-radius: 3px;
+}
+
 .form-row {
   display: flex;
   gap: 24px;
@@ -568,4 +749,40 @@ defineExpose({
   font-size: 14px;
   font-weight: bold;
 }
+
+.user-input-section {
+  margin-bottom: 10px;
+}
+
+.user-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.user-tag {
+  margin-right: 8px;
+  margin-bottom: 8px;
+}
+
+.loading-container {
+  height: 60vh;
+  position: relative;
+}
+
+:deep(.el-loading-mask) {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+:deep(.el-loading-spinner .circular) {
+  width: 42px;
+  height: 42px;
+}
+
+:deep(.el-loading-spinner .el-loading-text) {
+  color: var(--el-color-primary);
+  margin: 3px 0;
+  font-size: 14px;
+}
+
 </style>

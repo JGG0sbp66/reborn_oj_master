@@ -13,7 +13,22 @@ import { ref, onMounted } from 'vue';
 import managerhead from '@/components/zq/manager-head.vue';
 import managerslider from '@/components/zq/manager-sidebar.vue';
 import managerproblem from '@/components/zq/manager-problem.vue';
+import { useRouter, useRoute } from 'vue-router';
+import { checkAuth } from '@/utils/auth';
 
+const router = useRouter();
+const route = useRoute();
+
+const verifyAuth = async () => {
+    const { authenticated } = await checkAuth();
+    if (!authenticated) {
+        router.push({
+            path: '/account/login',
+            query: { redirect: route.fullPath }
+        });
+    }
+};
+verifyAuth();
 // 获取侧边栏折叠状态
 const isCollapsed = ref<boolean>(true);
 

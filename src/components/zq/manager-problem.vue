@@ -216,9 +216,27 @@
                 <span class="chevron-left"></span>
             </button>
             <div class="page-numbers">
-                <button v-for="num in displayedPages" :key="num" class="page-number"
+                <!-- 始终显示第一页 -->
+                <button class="page-number" :class="{ active: currentPage === 1 }" @click="handleCurrentChange(1)">
+                    1
+                </button>
+                
+                <!-- 如果当前页前面有很多页，显示省略号 -->
+                <span class="page-ellipsis" v-if="currentPage > 4">...</span>
+                
+                <!-- 显示当前页附近的页码 -->
+                <button v-for="num in displayedMiddlePages" :key="num" class="page-number"
                     :class="{ active: currentPage === num }" @click="handleCurrentChange(num)">
                     {{ num }}
+                </button>
+                
+                <!-- 如果当前页后面有很多页，显示省略号 -->
+                <span class="page-ellipsis" v-if="currentPage < totalPages - 3">...</span>
+                
+                <!-- 始终显示最后一页，除非总页数为1 -->
+                <button v-if="totalPages > 1" class="page-number" :class="{ active: currentPage === totalPages }" 
+                    @click="handleCurrentChange(totalPages)">
+                    {{ totalPages }}
                 </button>
             </div>
             <button class="page-btn next-btn" :disabled="currentPage === totalPages"
@@ -249,7 +267,9 @@ interface Example {
     explanation: string;
 }
 
+// 定义题目数据结构
 interface QuestionData {
+    id: number;
     title: string;
     description: string;
     time_limit: number;
@@ -261,6 +281,8 @@ interface QuestionData {
 }
 
 interface ApiProblem {
+    id: number;
+    uid: number;
     question: QuestionData;
     topic: string;
 }
@@ -290,26 +312,9 @@ const searchTimeout = ref(null);
 
 // 模拟题目数据
 const problems = ref([]);
-const defaultExamples = ref([
-    {
-        input: '3\n1 2 3',
-        output: '6',
-        explanation: '1 + 2 + 3 = 6，计算数组所有元素的和'
-    },
-    {
-        input: '5\n1 2 3 4 5',
-        output: '15',
-        explanation: '1 + 2 + 3 + 4 + 5 = 15'
-    },
-    {
-        input: '0',
-        output: '0',
-        explanation: '空数组的和为0'
-    }
-]);
 const get_problem_info = async (): Promise<ApiProblem[]> => {
     const { data: userData } = await axios({
-        url: "http://localhost:5000/api/",
+        url: "http://localhost:5000/api/admin-question",
         method: "get",
     });
     return userData;
@@ -345,7 +350,6 @@ const handleSelectionChange = (selection: any[]) => {
 // 批量操作方法
 const batchExport = () => {
     const ids = selectedProblems.value.map((problem: any) => problem.id).join(', ');
-    // ElMessage.success(`已导出题目: ${ids}`);
     alertBox.value.show(`已导出题目: ${ids}`, 0);
 };
 
@@ -357,31 +361,8 @@ const batchChangeCategory = () => {
         const ids = selectedProblems.value.map((problem: any) => problem.id).join(', ');
         alertBox.value.show(`已将题目 ${ids} 的分类修改为 ${value}`, 0);
     }).catch(() => {
-        // ElMessage.info('已取消操作');
         alertBox.value.show('已取消操作', 1);
     });
-};
-
-const batchDelete = () => {
-    const ids = selectedProblems.value.map((problem: any) => problem.id).join(', ');
-    ElMessageBox.confirm(
-        `确定要删除这 ${selectedProblems.value.length} 个题目吗？此操作不可逆。`,
-        '批量删除确认',
-        {
-            confirmButtonText: '确定',
-            cancelButtonText: '取消',
-            type: 'warning',
-        }
-    )
-        .then(() => {
-            // ElMessage.success(`已删除题目: ${ids}`);
-            alertBox.value.show(`已删除题目: ${ids}`, 0);
-            selectedProblems.value = [];
-        })
-        .catch(() => {
-            // ElMessage.info('已取消删除');
-            alertBox.value.show('已取消删除', 1);
-        });
 };
 
 // 监听筛选条件变化，重置分页
@@ -395,6 +376,9 @@ const fetchData = async () => {
     try {
         // 从API获取数据
         const apiData = await get_problem_info();
+        
+        // 打印原始数据，便于调试
+        console.log('API返回的原始数据:', JSON.stringify(apiData, null, 2));
 
         // 处理API返回的数据，转换为组件需要的格式
         const formattedProblems = apiData.map((item, index) => {
@@ -402,8 +386,18 @@ const fetchData = async () => {
             const passRate = Math.floor(Math.random() * 100);
             const submissionCount = Math.floor(Math.random() * 10000) + 1000;
 
+            // 从API返回数据中获取UID
+            const problemId = item.uid;
+            
+            // 记录每个题目处理的详细信息
+            console.log(`处理题目 ${index}:`, {
+                原始UID: item.uid,
+                使用的ID: problemId,
+                题目名称: item.question.title
+            });
+            
             return {
-                id: `P${1001 + index}`, // 生成ID，从P1001开始
+                id: problemId, // 直接使用原始UID作为ID
                 title: item.question.title,
                 topic: item.topic || '未分类',
                 difficulty: getDifficultyByComplexity(item.question), // 根据题目复杂度推断难度
@@ -414,12 +408,15 @@ const fetchData = async () => {
             };
         });
 
-        // 对题目按ID排序
+        // 对题目按ID排序（如果ID是数字）
         formattedProblems.sort((a, b) => {
-            const numA = parseInt(a.id.replace('P', ''));
-            const numB = parseInt(b.id.replace('P', ''));
+            const numA = typeof a.id === 'number' ? a.id : parseInt(a.id);
+            const numB = typeof b.id === 'number' ? b.id : parseInt(b.id);
             return numA - numB;
         });
+
+        // 打印处理后的数据
+        console.log('处理后的题目数据:', formattedProblems);
 
         problems.value = formattedProblems;
 
@@ -492,7 +489,8 @@ const filteredProblems = computed(() => {
         // 搜索过滤
         const matchesSearch = searchQuery.value ?
             problem.title.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-            problem.id.toLowerCase().includes(searchQuery.value.toLowerCase()) :
+            (typeof problem.id === 'string' ? problem.id.toLowerCase().includes(searchQuery.value.toLowerCase()) : 
+             String(problem.id).includes(searchQuery.value.toLowerCase())) :
             true;
 
         // 难度过滤 - 修改这里使用topic而不是difficulty
@@ -553,8 +551,8 @@ const filteredProblems = computed(() => {
     const sorted = [...filtered].sort((a, b) => {
         // 特殊处理ID排序
         if (sortBy.value === 'id') {
-            const numA = parseInt(a.id.replace('P', ''));
-            const numB = parseInt(b.id.replace('P', ''));
+            const numA = typeof a.id === 'number' ? a.id : parseInt(a.id);
+            const numB = typeof b.id === 'number' ? b.id : parseInt(b.id);
             return sortOrder.value === 'ascending' ? numA - numB : numB - numA;
         }
 
@@ -643,7 +641,7 @@ const editProblem = (id: string) => {
         if (problem) {
             // 转换数据格式以匹配problem-edit.vue期望的格式
             const editData = {
-                id: problem.id,
+                id: problem.id, // 使用原始ID/UID
                 title: problem.question.title || problem.title,
                 description: problem.question.description || '',
                 topic: problem.topic || '入门',
@@ -669,7 +667,7 @@ const handleEditFromDetail = (problemData: any) => {
     if (problemEditRef.value) {
         // 转换数据格式以匹配problem-edit.vue期望的格式
         const editData = {
-            id: problemData.id,
+            id: problemData.uid, // 确保使用uid作为ID
             title: problemData.title || '',
             description: problemData.description || '',
             topic: problemData.topic || '入门',
@@ -708,16 +706,14 @@ const deleteProblem = (id: string) => {
     )
         .then(async () => {
             try {
-                // 从ID中提取实际数字部分
-                // P1XXX格式，需要提取出XXX部分对应的数字
-                const matches = id.match(/P1(\d+)/);
-                const numericId = matches ? parseInt(matches[1], 10) : 0;
+                // 获取实际的数字ID
+                const numericId = typeof id === 'number' ? id : parseInt(id);
 
-                console.log(`正在删除题目，原始ID: ${id}, 实际ID: ${numericId}`);
+                console.log(`正在删除题目，ID: ${id}`);
 
-                // 使用实际ID调用接口
+                // 使用ID调用接口
                 const response = await axios({
-                    url: `http://localhost:5000/api/${numericId}`,
+                    url: `http://localhost:5000/api/admin-question/${numericId}`,
                     method: 'DELETE',
                     headers: {
                         'Content-Type': 'application/json'
@@ -756,32 +752,56 @@ const totalPages = computed(() => {
     return Math.ceil(totalProblems.value / pageSize.value);
 });
 
-// 计算要显示的页码（最多显示5个页码）
-const displayedPages = computed(() => {
+// 计算要显示的中间页码
+const displayedMiddlePages = computed(() => {
     const total = totalPages.value;
     const current = currentPage.value;
-    const delta = 2; // 当前页前后最多显示的页数
-
-    if (total <= 5) {
-        // 如果总页数小于等于5，则全部显示
-        return Array.from({ length: total }, (_, i) => i + 1);
+    
+    // 如果总页数很少，不需要处理
+    if (total <= 7) {
+        // 排除第一页和最后一页，因为它们会单独显示
+        return Array.from({ length: total - 2 }, (_, i) => i + 2).filter(page => page > 0 && page < total);
     }
-
-    // 确保current前后都有delta个页码（如果可能）
-    let start = Math.max(1, current - delta);
-    let end = Math.min(total, current + delta);
-
-    // 如果不够5个页码，则调整start或end
-    if (end - start + 1 < 5) {
-        if (start === 1) {
-            end = Math.min(5, total);
-        } else if (end === total) {
-            start = Math.max(1, total - 4);
-        }
+    
+    // 处理中间页码逻辑
+    let startPage, endPage;
+    
+    if (current <= 4) {
+        // 靠近开始的页面，显示2~5
+        startPage = 2;
+        endPage = 5;
+    } else if (current >= total - 3) {
+        // 靠近结束的页面，显示倒数4个页面中的中间2个
+        startPage = total - 4;
+        endPage = total - 1;
+    } else {
+        // 在中间，显示当前页和它的前后页
+        startPage = current - 1;
+        endPage = current + 1;
     }
-
-    return Array.from({ length: end - start + 1 }, (_, i) => start + i);
+    
+    // 确保在有效范围内
+    startPage = Math.max(2, startPage);
+    endPage = Math.min(total - 1, endPage);
+    
+    return Array.from({ length: endPage - startPage + 1 }, (_, i) => startPage + i);
 });
+
+// 应用高级筛选
+const applyAdvancedSearch = () => {
+    // 由于使用了计算属性，我们只需要让页面知道筛选条件变更了
+    // 可以通过修改一些筛选条件的引用来触发
+    difficultyFilter.value = difficultyFilter.value;
+    
+    // 可以在这里添加一些提示信息
+    console.log('应用高级筛选');
+    
+    // 如果需要，可以在此处重新获取数据或执行其他操作
+    // 为避免频繁请求，通常我们会使用本地过滤
+    
+    // 关闭高级筛选面板
+    showAdvancedSearch.value = false;
+};
 
 // 重置筛选条件
 const resetAdvancedSearch = () => {
@@ -792,13 +812,7 @@ const resetAdvancedSearch = () => {
     submissionCountFilter.value = '';
     createTimeRange.value = [];
     // 立即应用重置的筛选条件
-    handleSearch();
-};
-
-const applyAdvancedSearch = () => {
-    // 应用高级筛选条件
-    handleSearch();
-    showAdvancedSearch.value = false;
+    applyAdvancedSearch();
 };
 </script>
 
@@ -1740,5 +1754,18 @@ const applyAdvancedSearch = () => {
 
 .advanced-search~div .batch-operations {
     margin-top: 24px;
+}
+
+.page-ellipsis {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    color: #909399;
+    font-size: 20px;
+    font-weight: bold;
+    line-height: 10px;
+    margin: 0 4px;
 }
 </style>

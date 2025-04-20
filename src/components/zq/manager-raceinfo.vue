@@ -2,7 +2,7 @@
     <div class="table-section recent-competitions">
         <div class="table-header">
             <h3 class="table-title">最近竞赛</h3>
-            <router-link to="/nav/competition" class="view-all">查看全部</router-link>
+            <router-link to="/user/mrace" class="view-all">查看全部</router-link>
         </div>
         <div class="table-content">
             <el-table :data="recentCompetitions" stripe style="width: 100%" size="small">
