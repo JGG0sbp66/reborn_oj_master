@@ -2,11 +2,14 @@
   <div class="welcome-section" :class="{ appear: appear }">
     <h3 class="welcome-title"><i class="welcome-icon"></i> 欢迎来到 OJ Master</h3>
     <div class="welcome-content">
-      <p>{{ message }}</p>
+      <div style="display: flex;justify-content: center;align-items: center;">
+        <p>{{ displayMessage }}<span class="cursor" :class="{ 'cursor-hidden': isCursorHidden }">|</span></p>
+      </div>
       <div class="welcome-stats">
         <div class="stat-item" v-for="(stat, index) in statsData" :key="index">
           <div class="stat-value">
-            <span class="count number-animate" :class="{ animate: animationTriggered[index] }">{{ formattedCounts[index] }}</span>
+            <span class="count number-animate" :class="{ animate: animationTriggered[index] }">{{ formattedCounts[index]
+              }}</span>
           </div>
           <div class="stat-label">{{ stat.label }}</div>
         </div>
@@ -16,18 +19,22 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, defineProps, computed } from 'vue';
+import { ref, onMounted, onUnmounted, defineProps, computed } from 'vue';
+import axios from 'axios';
 
 interface StatItem {
   value: number;
   label: string;
 }
 
+interface StatsResponse {
+  success: boolean;
+  注册用户数量: number;
+  题目数量: number;
+  竞赛数量: number;
+}
+
 const props = defineProps({
-  statsData: {
-    type: Array as () => StatItem[],
-    required: true
-  },
   message: {
     type: String,
     default: '开始你的编程之旅，提升算法能力！'
@@ -42,9 +49,30 @@ const props = defineProps({
   }
 });
 
+const statsData = ref<StatItem[]>([
+  { value: 0, label: '题目总数' },
+  { value: 0, label: '活跃用户' },
+  { value: 0, label: '近期比赛' }
+]);
+
+const fetchStats = async () => {
+  try {
+    const response = await axios.get<StatsResponse>('http://localhost:5000/api/getStats');
+    if (response.data.success) {
+      statsData.value = [
+        { value: response.data.题目数量, label: '题目总数' },
+        { value: response.data.注册用户数量, label: '活跃用户' },
+        { value: response.data.竞赛数量, label: '近期比赛' }
+      ];
+    }
+  } catch (error) {
+    console.error('获取统计数据失败:', error);
+  }
+};
+
 // 为统计数字创建动画效果
-const counts = ref<number[]>(props.statsData.map(() => 0));
-const animationTriggered = ref<boolean[]>(props.statsData.map(() => false));
+const counts = ref<number[]>(statsData.value.map(() => 0));
+const animationTriggered = ref<boolean[]>(statsData.value.map(() => false));
 
 // 格式化数字，添加千位分隔符
 const formattedCounts = computed(() => {
@@ -55,40 +83,40 @@ const formattedCounts = computed(() => {
 
 // 优化动画函数 - 使用更加平滑的过渡
 const animateNumbers = () => {
-  props.statsData.forEach((stat: StatItem, index: number) => {
+  statsData.value.forEach((stat: StatItem, index: number) => {
     const targetValue = stat.value;
     const duration = 1500; // 增加动画持续时间
     const easing = (t: number) => t < 0.5 ? 4 * t * t * t : (t - 1) * (2 * t - 2) * (2 * t - 2) + 1; // 三次贝塞尔缓动函数
-    
+
     const startTime = Date.now();
     const startValue = 0;
-    
+
     const updateValue = () => {
       const currentTime = Date.now();
       const elapsed = currentTime - startTime;
-      
+
       if (elapsed < duration) {
         const progress = easing(elapsed / duration);
         const currentValue = Math.floor(startValue + progress * (targetValue - startValue));
-        
+
         // 只有数值变化时才触发动画
         if (counts.value[index] !== currentValue) {
           counts.value[index] = currentValue;
           animationTriggered.value[index] = true;
-          
+
           // 重置动画状态，允许下一次触发
           setTimeout(() => {
             animationTriggered.value[index] = false;
           }, 400);
         }
-        
+
         requestAnimationFrame(updateValue);
       } else {
         // 确保最终值精确
         counts.value[index] = targetValue;
       }
     };
-    
+
     // 开始动画
     setTimeout(() => {
       requestAnimationFrame(updateValue);
@@ -96,9 +124,49 @@ const animateNumbers = () => {
   });
 };
 
-// 组件挂载后启动动画
-onMounted(() => {
+const displayMessage = ref('');
+const isCursorHidden = ref(false);
+let typewriterTimeout: NodeJS.Timeout;
+let cursorInterval: NodeJS.Timer;
+
+const typeWriter = (text: string, speed = 100) => {
+  const middleIndex = Math.floor(text.length / 2);
+  let leftIndex = middleIndex;
+  let rightIndex = middleIndex;
+  let isRight = true;
+
+  const type = () => {
+    if (leftIndex > 0 || rightIndex < text.length) {
+      if (isRight && rightIndex < text.length) {
+        displayMessage.value = text.substring(leftIndex, rightIndex + 1);
+        rightIndex++;
+      } else if (!isRight && leftIndex > 0) {
+        leftIndex--;
+        displayMessage.value = text.substring(leftIndex, rightIndex);
+      }
+      isRight = !isRight;
+      typewriterTimeout = setTimeout(type, speed);
+    } else {
+      // 打字结束后启动光标闪烁
+      cursorInterval = setInterval(() => {
+        isCursorHidden.value = !isCursorHidden.value;
+      }, 530);
+    }
+  };
+  type();
+};
+
+// 组件挂载后获取数据并启动动画
+onMounted(async () => {
+  await fetchStats();
+  typeWriter(props.message); // 启动打字机效果
   setTimeout(animateNumbers, props.animationDelay);
+});
+
+// 组件卸载时清理定时器
+onUnmounted(() => {
+  clearTimeout(typewriterTimeout);
+  clearInterval(cursorInterval);
 });
 </script>
 
@@ -138,6 +206,10 @@ onMounted(() => {
   margin-top: 0;
   margin-bottom: 16px;
   line-height: 1.5;
+  min-height: 1.5em;
+  /* 防止文字显示时的抖动 */
+  white-space: pre;
+  /* 保持空格 */
 }
 
 .welcome-stats {
@@ -172,20 +244,31 @@ onMounted(() => {
   margin-top: 4px;
 }
 
+.cursor {
+  display: inline-block;
+  color: #42b983;
+  font-weight: bold;
+  animation: blink 1s step-end infinite;
+}
+
+.cursor-hidden {
+  opacity: 0;
+}
+
 @media (max-width: 480px) {
   .welcome-stats {
     flex-direction: column;
     gap: 10px;
   }
-  
+
   .stat-item {
     display: flex;
     align-items: center;
     text-align: left;
   }
-  
+
   .stat-value {
     margin-right: 8px;
   }
 }
-</style> 
+</style>
