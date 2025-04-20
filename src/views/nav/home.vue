@@ -223,8 +223,43 @@ const competitions = ref([
   },
 ]);
 
+// 难度等级映射
+const difficultyMap = {
+  '入门': { level: '入门', difficulty: '入门' },
+  '普及': { level: '普及', difficulty: '普及' },
+  '提高': { level: '提高', difficulty: '提高' },
+  '省选': { level: '省选', difficulty: '省选' },
+  'NOI': { level: 'NOI', difficulty: 'NOI' },
+  'CTSC': { level: 'CTSC', difficulty: 'CTSC' }
+};
+
+// 最新题目 - 改为从API获取
+const latestProblems = ref([]);
+
+// 获取最新题目数据
+const fetchLatestProblems = async () => {
+  try {
+    const response = await axios.get('http://localhost:5000/api/home-get-question');
+    if (response.data.success) {
+      // console.log('获取最新题目数据:', response.data.questions);
+      latestProblems.value = response.data.questions.map(question => ({
+        uid: question.uid,
+        title: question.title,
+        ...difficultyMap[question.topic] || { level: '未知', difficulty: 'entry' } // 默认值处理
+      }));
+      console.log('最新题目数据:', latestProblems.value);
+    }
+  } catch (error) {
+    console.error('获取最新题目失败:', error);
+    // 使用默认数据作为备份
+    latestProblems.value = [
+      { title: "暂无数据", level: "入门", difficulty: "入门" }
+    ];
+  }
+};
+
 // 最新题目
-const latestProblems = [
+const latestProblemsBackup = [
   { title: "简单的数学问题", level: "入门", difficulty: "entry" },
   { title: "字符串反转", level: "基础", difficulty: "easy" },
   { title: "二叉树遍历", level: "提高", difficulty: "medium" },
@@ -327,6 +362,9 @@ onMounted(async () => {
 
   // 获取竞赛数据
   fetchCompetitions();
+
+  // 获取最新题目数据
+  await fetchLatestProblems();
 });
 
 // 在组件销毁前清除定时器
@@ -1042,3 +1080,4 @@ const yourApiEndpoint = ref("https://your-ai-api.com/chat"); // 替换为你的�
   color: #9966cc;
 }
 </style>
+``` 
