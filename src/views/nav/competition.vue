@@ -351,38 +351,50 @@ const fetchCompetitions = async () => {
       data: {}
     });
     
-    // 检查数据结构并提取竞赛信息
     const data = response.data;
+    console.log(data);
     
+    // 添加以下代码来获取和打印每条数据的status
     if (data && data.race_info && Array.isArray(data.race_info)) {
-      // 将获取到的竞赛数据赋值给competitionData
-      competitionData.value = data.race_info.map((race: any) => {
-        // 转换API返回的数据格式为组件需要的格式
-        return {
-          uid: race.race_uid, // 使用API返回的race_uid作为uid
-          race_uid: race.race_uid, // 同时保留原始的race_uid
-          title: race.title,
-          logos: race.logos || [],
-          startTime: race.startTime,
-          endTime: race.endTime,
-          duration: race.duration,
-          status: race.status,
-          tags: race.tags || []
-        };
+      // // 方法1：直接打印所有status
+      // console.log('所有竞赛的status值：', data.race_info.map(race => race.status));
+      
+      // 方法2：遍历每条数据单独处理
+      data.race_info.forEach((race, index) => {
+        console.log(`第${index + 1}条竞赛的status值:`, race.status);
       });
       
-      // 按照开始时间排序，将最新的竞赛排在前面
-      competitionData.value.sort((a, b) => {
-        // 将时间字符串转换为日期对象进行比较
-        const dateA = new Date(a.startTime);
-        const dateB = new Date(b.startTime);
-        // 降序排列，最新的日期在前面
-        return dateB.getTime() - dateA.getTime();
-      });
-      
-      console.log('获取到竞赛数据:', competitionData.value);
-    } else {
-      console.warn('获取到的竞赛数据格式不正确:', data);
+      // 检查数据结构并提取竞赛信息
+      if (data && data.race_info && Array.isArray(data.race_info)) {
+        // 将获取到的竞赛数据赋值给competitionData
+        competitionData.value = data.race_info.map((race: any) => {
+          // 转换API返回的数据格式为组件需要的格式
+          return {
+            uid: race.race_uid, // 使用API返回的race_uid作为uid
+            race_uid: race.race_uid, // 同时保留原始的race_uid
+            title: race.title,
+            logos: race.logos || [],
+            startTime: race.startTime,
+            endTime: race.endTime,
+            duration: race.duration,
+            status: race.status,
+            tags: race.tags || []
+          };
+        });
+        
+        // 按照开始时间排序，将最新的竞赛排在前面
+        competitionData.value.sort((a, b) => {
+          // 将时间字符串转换为日期对象进行比较
+          const dateA = new Date(a.startTime);
+          const dateB = new Date(b.startTime);
+          // 降序排列，最新的日期在前面
+          return dateB.getTime() - dateA.getTime();
+        });
+        
+        console.log('获取到竞赛数据:', competitionData.value);
+      } else {
+        console.warn('获取到的竞赛数据格式不正确:', data);
+      }
     }
   } catch (error) {
     console.error('获取竞赛数据失败:', error);
