@@ -322,6 +322,9 @@ const saveProfile = async (): Promise<void> => {
 </script>
 
 <style scoped>
+* {
+  font-family: 'Microsoft YaHei', sans-serif;
+}
 .profile-section {
   background-color: white;
   border-radius: 12px;
