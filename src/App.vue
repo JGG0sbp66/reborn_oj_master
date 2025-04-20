@@ -23,4 +23,8 @@
 * {
   -ms-overflow-style: none;
 }
+
+* {
+  font-family: 'Microsoft YaHei', sans-serif;
+}
 </style>

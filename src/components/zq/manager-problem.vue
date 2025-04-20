@@ -714,7 +714,7 @@ const deleteProblem = (id: string) => {
 
                 // 使用实际ID调用接口
                 const response = await axios({
-                    url: `http://localhost:5000/api/${numericId}`,
+                    url: `http://localhost:5000/api/admin-question/${numericId}`,
                     method: 'DELETE',
                     headers: {
                         'Content-Type': 'application/json'
