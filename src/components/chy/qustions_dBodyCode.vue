@@ -1431,30 +1431,30 @@ export default {
       const input = this.$refs[`input_${index}`][0];
       const cursorPos = input.selectionStart;
       const line = this.codeLines[index];
+      const indent = this.getCurrentIndent(line); // 获取当前缩进
+      const beforeCursor = line.substring(0, cursorPos);
+      const afterCursor = line.substring(cursorPos);
+      const closingBracket = key === '{' ? '}' : ')';
 
-      // 处理 { 补全
-      if (key === "{") {
-        const newLine =
-          line.substring(0, cursorPos) + "{}" + line.substring(cursorPos);
-        this.codeLines[index] = newLine;
-        this.$nextTick(() => {
-          input.setSelectionRange(cursorPos + 1, cursorPos + 1); // 将光标定位在 {} 中间
-        });
-        return true; // 表示已处理
-      }
+      // 创建三行：第一行到括号，第二行缩进，第三行闭合括号
+      const newLines = [
+        beforeCursor + key,           // 第一行：光标前内容加开括号
+        indent + "  ",               // 第二行：增加缩进
+        indent + closingBracket + afterCursor   // 第三行：闭合括号加上光标后内容
+      ];
 
-      // 处理 ( 补全
-      if (key === "(") {
-        const newLine =
-          line.substring(0, cursorPos) + "()" + line.substring(cursorPos);
-        this.codeLines[index] = newLine;
-        this.$nextTick(() => {
-          input.setSelectionRange(cursorPos + 1, cursorPos + 1); // 将光标定位在 () 中间
-        });
-        return true; // 表示已处理
-      }
+      // 替换当前行并插入新行
+      this.codeLines.splice(index, 1, ...newLines);
 
-      return false; // 未处理
+      // 设置光标位置到新行
+      this.$nextTick(() => {
+        const newInput = this.$refs[`input_${index + 1}`][0];
+        if (newInput) {
+          newInput.focus();
+          newInput.setSelectionRange(indent.length + 2, indent.length + 2);
+        }
+      });
+      return true;
     },
 
     // 处理在括号内按回车的情况
