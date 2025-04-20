@@ -366,7 +366,7 @@ const updateProblem = async () => {
     
     // 发送更新题目请求
     const response = await axios({
-      url: `http://localhost:5000/api/${numericId}`,
+      url: `http://localhost:5000/api/admin-question/${numericId}`,
       method: 'put',
       data: submitData
     });
