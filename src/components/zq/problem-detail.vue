@@ -201,7 +201,7 @@ const fetchProblemDetails = async (problemId: string) => {
         console.log(`正在获取题目详情，原始ID: ${problemId}, 实际ID: ${numericId}`);
 
         const response = await axios({
-            url: `http://localhost:5000/api/${numericId}`,
+            url: `http://localhost:5000/api/admin-question/${numericId}`,
             method: 'get'
         });
 
