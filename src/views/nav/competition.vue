@@ -38,25 +38,6 @@
                 ></path>
               </svg>
             </span>
-            
-            <!-- 状态下拉菜单 -->
-            <div
-              class="dropdown-menu"
-              v-if="statusDropdownOpen"
-            >
-              <div class="dropdown-arrow"></div>
-              <div class="dropdown-content">
-                <div
-                  class="dropdown-item"
-                  v-for="option in statusOptions" 
-                  :key="option.value"
-                  @click="selectStatus(option.value)"
-                  :class="{ 'active': statusFilter === option.value }"
-                >
-                  <span>{{ option.label }}</span>
-                </div>
-              </div>
-            </div>
           </div>
           
           <!-- 自定义类型下拉框 -->
@@ -83,25 +64,6 @@
                 ></path>
               </svg>
             </span>
-            
-            <!-- 类型下拉菜单 -->
-            <div
-              class="dropdown-menu"
-              v-if="typeDropdownOpen"
-            >
-              <div class="dropdown-arrow"></div>
-              <div class="dropdown-content">
-                <div
-                  class="dropdown-item"
-                  v-for="option in typeOptions" 
-                  :key="option.value"
-                  @click="selectType(option.value)"
-                  :class="{ 'active': typeFilter === option.value }"
-                >
-                  <span>{{ option.label }}</span>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
         
@@ -212,6 +174,47 @@
     </div>
   </div>
   <foot class="page-footer" />
+  
+  <!-- 将下拉菜单放在页面最顶层 -->
+  <!-- 状态下拉菜单 -->
+  <div
+    class="dropdown-menu"
+    v-if="statusDropdownOpen"
+    :style="statusDropdownStyle"
+  >
+    <div class="dropdown-arrow"></div>
+    <div class="dropdown-content">
+      <div
+        class="dropdown-item"
+        v-for="option in statusOptions" 
+        :key="option.value"
+        @click="selectStatus(option.value)"
+        :class="{ 'active': statusFilter === option.value }"
+      >
+        <span>{{ option.label }}</span>
+      </div>
+    </div>
+  </div>
+  
+  <!-- 类型下拉菜单 -->
+  <div
+    class="dropdown-menu"
+    v-if="typeDropdownOpen"
+    :style="typeDropdownStyle"
+  >
+    <div class="dropdown-arrow"></div>
+    <div class="dropdown-content">
+      <div
+        class="dropdown-item"
+        v-for="option in typeOptions" 
+        :key="option.value"
+        @click="selectType(option.value)"
+        :class="{ 'active': typeFilter === option.value }"
+      >
+        <span>{{ option.label }}</span>
+      </div>
+    </div>
+  </div>
   <AIAgent
     title="「黄金判官·葛孚雷」"
     buttonColor="#3b82f6"
@@ -287,6 +290,13 @@ const toggleStatusDropdown = () => {
   statusDropdownOpen.value = !statusDropdownOpen.value;
   if (statusDropdownOpen.value) {
     typeDropdownOpen.value = false;
+    // 菜单打开时添加滚动事件监听
+    window.addEventListener('scroll', handleScroll);
+    // 立即执行一次以确保初始位置正确
+    setTimeout(updateDropdownPositions, 0);
+  } else {
+    // 菜单关闭时移除滚动事件监听
+    window.removeEventListener('scroll', handleScroll);
   }
 };
 
@@ -294,6 +304,13 @@ const toggleTypeDropdown = () => {
   typeDropdownOpen.value = !typeDropdownOpen.value;
   if (typeDropdownOpen.value) {
     statusDropdownOpen.value = false;
+    // 菜单打开时添加滚动事件监听
+    window.addEventListener('scroll', handleScroll);
+    // 立即执行一次以确保初始位置正确
+    setTimeout(updateDropdownPositions, 0);
+  } else {
+    // 菜单关闭时移除滚动事件监听
+    window.removeEventListener('scroll', handleScroll);
   }
 };
 
@@ -301,11 +318,15 @@ const toggleTypeDropdown = () => {
 const selectStatus = (value: string) => {
   statusFilter.value = value;
   statusDropdownOpen.value = false;
+  // 菜单关闭时移除滚动事件监听
+  window.removeEventListener('scroll', handleScroll);
 };
 
 const selectType = (value: string) => {
   typeFilter.value = value;
   typeDropdownOpen.value = false;
+  // 菜单关闭时移除滚动事件监听
+  window.removeEventListener('scroll', handleScroll);
 };
 
 // 点击外部关闭下拉菜单
@@ -323,21 +344,86 @@ const handleClickOutside = (event: MouseEvent) => {
   
   // 如果点击的不是筛选按钮或其子元素，且不在下拉菜单内，则关闭下拉菜单
   if (!isStatusButtonOrChild && !target.closest('.dropdown-menu')) {
-    statusDropdownOpen.value = false;
+    if (statusDropdownOpen.value) {
+      statusDropdownOpen.value = false;
+      // 移除滚动事件监听器
+      window.removeEventListener('scroll', handleScroll);
+    }
   }
   
   if (!isTypeButtonOrChild && !target.closest('.dropdown-menu')) {
-    typeDropdownOpen.value = false;
+    if (typeDropdownOpen.value) {
+      typeDropdownOpen.value = false;
+      // 移除滚动事件监听器
+      window.removeEventListener('scroll', handleScroll);
+    }
   }
 };
 
-// 监听点击事件
+// 下拉菜单位置计算
+const statusDropdownStyle = computed(() => {
+  if (!statusDropdownWrapper.value) return {};
+  
+  const rect = statusDropdownWrapper.value.getBoundingClientRect();
+  return {
+    position: 'absolute',
+    top: `${rect.bottom + 8}px`,
+    left: `${rect.left}px`,
+    width: `${rect.width}px`
+  };
+});
+
+const typeDropdownStyle = computed(() => {
+  if (!typeDropdownWrapper.value) return {};
+  
+  const rect = typeDropdownWrapper.value.getBoundingClientRect();
+  return {
+    position: 'absolute',
+    top: `${rect.bottom + 8}px`,
+    left: `${rect.left}px`,
+    width: `${rect.width}px`
+  };
+});
+
+// 直接更新下拉菜单位置的函数
+const updateDropdownPositions = () => {
+  // 不需要额外的实现，因为下拉菜单将通过绑定计算属性自动更新位置
+};
+
+// 处理页面滚动时更新下拉菜单位置
+const handleScroll = () => {
+  // 强制重新计算计算属性
+  if (statusDropdownOpen.value || typeDropdownOpen.value) {
+    // 触发Vue更新机制，让计算属性重新计算
+    statusDropdownOpen.value = statusDropdownOpen.value;
+    typeDropdownOpen.value = typeDropdownOpen.value;
+  }
+};
+
+// 监听点击事件，不再需要全局监听滚动事件
 onMounted(() => {
   document.addEventListener('click', handleClickOutside);
 });
 
 onBeforeUnmount(() => {
   document.removeEventListener('click', handleClickOutside);
+  // 确保在组件卸载时移除所有可能的滚动事件监听器
+  window.removeEventListener('scroll', handleScroll);
+});
+
+// 监听下拉菜单状态变化
+watch([statusDropdownOpen, typeDropdownOpen], ([newStatusOpen, newTypeOpen], [oldStatusOpen, oldTypeOpen]) => {
+  // 从关闭到打开状态时，添加滚动事件监听并立即更新位置
+  if ((!oldStatusOpen && newStatusOpen) || (!oldTypeOpen && newTypeOpen)) {
+    window.addEventListener('scroll', handleScroll);
+    // 立即执行一次以确保初始位置正确
+    setTimeout(updateDropdownPositions, 0);
+  }
+  
+  // 从打开到关闭状态，且两个菜单都关闭时，移除滚动事件监听
+  if ((oldStatusOpen || oldTypeOpen) && !newStatusOpen && !newTypeOpen) {
+    window.removeEventListener('scroll', handleScroll);
+  }
 });
 
 // 分页
@@ -519,31 +605,6 @@ const nextPage = () => {
 const goToPage = (page: number) => {
   currentPage.value = page;
 };
-
-// 计算下拉菜单位置样式
-const statusDropdownStyle = computed(() => {
-  if (!statusDropdownWrapper.value) return {};
-  
-  const rect = statusDropdownWrapper.value.getBoundingClientRect();
-  return {
-    position: 'absolute',
-    top: `${rect.height + 190}px`,
-    left: `${rect.width + 150}px`,
-    width: `${rect.width}px`
-  };
-});
-
-const typeDropdownStyle = computed(() => {
-  if (!typeDropdownWrapper.value) return {};
-  
-  const rect = typeDropdownWrapper.value.getBoundingClientRect();
-  return {
-    position: 'absolute',
-    top: `${rect.height + 8}px`,
-    left: `0`,
-    width: `${rect.width}px`
-  };
-});
 </script>
 
 
@@ -768,17 +829,15 @@ const typeDropdownStyle = computed(() => {
 
 /* 下拉菜单样式 */
 .dropdown-menu {
-  position: absolute;
-  top: calc(100% + 8px);
-  left: 0;
-  width: 100%;
+  position: fixed;
+  z-index: 9999; /* 极高的z-index确保始终在最上层 */
   min-width: 160px;
   background-color: white;
   border-radius: 8px;
   box-shadow: 0 6px 30px rgba(0, 0, 0, 0.2);
-  z-index: 1000;
   transform-origin: top center;
   animation: dropdownFadeIn 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+  pointer-events: auto; /* 确保下拉菜单可以接收鼠标事件 */
 }
 
 @keyframes dropdownFadeIn {
@@ -902,6 +961,8 @@ const typeDropdownStyle = computed(() => {
   transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
   border: 1px solid rgba(235, 240, 245, 0.8);
   animation: fadeInUp 0.4s ease-out;
+  position: relative;
+  z-index: 1; /* 低于下拉菜单 */
 }
 
 .competition-card:hover {
@@ -1345,10 +1406,30 @@ const typeDropdownStyle = computed(() => {
   cursor: not-allowed;
 }
 
-/* 移除旧的顶层下拉菜单样式 */
-.dropdown-menu.top-layer {
-  position: absolute;
+/* 将下拉菜单移到第178行的模板末尾，改为全局定位 */
+.dropdown-menu {
+  position: fixed;
+  z-index: 9999; /* 极高的z-index确保始终在最上层 */
+  min-width: 160px;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 6px 30px rgba(0, 0, 0, 0.2);
+  transform-origin: top center;
+  animation: dropdownFadeIn 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+  pointer-events: auto; /* 确保下拉菜单可以接收鼠标事件 */
+}
+
+/* 删除以下不再需要的样式 */
+.top-layer {
+  position: fixed;
   z-index: 9999;
+}
+
+/* 调整下拉菜单位置样式，使用JS计算偏移量 */
+.dropdown-menu.top-layer {
+  position: fixed;
+  min-width: 160px;
+  box-shadow: 0 6px 30px rgba(0, 0, 0, 0.2);
 }
 </style>
 
