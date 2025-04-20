@@ -7,139 +7,143 @@
       width="600px"
       :close-on-click-modal="false"
       :close-on-press-escape="false"
+      class="problem-edit-dialog" style="margin-top: 100px;"
     >
-      <el-form 
-        ref="problemFormRef" 
-        :model="problem" 
-        :rules="problemRules" 
-        label-width="120px"
-        label-position="top"
-      >
-        <el-form-item label="题目名称" prop="title">
-          <el-input v-model="problem.title" placeholder="请输入题目名称"></el-input>
-        </el-form-item>
-        
-        <el-form-item label="题目难度" prop="topic">
-          <el-select v-model="problem.topic" placeholder="请选择题目难度" style="width: 100%">
-            <el-option
-              v-for="item in difficultyOptions"
-              :key="item.value"
-              :label="item.label"
-              :value="item.value"
-            >
-              <div class="difficulty-option">
-                <div :class="['difficulty-indicator', item.class]"></div>
-                <span>{{ item.label }}</span>
-              </div>
-            </el-option>
-          </el-select>
-        </el-form-item>
-        
-        <div class="form-row">
-          <el-form-item label="时间限制(ms)" prop="time_limit">
-            <el-input-number v-model="problem.time_limit" :min="100" :max="10000" :step="100"></el-input-number>
+      <div class="dialog-content-wrapper">
+        <el-form 
+          ref="problemFormRef" 
+          :model="problem" 
+          :rules="problemRules" 
+          label-width="120px"
+          label-position="top"
+          class="scrollable-form"
+        >
+          <el-form-item label="题目名称" prop="title">
+            <el-input v-model="problem.title" placeholder="请输入题目名称"></el-input>
           </el-form-item>
           
-          <el-form-item label="内存限制(MB)" prop="memory_limit">
-            <el-input-number v-model="problem.memory_limit" :min="16" :max="1024" :step="16"></el-input-number>
-          </el-form-item>
-        </div>
-        
-        <el-form-item label="题目描述" prop="description">
-          <el-input 
-            v-model="problem.description" 
-            type="textarea" 
-            :rows="5" 
-            placeholder="请输入题目描述"
-          ></el-input>
-        </el-form-item>
-        
-        <el-form-item label="输入格式" prop="input_format">
-          <el-input 
-            v-model="problem.input_format" 
-            type="textarea" 
-            :rows="3" 
-            placeholder="请描述输入格式"
-          ></el-input>
-        </el-form-item>
-        
-        <el-form-item label="输出格式" prop="output_format">
-          <el-input 
-            v-model="problem.output_format" 
-            type="textarea" 
-            :rows="3" 
-            placeholder="请描述输出格式"
-          ></el-input>
-        </el-form-item>
-        
-        <el-form-item label="约束条件">
-          <div class="constraints-section">
-            <div class="constraint-input-group">
-              <el-input 
-                v-model="constraint" 
-                placeholder="请输入约束条件"
-                @keyup.enter="addConstraint"
-              ></el-input>
-              <el-button @click="addConstraint" :disabled="!constraint">添加</el-button>
-            </div>
-            <div class="constraints-list" v-if="problem.constraints.length > 0">
-              <div 
-                v-for="(item, index) in problem.constraints" 
-                :key="index"
-                class="constraint-item"
+          <el-form-item label="题目难度" prop="topic">
+            <el-select v-model="problem.topic" placeholder="请选择题目难度" style="width: 100%">
+              <el-option
+                v-for="item in difficultyOptions"
+                :key="item.value"
+                :label="item.label"
+                :value="item.value"
               >
-                <span>{{ item }}</span>
-                <el-icon @click="removeConstraint(index)" class="delete-icon"><Delete /></el-icon>
-              </div>
-            </div>
-            <el-empty v-else description="暂无约束条件" :image-size="80"></el-empty>
-          </div>
-        </el-form-item>
-        
-        <el-form-item label="示例">
-          <div class="examples-section">
-            <div class="example-inputs">
-              <el-input 
-                v-model="currentExample.input" 
-                type="textarea" 
-                :rows="2" 
-                placeholder="示例输入"
-              ></el-input>
-              <el-input 
-                v-model="currentExample.output" 
-                type="textarea" 
-                :rows="2" 
-                placeholder="示例输出"
-              ></el-input>
-              <el-input 
-                v-model="currentExample.explanation" 
-                type="textarea" 
-                :rows="2" 
-                placeholder="示例解释 (可选)"
-              ></el-input>
-            </div>
-            <el-button @click="addExample" :disabled="!currentExample.input || !currentExample.output">
-              添加示例
-            </el-button>
-            
-            <div class="examples-list" v-if="problem.examples.length > 0">
-              <div 
-                v-for="(example, index) in problem.examples" 
-                :key="index"
-                class="example-item"
-              >
-                <div class="example-content">
-                  <div><strong>输入:</strong> {{ example.input }}</div>
-                  <div><strong>输出:</strong> {{ example.output }}</div>
-                  <div v-if="example.explanation"><strong>解释:</strong> {{ example.explanation }}</div>
+                <div class="difficulty-option">
+                  <div :class="['difficulty-indicator', item.class]"></div>
+                  <span>{{ item.label }}</span>
                 </div>
-                <el-icon @click="removeExample(index)" class="delete-icon"><Delete /></el-icon>
-              </div>
-            </div>
-            <el-empty v-else description="暂无示例" :image-size="80"></el-empty>
+              </el-option>
+            </el-select>
+          </el-form-item>
+          
+          <div class="form-row">
+            <el-form-item label="时间限制(ms)" prop="time_limit">
+              <el-input-number v-model="problem.time_limit" :min="100" :max="10000" :step="100"></el-input-number>
+            </el-form-item>
+            
+            <el-form-item label="内存限制(MB)" prop="memory_limit">
+              <el-input-number v-model="problem.memory_limit" :min="16" :max="1024" :step="16"></el-input-number>
+            </el-form-item>
           </div>
-        </el-form-item>
-      </el-form>
+          
+          <el-form-item label="题目描述" prop="description">
+            <el-input 
+              v-model="problem.description" 
+              type="textarea" 
+              :rows="5" 
+              placeholder="请输入题目描述"
+            ></el-input>
+          </el-form-item>
+          
+          <el-form-item label="输入格式" prop="input_format">
+            <el-input 
+              v-model="problem.input_format" 
+              type="textarea" 
+              :rows="3" 
+              placeholder="请描述输入格式"
+            ></el-input>
+          </el-form-item>
+          
+          <el-form-item label="输出格式" prop="output_format">
+            <el-input 
+              v-model="problem.output_format" 
+              type="textarea" 
+              :rows="3" 
+              placeholder="请描述输出格式"
+            ></el-input>
+          </el-form-item>
+          
+          <el-form-item label="约束条件">
+            <div class="constraints-section">
+              <div class="constraint-input-group">
+                <el-input 
+                  v-model="constraint" 
+                  placeholder="请输入约束条件"
+                  @keyup.enter="addConstraint"
+                ></el-input>
+                <el-button @click="addConstraint" :disabled="!constraint">添加</el-button>
+              </div>
+              <div class="constraints-list" v-if="problem.constraints.length > 0">
+                <div 
+                  v-for="(item, index) in problem.constraints" 
+                  :key="index"
+                  class="constraint-item"
+                >
+                  <span>{{ item }}</span>
+                  <el-icon @click="removeConstraint(index)" class="delete-icon"><Delete /></el-icon>
+                </div>
+              </div>
+              <el-empty v-else description="暂无约束条件" :image-size="80"></el-empty>
+            </div>
+          </el-form-item>
+          
+          <el-form-item label="示例">
+            <div class="examples-section">
+              <div class="example-inputs">
+                <el-input 
+                  v-model="currentExample.input" 
+                  type="textarea" 
+                  :rows="2" 
+                  placeholder="示例输入"
+                ></el-input>
+                <el-input 
+                  v-model="currentExample.output" 
+                  type="textarea" 
+                  :rows="2" 
+                  placeholder="示例输出"
+                ></el-input>
+                <el-input 
+                  v-model="currentExample.explanation" 
+                  type="textarea" 
+                  :rows="2" 
+                  placeholder="示例解释 (可选)"
+                ></el-input>
+              </div>
+              <el-button @click="addExample" :disabled="!currentExample.input || !currentExample.output">
+                添加示例
+              </el-button>
+              
+              <div class="examples-list" v-if="problem.examples.length > 0">
+                <div 
+                  v-for="(example, index) in problem.examples" 
+                  :key="index"
+                  class="example-item"
+                >
+                  <div class="example-content">
+                    <div><strong>输入:</strong> {{ example.input }}</div>
+                    <div><strong>输出:</strong> {{ example.output }}</div>
+                    <div v-if="example.explanation"><strong>解释:</strong> {{ example.explanation }}</div>
+                  </div>
+                  <el-icon @click="removeExample(index)" class="delete-icon"><Delete /></el-icon>
+                </div>
+              </div>
+              <el-empty v-else description="暂无示例" :image-size="80"></el-empty>
+            </div>
+          </el-form-item>
+        </el-form>
+      </div>
       
       <template #footer>
         <span class="dialog-footer">
@@ -402,6 +406,45 @@ defineExpose({
 </script>
 
 <style scoped>
+.problem-edit-dialog :deep(.el-dialog__body) {
+  padding: 0;
+  max-height: calc(80vh - 120px);
+  overflow: hidden;
+}
+
+.dialog-content-wrapper {
+  padding: 20px;
+  max-height: calc(80vh - 120px);
+  overflow: hidden;
+}
+
+.scrollable-form {
+  height: 100%;
+  max-height: calc(80vh - 160px);
+  overflow-y: auto;
+  padding-right: 10px;
+}
+
+.scrollable-form::-webkit-scrollbar {
+  width: 6px;
+}
+
+.scrollable-form::-webkit-scrollbar-thumb {
+  background-color: #dcdfe6;
+  border-radius: 3px;
+}
+
+.scrollable-form::-webkit-scrollbar-track {
+  background-color: #f5f7fa;
+}
+
+.dialog-footer {
+  padding: 10px 20px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
 .form-row {
   display: flex;
   gap: 24px;
