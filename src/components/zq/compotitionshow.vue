@@ -1,7 +1,7 @@
 <template>
   <div class="competition-problems">
     <div v-if="!isCompetitionStarted" class="not-started-notice">
-      <el-empty description="比赛未开始，题目将在开始后显示">
+      <el-empty :description="competitionStatusText">
         <template #image>
           <el-icon :size="60"><Timer /></el-icon>
         </template>
@@ -124,12 +124,27 @@ const props = defineProps({
   },
 });
 
-// 添加比赛状态判断
+// 修改比赛状态判断
 const isCompetitionStarted = computed(() => {
   if (!props.raceInfo?.value?.race_info) return false;
-  const now = new Date().getTime();
-  const startTime = new Date(props.raceInfo.value.race_info.start_time).getTime();
-  return now >= startTime;
+  return props.raceInfo.value.race_info.status === 'running';
+});
+
+// 添加比赛状态文本
+const competitionStatusText = computed(() => {
+  if (!props.raceInfo?.value?.race_info) return '加载中';
+  
+  const status = props.raceInfo.value.race_info.status;
+  switch (status) {
+    case 'upcoming':
+      return '比赛报名中，题目将在开始后显示';
+    case 'running':
+      return '比赛进行中';
+    case 'ended':
+      return '比赛已结束';
+    default:
+      return '未知状态';
+  }
 });
 
 // 修改题目列表计算属性
