@@ -497,7 +497,6 @@ export default {
   flex-direction: column;
   width: 80%;
   background-color: white;
-  border: 1px solid gainsboro;
   border-radius: 15px;
   margin: 16px auto;
   padding: 16px;

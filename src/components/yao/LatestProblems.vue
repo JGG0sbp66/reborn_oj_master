@@ -8,8 +8,9 @@
         :key="index"
         @mouseenter="handleMouseEnter"
         @mouseleave="handleMouseLeave"
+        @click="handleProblemClick(problem.uid)"
       >
-        <a :href="problem.url" class="problem-title">{{ problem.title }}</a>
+        <span class="problem-title">{{ problem.title }}</span>
         <span class="problem-tag" :class="problem.difficulty">{{ problem.level }}</span>
         <span class="problem-row-hover-effect"></span>
       </div>
@@ -19,11 +20,16 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
+import axios from 'axios';
+import { useRouter } from 'vue-router';
+
+const router = useRouter();
 
 interface Problem {
+  uid: number;
   title: string;
-  level: string;
-  difficulty: string;
+  level: '入门' | '普及' | '提高' | '省选' | 'NOI' | 'CTSC';
+  difficulty: '入门' | '普及' | '提高' | '省选' | 'NOI' | 'CTSC';
   url?: string;
 }
 
@@ -51,6 +57,21 @@ const handleMouseEnter = (event: MouseEvent) => {
 const handleMouseLeave = (event: MouseEvent) => {
   const target = event.currentTarget as HTMLElement;
   target.classList.remove('hover-active');
+};
+
+const handleProblemClick = (uid: number) => {
+  console.log('点击题目:', uid);
+  // 先存储ID
+  localStorage.setItem("currentQuestionId", uid.toString());
+  // 直接打开新窗口
+  window.open(`/nav/questions_detail`, '_blank');
+  
+  // 异步发送请求，不阻塞页面跳转
+  axios.post('http://localhost:5000/api/question-detail', {
+    uid: uid
+  }).catch(error => {
+    console.error('获取题目详情失败:', error);
+  });
 };
 </script>
 
@@ -140,6 +161,7 @@ const handleMouseLeave = (event: MouseEvent) => {
   background-color: #f9fafc;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
   border: 1px solid transparent;
+  cursor: pointer;  /* 添加指针样式 */
 }
 
 .problem-row-hover-effect {
@@ -219,9 +241,45 @@ const handleMouseLeave = (event: MouseEvent) => {
   color: #9966cc;
 }
 
+.problem-tag.入门 {
+  background-color: rgba(254, 76, 97, 0.1);
+  color: #fe4c61;
+  border: 1px solid rgba(254, 76, 97, 0.2);
+}
+
+.problem-tag.普及 {
+  background-color: rgba(243, 156, 17, 0.1);
+  color: #f39c11;
+  border: 1px solid rgba(243, 156, 17, 0.2);
+}
+
+.problem-tag.提高 {
+  background-color: rgba(255, 193, 22, 0.1);
+  color: #ffc116;
+  border: 1px solid rgba(255, 193, 22, 0.2);
+}
+
+.problem-tag.省选 {
+  background-color: rgba(82, 196, 26, 0.1);
+  color: #52c41a;
+  border: 1px solid rgba(82, 196, 26, 0.2);
+}
+
+.problem-tag.NOI {
+  background-color: rgba(157, 61, 207, 0.1);
+  color: #9d3dcf;
+  border: 1px solid rgba(157, 61, 207, 0.2);
+}
+
+.problem-tag.CTSC {
+  background-color: rgba(14, 29, 105, 0.1);
+  color: #0e1d69;
+  border: 1px solid rgba(14, 29, 105, 0.2);
+}
+
 @media (max-width: 480px) {
   .problem-row {
     padding: 10px;
   }
 }
-</style> 
+</style>

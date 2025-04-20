@@ -1,99 +1,101 @@
 <template>
     <div>
         <!-- 查看题目详情弹窗 -->
-        <el-dialog v-model="dialogVisible" title="题目详情" width="680px" :close-on-click-modal="false">
-            <div class="problem-detail-container" v-loading="loading">
-                <div class="problem-header">
-                    <h2 class="problem-title">{{ problemData.title }}</h2>
-                    <div class="problem-meta">
-                        <el-tag :type="getDifficultyType(problemData.difficulty)" class="meta-tag">
-                            {{ problemData.difficulty }}
-                        </el-tag>
-                        <el-tag type="info" class="meta-tag">
-                            {{ problemData.category }}
-                        </el-tag>
-                        <span class="id-label">ID: {{ problemData.id }}</span>
+        <el-dialog v-model="dialogVisible" title="题目详情" width="680px" :close-on-click-modal="false" class="problem-detail-dialog" style="margin-top: 70px;">
+            <div class="problem-detail-scroll-wrapper">
+                <div class="problem-detail-container" v-loading="loading">
+                    <div class="problem-header">
+                        <h2 class="problem-title">{{ problemData.title }}</h2>
+                        <div class="problem-meta">
+                            <el-tag :type="getDifficultyType(problemData.difficulty)" class="meta-tag">
+                                {{ problemData.difficulty }}
+                            </el-tag>
+                            <el-tag type="info" class="meta-tag">
+                                {{ problemData.category }}
+                            </el-tag>
+                            <span class="id-label">ID: {{ problemData.id }}</span>
+                        </div>
                     </div>
-                </div>
 
-                <el-divider></el-divider>
+                    <el-divider></el-divider>
 
-                <div class="problem-info">
-                    <div class="info-item">
-                        <span class="label">时间限制:</span>
-                        <span class="value">{{ problemData.time_limit }} ms</span>
+                    <div class="problem-info">
+                        <div class="info-item">
+                            <span class="label">时间限制:</span>
+                            <span class="value">{{ problemData.time_limit }} ms</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="label">内存限制:</span>
+                            <span class="value">{{ problemData.memory_limit }} MB</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="label">通过率:</span>
+                            <span class="value">{{ problemData.passRate }}%</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="label">提交次数:</span>
+                            <span class="value">{{ problemData.submissionCount }} 次</span>
+                        </div>
                     </div>
-                    <div class="info-item">
-                        <span class="label">内存限制:</span>
-                        <span class="value">{{ problemData.memory_limit }} MB</span>
+
+                    <el-divider></el-divider>
+
+                    <div class="problem-description" v-if="problemData.description">
+                        <h3>题目描述</h3>
+                        <p>{{ problemData.description }}</p>
                     </div>
-                    <div class="info-item">
-                        <span class="label">通过率:</span>
-                        <span class="value">{{ problemData.passRate }}%</span>
+
+                    <el-divider></el-divider>
+
+                    <div class="problem-section">
+                        <h3>输入格式</h3>
+                        <p>{{ problemData.input_format || '暂无输入格式说明' }}</p>
                     </div>
-                    <div class="info-item">
-                        <span class="label">提交次数:</span>
-                        <span class="value">{{ problemData.submissionCount }} 次</span>
+
+                    <el-divider></el-divider>
+
+                    <div class="problem-section">
+                        <h3>输出格式</h3>
+                        <p>{{ problemData.output_format || '暂无输出格式说明' }}</p>
                     </div>
-                </div>
 
-                <el-divider></el-divider>
+                    <el-divider></el-divider>
 
-                <div class="problem-description" v-if="problemData.description">
-                    <h3>题目描述</h3>
-                    <p>{{ problemData.description }}</p>
-                </div>
+                    <div class="problem-section">
+                        <h3>约束条件</h3>
+                        <ul v-if="problemData.constraints && problemData.constraints.length">
+                            <li v-for="(constraint, index) in problemData.constraints" :key="index">
+                                {{ constraint }}
+                            </li>
+                        </ul>
+                        <p v-else>暂无约束条件</p>
+                    </div>
 
-                <el-divider></el-divider>
+                    <el-divider></el-divider>
 
-                <div class="problem-section">
-                    <h3>输入格式</h3>
-                    <p>{{ problemData.input_format || '暂无输入格式说明' }}</p>
-                </div>
-
-                <el-divider></el-divider>
-
-                <div class="problem-section">
-                    <h3>输出格式</h3>
-                    <p>{{ problemData.output_format || '暂无输出格式说明' }}</p>
-                </div>
-
-                <el-divider></el-divider>
-
-                <div class="problem-section">
-                    <h3>约束条件</h3>
-                    <ul v-if="problemData.constraints && problemData.constraints.length">
-                        <li v-for="(constraint, index) in problemData.constraints" :key="index">
-                            {{ constraint }}
-                        </li>
-                    </ul>
-                    <p v-else>暂无约束条件</p>
-                </div>
-
-                <el-divider></el-divider>
-
-                <div class="problem-section">
-                    <h3>示例</h3>
-                    <div v-if="problemData.examples && problemData.examples.length">
-                        <div class="example-box" v-for="(example, index) in problemData.examples" :key="index">
-                            <div class="example-header">示例 {{ index + 1 }}</div>
-                            <div class="example-content">
-                                <div class="example-input">
-                                    <div class="example-label">输入:</div>
-                                    <pre class="example-code">{{ example.input }}</pre>
-                                </div>
-                                <div class="example-output">
-                                    <div class="example-label">输出:</div>
-                                    <pre class="example-code">{{ example.output }}</pre>
-                                </div>
-                                <div class="example-explanation" v-if="example.explanation">
-                                    <div class="example-label">解释:</div>
-                                    <pre class="example-code">{{ example.explanation }}</pre>
+                    <div class="problem-section">
+                        <h3>示例</h3>
+                        <div v-if="problemData.examples && problemData.examples.length">
+                            <div class="example-box" v-for="(example, index) in problemData.examples" :key="index">
+                                <div class="example-header">示例 {{ index + 1 }}</div>
+                                <div class="example-content">
+                                    <div class="example-input">
+                                        <div class="example-label">输入:</div>
+                                        <pre class="example-code">{{ example.input }}</pre>
+                                    </div>
+                                    <div class="example-output">
+                                        <div class="example-label">输出:</div>
+                                        <pre class="example-code">{{ example.output }}</pre>
+                                    </div>
+                                    <div class="example-explanation" v-if="example.explanation">
+                                        <div class="example-label">解释:</div>
+                                        <pre class="example-code">{{ example.explanation }}</pre>
+                                    </div>
                                 </div>
                             </div>
                         </div>
+                        <p v-else>暂无示例</p>
                     </div>
-                    <p v-else>暂无示例</p>
                 </div>
             </div>
 
@@ -165,7 +167,7 @@ const loading = ref(false);
 
 // 题目数据
 const problemData = reactive<ProblemData>({
-    id: '',
+    id: 0,
     title: '',
     description: '',
     difficulty: '',
@@ -182,7 +184,7 @@ const problemData = reactive<ProblemData>({
 });
 
 // 打开题目详情对话框
-const openDetailDialog = async (problemId: string) => {
+const openDetailDialog = async (problemId: number) => {
     dialogVisible.value = true;
     loading.value = true;
     await fetchProblemDetails(problemId);
@@ -190,16 +192,14 @@ const openDetailDialog = async (problemId: string) => {
 };
 
 // 获取题目详情
-const fetchProblemDetails = async (problemId: string) => {
+const fetchProblemDetails = async (problemId: number) => {
     try {
-        // P1XXX格式，需要提取出XXX部分对应的数字
-        const matches = problemId.match(/P1(\d+)/);
-        const numericId = matches ? parseInt(matches[1], 10) : 0;
+        const numericId = problemId;
 
-        console.log(`正在获取题目详情，原始ID: ${problemId}, 实际ID: ${numericId}`);
+        console.log(`正在获取题目详情,ID: ${numericId}`);
 
         const response = await axios({
-            url: `http://localhost:5000/api/${numericId}`,
+            url: `http://localhost:5000/api/admin-question/${numericId}`,
             method: 'get'
         });
 
@@ -287,6 +287,41 @@ defineExpose({
 </script>
 
 <style scoped>
+.problem-detail-dialog :deep(.el-dialog__body) {
+  padding: 0;
+  max-height: calc(80vh - 120px);
+  overflow: hidden;
+}
+
+.problem-detail-scroll-wrapper {
+  max-height: calc(80vh - 120px);
+  overflow-y: auto;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.problem-detail-scroll-wrapper::-webkit-scrollbar {
+  width: 6px;
+}
+
+.problem-detail-scroll-wrapper::-webkit-scrollbar-thumb {
+  background-color: #dcdfe6;
+  border-radius: 3px;
+}
+
+.problem-detail-scroll-wrapper::-webkit-scrollbar-track {
+  background-color: #f5f7fa;
+}
+
+.dialog-footer {
+  padding: 10px 20px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  border-top: 1px solid #ebeef5;
+  background-color: #fff;
+}
+
 .problem-detail-container {
     padding: 0 12px;
 }
