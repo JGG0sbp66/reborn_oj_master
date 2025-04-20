@@ -2,19 +2,19 @@
   <main>
     <competitionheader :raceInfo="raceInfo"/>
     <div class="main-content">
-      <div class="left-panel">
+      <aside class="left-panel">
         <sidebarproblem :raceInfo="raceInfo"/>
-      </div>
-      <div class="content-area">
+      </aside>
+      <section class="content-area">
         <div class="content-wrapper">
-          <div class="left-main">
+          <article class="left-main">
             <competitionshow :raceInfo="raceInfo" :uid="uid"/>
-          </div>
-          <div class="right-main">
+          </article>
+          <aside class="right-main">
             <competitioninformation :raceInfo="raceInfo" :uid="uid"/>
-          </div>
+          </aside>
         </div>
-      </div>
+      </section>
     </div>
   </main>
 </template>
@@ -54,12 +54,12 @@ onMounted(fetchData); // 在组件挂载时调用 fetchData 函数
 <style scoped>
 .main-content {
   display: flex;
-  /* height: calc(100vh - 52px); */
-  background-color: #ffffff;
+  flex: 1;
+  background-color: #f7f9fc;
   animation: fadeIn 0.6s ease-out;
   position: relative;
-  /* top: 70px; */
   overflow: auto; /* 改为auto允许滚动 */
+  min-height: calc(100vh - 70px); /* 减去头部高度 */
 }
 
 .page-title {
@@ -119,7 +119,7 @@ onMounted(fetchData); // 在组件挂载时调用 fetchData 函数
 .left-main {
   flex: 1;
   min-width: 0; /* 防止内容溢出 */
-  background-color: #fff;
+  background-color: transparent;
   border-radius: 12px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
   padding: 24px;
@@ -128,7 +128,12 @@ onMounted(fetchData); // 在组件挂载时调用 fetchData 函数
   position: relative;
   overflow: hidden;
   backdrop-filter: blur(10px);
-  background: rgba(255, 255, 255, 0.95);
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.left-main:hover {
+  box-shadow: 0 6px 25px rgba(59, 130, 246, 0.15);
+  transform: translateY(-2px);
 }
 
 .right-main {
@@ -187,9 +192,12 @@ onMounted(fetchData); // 在组件挂载时调用 fetchData 函数
 }
 
 main {
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  background: #f7f9fc;
   position: relative;
   overflow: hidden;
+  min-height: 100vh; /* 确保至少占满整个视口高度 */
+  display: flex;
+  flex-direction: column;
 }
 
 main::before {
