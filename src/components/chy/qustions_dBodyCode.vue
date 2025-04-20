@@ -1250,42 +1250,44 @@ export default {
       }
       try {
         const { authenticated } = await checkAuth();
-        console.log("用户认证状态:", authenticated);
         if (!authenticated) {
           throw new Error("用户未登录");
         }
+
+        // 显示提交成功的提示
         this.$emit("show-alert", {
           type: "success",
           message: "提交成功",
         });
-        // 如果已登录，继续提交流程
+
+        // 创建唯一的提交标识
+        const submissionId = Date.now();
+
         const pendingSubmission = {
           status: `
-    <div style="display: inline-flex; align-items: center;">
-      <span>评测中</span>
-        <div class="spinner" style="
-        width: 12px;
-        height: 12px;
-        border: 2px solid #ccc;
-        border-top-color: #18a058;
-        border-radius: 50%;
-        margin-left: 5px;
-        margin-top: 3px;
-        animation: spin 1s linear infinite;
-      "></div>
-    </div>
-  `,
+            <div style="display: inline-flex; align-items: center;">
+              <span>评测中</span>
+              <div class="spinner" style="
+                width: 12px;
+                height: 12px;
+                border: 2px solid #ccc;
+                border-top-color: #18a058;
+                border-radius: 50%;
+                margin-left: 5px;
+                margin-top: 3px;
+                animation: spin 1s linear infinite;
+              "></div>
+            </div>
+          `,
           language: this.selectedLanguage,
           runTime: "-",
           memoryUsage: "-",
           submitTime: this.getSubmitTime(),
           isPending: true,
-          index: Date.now(), // 添加唯一标识
+          index: submissionId,
         };
-        this.$emit("add-pending-submission", pendingSubmission);
 
-        // 模拟API请求延迟
-        // await new Promise((resolve) => setTimeout(resolve, 1500));
+        this.$emit("add-pending-submission", pendingSubmission);
 
         const formData = new FormData();
         formData.append("question_uid", this.id);
@@ -1302,10 +1304,7 @@ export default {
           },
         });
 
-        // 解析AI返回的结果
         const aiResponse = response.message;
-        // const aiResponse = "编译错误"; // 测试用的假数据
-        // console.log(aiResponse);
         let statusOption = this.stateOptions.find((option) =>
           option.status.includes(this.getStatusFromAiResponse(aiResponse))
         );
@@ -1322,16 +1321,16 @@ export default {
           submitTime: this.getSubmitTime(),
           aiFeedback: aiResponse,
           isPending: false,
-          index: pendingSubmission.index, // 保持相同的唯一标识
+          index: submissionId, // 保持相同的唯一标识
         };
 
-        // 确保传递正确的index
         this.$emit("update-submission", {
-          index: pendingSubmission.index,
+          index: submissionId,
           submission: submission,
         });
 
         this.codeLines = [""];
+
       } catch (error) {
         console.error("提交失败:", error);
 

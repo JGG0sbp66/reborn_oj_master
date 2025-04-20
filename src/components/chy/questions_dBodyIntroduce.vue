@@ -335,24 +335,23 @@ export default {
             (existing) =>
               existing.submitTime === submission.submitTime &&
               existing.status === submission.status &&
-              existing.language === submission.language
+              existing.language === submission.language &&
+              existing.index === submission.index // 添加index比较
           );
         });
 
         if (newSubmissions.length > 0) {
           // 合并新的提交记录到现有记录中
           const updatedSubmissions = [
-            ...existingSubmissions,
             ...newSubmissions,
+            ...existingSubmissions,
           ];
 
-          // 按提交时间降序排序
-          updatedSubmissions.sort(
-            (a, b) => new Date(b.submitTime) - new Date(a.submitTime)
-          );
+          // 限制本地存储的记录数量，比如只保留最近的50条
+          const limitedSubmissions = updatedSubmissions.slice(0, 50);
 
           // 存储更新后的提交记录
-          localStorage.setItem(storageKey, JSON.stringify(updatedSubmissions));
+          localStorage.setItem(storageKey, JSON.stringify(limitedSubmissions));
           console.log("保存新的提交记录到本地存储:", newSubmissions);
         }
       }
@@ -462,27 +461,31 @@ export default {
       deep: true,
       handler(newVal) {
         if (this.isAuthenticated) {
-          this.saveSubmissionsToLocal();
-          this.loadLocalSubmissions();
-
-          // 修改这部分代码以获取 span 内容
-          newVal.forEach((submission) => {
-            if (!submission.isPending) {
-              const status = this.handleStatusClick(submission);
-              console.log("Emitted status:", status);
-              if (!status.includes("答案正确")) {
-                this.$emit("show-alert", {
-                  type: "error",
-                  message: status, // 使用解析后的 span 内容
-                });
-              } else {
-                this.$emit("show-alert", {
-                  type: "success",
-                  message: status, // 使用解析后的 span 内容
-                });
-              }
+          // 只处理最新的提交记录
+          const latestSubmission = newVal[0]; // 假设最新的提交总是在数组的第一个位置
+          
+          if (latestSubmission && !latestSubmission.isPending) {
+            this.saveSubmissionsToLocal(); // 先保存到本地存储
+            
+            // 获取状态文本
+            const status = this.handleStatusClick(latestSubmission);
+            if (status) {
+              // 设置延时显示评测结果，避免和"提交成功"的提示重叠
+              setTimeout(() => {
+                if (!status.includes("答案正确")) {
+                  this.$emit("show-alert", {
+                    type: "error",
+                    message: status,
+                  });
+                } else {
+                  this.$emit("show-alert", {
+                    type: "success",
+                    message: status,
+                  });
+                }
+              }, 100);
             }
-          });
+          }
         }
       },
     },
