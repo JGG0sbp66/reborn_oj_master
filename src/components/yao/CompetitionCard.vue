@@ -1,5 +1,5 @@
 <template>
-  <div class="competition-item" :class="{ appear }" :style="animationStyle">
+  <div class="competition-item" :class="[{ appear }, getStatusClass()]" :style="animationStyle">
     <div class="competition-header" :class="headerClass">
       <div class="title-line">
         <!-- 标题插槽 -->
@@ -78,6 +78,7 @@ interface Competition {
   endTime: string;
   duration: string;
   tags: Tag[];
+  status?: string; // 新增：竞赛状态
   [key: string]: any; // 允许添加任意其他属性
 }
 
@@ -95,7 +96,6 @@ const props = defineProps<{
 }>();
 
 // 提供默认值
-const actionLink = props.actionLink || '/contest/problems';
 const actionText = props.actionText || "Let's go";
 
 // 存储从服务器获取的竞赛数据
@@ -107,6 +107,16 @@ const mergedCompetition = computed(() => {
     return competitionData.value;
   }
   return props.competition;
+});
+
+// 修改：将actionLink从默认值变为计算属性
+const actionLink = computed(() => {
+  if (props.actionLink) {
+    return props.actionLink;
+  }
+  // 如果存在race_uid或uid，则使用它构建链接
+  const uid = mergedCompetition.value?.race_uid || mergedCompetition.value?.uid;
+  return uid ? `/contest/problems?uid=${uid}` : '/contest/problems';
 });
 
 // 时间信息项目配置
@@ -189,7 +199,6 @@ const fetchCompetitionData = async () => {
         id: props.competitionId 
       }
     });
-    
     competitionData.value = data.competition;
     console.log('获取到竞赛数据:', data.competition);
   } catch (error) {
@@ -210,6 +219,22 @@ onMounted(() => {
     fetchCompetitionData();
   }
 });
+
+// 获取竞赛状态对应的类名
+const getStatusClass = () => {
+  if (!mergedCompetition.value || !mergedCompetition.value.status) return '';
+  
+  switch(mergedCompetition.value.status) {
+    case 'upcoming':
+      return 'status-upcoming';
+    case 'running':
+      return 'status-running';
+    case 'ended':
+      return 'status-ended';
+    default:
+      return '';
+  }
+};
 </script>
 
 <style scoped>
@@ -338,7 +363,9 @@ onMounted(() => {
 
 .logo-placeholder {
   height: 36px;
-  width: 70px;
+  min-width: 70px; /* 设置最小宽度 */
+  max-width: 120px; /* 设置最大宽度 */
+  width: auto; /* 宽度自适应 */
   background-color: #f0f0f0;
   display: flex;
   align-items: center;
@@ -349,6 +376,10 @@ onMounted(() => {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
   transition: all 0.2s ease;
   font-size: 13px;
+  padding: 0 10px; /* 添加水平内边距 */
+  white-space: nowrap; /* 防止文字换行 */
+  overflow: hidden; /* 超出部分隐藏 */
+  text-overflow: ellipsis; /* 超出显示省略号 */
 }
 
 .competition-item:hover .logo-placeholder {
@@ -488,4 +519,66 @@ onMounted(() => {
 .router-link-no-underline {
   text-decoration: none;
 }
-</style> 
+
+/* 添加状态相关的样式 */
+.competition-item.status-upcoming .competition-header {
+  background: linear-gradient(to right, #f9f9f9, #f2f2f2);
+}
+
+.competition-item.status-upcoming .lets-go-btn {
+  background: linear-gradient(135deg, #ffaa00, #ffc107);
+  box-shadow: 0 6px 15px rgba(255, 170, 0, 0.25);
+}
+
+.competition-item.status-upcoming .lets-go-btn::after {
+  background: linear-gradient(90deg, #ffc107, #ffaa00);
+}
+
+.competition-item.status-upcoming .competition-title::before {
+  background: linear-gradient(to bottom, #ffaa00, #ffc107);
+}
+
+.competition-item.status-running .competition-header {
+  background: linear-gradient(to right, #f9fafb, #f5f7fa);
+}
+
+.competition-item.status-running .competition-title::before {
+  background: linear-gradient(to bottom, #42b983, #33c6aa);
+}
+
+.competition-item.status-ended .competition-header {
+  background: linear-gradient(to right, #f9f9f9, #f2f2f2);
+}
+
+.competition-item.status-ended .lets-go-btn {
+  background: linear-gradient(135deg, #a3a3a3, #888888);
+  box-shadow: 0 6px 15px rgba(100, 100, 100, 0.2);
+}
+
+.competition-item.status-ended .lets-go-btn::after {
+  background: linear-gradient(90deg, #888888, #a3a3a3);
+}
+
+.competition-item.status-ended .competition-title {
+  color: #777;
+}
+
+.competition-item.status-ended .competition-title::before {
+  background: linear-gradient(to bottom, #bbbbbb, #999999);
+}
+
+.competition-item.status-ended:hover .logo-placeholder {
+  background-color: #f0f0f0;
+  color: #888888;
+}
+
+.competition-item.status-upcoming:hover .logo-placeholder {
+  background-color: #fff8e0;
+  color: #ffaa00;
+}
+
+.competition-item.status-running:hover .logo-placeholder {
+  background-color: #e8f7f1;
+  color: #42b983;
+}
+</style>
