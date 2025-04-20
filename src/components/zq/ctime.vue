@@ -88,6 +88,7 @@ const props = defineProps({
     align-items: center;
     position: relative;
     z-index: 2;
+    margin-top: 10px;
 }
 
 .time-point__icon {
@@ -125,8 +126,8 @@ const props = defineProps({
 .time-line:first-child::after {
     content: '';
     position: absolute;
-    left: 33px;
-    top: 60px;
+    left: 18px;
+    top: 70px;
     width: 2px;
     height: calc(100% - 60px);
     background: linear-gradient(to bottom, #42b983 0%, #f43f5e 100%);
@@ -176,8 +177,9 @@ const props = defineProps({
     }
 
     .time-line:first-child::after {
-        left: 31px;
-        top: 52px;
+        left: 16px;
+        top: 62px;
+        height: calc(100% - 52px);
     }
 
     .time-content__label {
@@ -203,8 +205,9 @@ const props = defineProps({
     }
 
     .time-line:first-child::after {
-        left: 29px;
-        top: 46px;
+        left: 14px;
+        top: 56px;
+        height: calc(100% - 46px);
     }
 }
 </style>

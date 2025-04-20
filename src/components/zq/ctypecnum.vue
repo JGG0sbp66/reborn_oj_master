@@ -22,6 +22,7 @@
                             <Clock v-else-if="tag.type === 'innovation'" />
                             <DataAnalysis v-else-if="tag.type === 'ai'" />
                             <Operation v-else-if="tag.type === 'algorithm'" />
+                            <Connection v-else-if="tag.type === 'iot'" />
                             <Timer v-else />
                         </el-icon>
                         <span class="tag-item__text" v-if="!['pending', 'started', 'ended', 'registration', 'ongoing'].includes(tag.type)">{{ tag.name }}</span>
@@ -58,9 +59,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import type { Ref } from 'vue';
-import { Trophy, User, Clock, Monitor, DataAnalysis, Operation, Timer } from '@element-plus/icons-vue';
+import { Trophy, User, Clock, Monitor, DataAnalysis, Operation, Timer, Connection } from '@element-plus/icons-vue';
 import axios from 'axios';
 
 interface Tag {
@@ -96,95 +97,172 @@ const props = defineProps({
     }
 });
 
-// 为未知标签随机生成颜色样式并保存
-onMounted(() => {
-    const styleEl = document.createElement('style');
-    styleEl.setAttribute('id', 'dynamic-tag-styles');
-    document.head.appendChild(styleEl);
+// 预定义的颜色 - 移除灰色系
+const backgrounds = [
+    '#e9d5ff', '#bfdbfe', '#bbf7d0', '#fef08a', 
+    '#fed7aa', '#fecaca', '#f0fdfa', '#fce7f3',
+    '#dbeafe', '#e0f2fe', '#ede9fe', '#ffedd5',
+    '#dcfce7', '#d8b4fe', '#c7d2fe', '#fef3c7'
+];
 
-    // 预定义的颜色
-    const backgrounds = [
-        '#e9d5ff', '#bfdbfe', '#bbf7d0', '#fef08a', 
-        '#fed7aa', '#fecaca', '#d1d5db', '#fce7f3'
-    ];
-    
-    const textColors = [
-        '#9333ea', '#3b82f6', '#22c55e', '#eab308', 
-        '#f97316', '#ef4444', '#4b5563', '#ec4899'
-    ];
+const textColors = [
+    '#9333ea', '#3b82f6', '#22c55e', '#eab308', 
+    '#f97316', '#ef4444', '#14b8a6', '#ec4899',
+    '#2563eb', '#0ea5e9', '#8b5cf6', '#f97316',
+    '#16a34a', '#9333ea', '#4f46e5', '#ca8a04'
+];
 
-    // 从本地存储获取已保存的样式
-    const getSavedStyles = (): TagStyleMap => {
-        const savedStyles = localStorage.getItem('tag-styles');
-        return savedStyles ? JSON.parse(savedStyles) : {};
-    };
+// 已知标签类型列表
+const knownTypes = [
+    'pending', 'individual', 'oi', 'acm', 'ioi', 
+    'team', 'innovation', 'ai', 'algorithm', 
+    'started', 'ended', 'registration', 'ongoing'
+];
 
-    // 保存样式到本地存储
-    const saveStyles = (styles: TagStyleMap): void => {
-        localStorage.setItem('tag-styles', JSON.stringify(styles));
-    };
+// 从本地存储获取已保存的样式
+const getSavedStyles = (): TagStyleMap => {
+    const savedStyles = localStorage.getItem('tag-styles');
+    return savedStyles ? JSON.parse(savedStyles) : {};
+};
 
-    // 随机获取索引
-    const getRandomIndex = (): number => Math.floor(Math.random() * backgrounds.length);
-    
-    // 生成随机样式
-    const generateRandomStyle = (tagType: string, savedStyles: TagStyleMap): string => {
-        // 如果已经存在样式，则使用保存的样式
-        if (savedStyles[tagType]) {
-            const style = savedStyles[tagType];
-            return `
-                .tag-item--${tagType} {
-                    background-color: ${style.bg};
-                    color: ${style.text};
-                }
-            `;
-        }
-        
-        // 否则生成新样式并保存
-        const index = getRandomIndex();
-        const newStyle = {
-            bg: backgrounds[index],
-            text: textColors[index]
-        };
-        
-        savedStyles[tagType] = newStyle;
-        saveStyles(savedStyles);
-        
+// 保存样式到本地存储
+const saveStyles = (styles: TagStyleMap): void => {
+    localStorage.setItem('tag-styles', JSON.stringify(styles));
+};
+
+// 随机获取索引
+const getRandomIndex = (): number => Math.floor(Math.random() * backgrounds.length);
+
+// 生成随机样式
+const generateRandomStyle = (tagType: string, savedStyles: TagStyleMap): string => {
+    // 如果已经存在样式，则使用保存的样式
+    if (savedStyles[tagType]) {
+        const style = savedStyles[tagType];
         return `
             .tag-item--${tagType} {
-                background-color: ${newStyle.bg};
-                color: ${newStyle.text};
+                background-color: ${style.bg};
+                color: ${style.text};
             }
         `;
-    };
-
-    // 检查所有标签并为未知标签生成样式
-    const generateTagStyles = (): void => {
-        if (!props.raceInfo?.value?.race_info.tags) return;
-        
-        let cssText = '';
-        const knownTypes = [
-            'pending', 'individual', 'oi', 'acm', 'ioi', 
-            'team', 'innovation', 'ai', 'algorithm', 
-            'started', 'ended', 'registration', 'ongoing'
-        ];
-        
-        const savedStyles = getSavedStyles();
-        
-        // 为每个未知类型生成样式
-        props.raceInfo.value.race_info.tags.forEach((tag: Tag) => {
-            if (!knownTypes.includes(tag.type) && tag.type) {
-                cssText += generateRandomStyle(tag.type, savedStyles);
-            }
-        });
-        
-        styleEl.textContent = cssText;
+    }
+    
+    // 否则生成新样式并保存
+    const index = getRandomIndex();
+    const newStyle = {
+        bg: backgrounds[index],
+        text: textColors[index]
     };
     
-    // 初始生成样式
+    savedStyles[tagType] = newStyle;
+    saveStyles(savedStyles);
+    
+    return `
+        .tag-item--${tagType} {
+            background-color: ${newStyle.bg};
+            color: ${newStyle.text};
+        }
+    `;
+};
+
+// 生成自定义标签样式并添加到DOM
+const generateTagStyles = () => {
+    if (!props.raceInfo?.value?.race_info?.tags) return;
+    
+    let styleEl = document.getElementById('dynamic-tag-styles');
+    if (!styleEl) {
+        styleEl = document.createElement('style');
+        styleEl.setAttribute('id', 'dynamic-tag-styles');
+        document.head.appendChild(styleEl);
+    }
+    
+    let cssText = '';
+    const savedStyles = getSavedStyles();
+    
+    // 添加'iot'类型的预设样式
+    if (!savedStyles['iot']) {
+        savedStyles['iot'] = {
+            bg: '#d1fae5',
+            text: '#059669'
+        };
+        saveStyles(savedStyles);
+    }
+    
+    // 添加'tourism'(旅游)类型的预设样式
+    if (!savedStyles['tourism']) {
+        savedStyles['tourism'] = {
+            bg: '#dbeafe',
+            text: '#3b82f6'
+        };
+        saveStyles(savedStyles);
+    }
+    
+    // 清除本地存储中可能存在的灰色样式
+    Object.keys(savedStyles).forEach(key => {
+        const style = savedStyles[key];
+        // 检测灰色相关色值并替换
+        if (style.bg === '#d1d5db' || style.bg === '#f3f4f6' || style.bg === '#f1f5f9' || 
+            style.text === '#4b5563' || style.text === '#6b7280' || style.text === '#64748b') {
+            // 替换为蓝色系
+            savedStyles[key] = {
+                bg: '#dbeafe',
+                text: '#3b82f6'
+            };
+        }
+    });
+    saveStyles(savedStyles);
+    
+    // 为每个标签生成样式
+    props.raceInfo.value.race_info.tags.forEach((tag: Tag) => {
+        if (tag && tag.type && tag.type.trim() !== '') {
+            // 如果不是已知类型或还没有样式，生成一个新样式
+            if (!knownTypes.includes(tag.type)) {
+                cssText += generateRandomStyle(tag.type, savedStyles);
+            }
+        }
+    });
+    
+    // 最后应用所有样式
+    styleEl.textContent = cssText;
+};
+
+// 在组件挂载时生成样式
+onMounted(() => {
     generateTagStyles();
 });
+
+// 监听props变化，当标签数据更新时重新生成样式
+watch(
+    () => props.raceInfo?.value?.race_info?.tags,
+    (newVal: Tag[] | undefined) => {
+        if (newVal) {
+            setTimeout(() => {
+                generateTagStyles();
+            }, 0);
+        }
+    },
+    { deep: true }
+);
 </script>
+
+<style>
+/* 全局样式确保被正确应用 */
+.tag-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+/* 确保所有标签类型都有默认样式 - 不使用灰色 */
+[class^="tag-item--"] {
+    background-color: #e0f2fe;
+    color: #0ea5e9;
+}
+</style>
 
 <style scoped>
 .competition-info {
@@ -246,17 +324,6 @@ onMounted(() => {
     gap: 8px;
 }
 
-.tag-item {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    padding: 6px 10px;
-    border-radius: 6px;
-    font-size: 13px;
-    font-weight: 500;
-    transition: all 0.2s ease;
-}
-
 .tag-item:hover {
     transform: translateY(-1px);
     box-shadow: 0 2px 8px rgba(66, 185, 131, 0.15);
@@ -267,8 +334,8 @@ onMounted(() => {
 }
 
 .tag-item--pending {
-    background-color: #f3f4f6;
-    color: #6b7280;
+    background-color: #c7d2fe;
+    color: #4f46e5;
 }
 
 .tag-item--individual {
@@ -318,8 +385,8 @@ onMounted(() => {
 }
 
 .tag-item--ended {
-    background-color: #f1f5f9;
-    color: #64748b;
+    background-color: #fef3c7;
+    color: #ca8a04;
 }
 
 .tag-item--registration {
@@ -395,5 +462,11 @@ onMounted(() => {
     .info-card {
         padding: 12px;
     }
+}
+
+/* 添加旅游数据标签样式 */
+.tag-item--tourism {
+    background-color: #dbeafe;
+    color: #3b82f6;
 }
 </style>

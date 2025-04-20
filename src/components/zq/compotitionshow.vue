@@ -1,7 +1,7 @@
 <template>
   <div class="competition-problems">
     <div v-if="!isCompetitionStarted" class="not-started-notice">
-      <el-empty :description="competitionStatusText">
+      <el-empty description="比赛未开始，题目将在开始后显示">
         <template #image>
           <el-icon :size="60"><Timer /></el-icon>
         </template>
@@ -124,27 +124,25 @@ const props = defineProps({
   },
 });
 
-// 修改比赛状态判断
+// 添加比赛状态判断
 const isCompetitionStarted = computed(() => {
   if (!props.raceInfo?.value?.race_info) return false;
-  return props.raceInfo.value.race_info.status === 'running';
-});
-
-// 添加比赛状态文本
-const competitionStatusText = computed(() => {
-  if (!props.raceInfo?.value?.race_info) return '加载中';
   
-  const status = props.raceInfo.value.race_info.status;
-  switch (status) {
-    case 'upcoming':
-      return '比赛报名中，题目将在开始后显示';
-    case 'running':
-      return '比赛进行中';
-    case 'ended':
-      return '比赛已结束';
-    default:
-      return '未知状态';
-  }
+  // 检查比赛标签，查找是否有"已开始"、"进行中"或"已结束"状态
+  const hasValidTag = props.raceInfo.value.race_info.tags?.some(
+    tag => tag.type === 'started' || tag.type === 'ongoing' || tag.type === 'ended'
+  );
+  
+  // 如果标签显示已开始/进行中/已结束，直接返回true
+  if (hasValidTag) return true;
+  
+  // 否则检查时间
+  const now = new Date().getTime();
+  const startTime = new Date(props.raceInfo.value.race_info.start_time).getTime();
+  const endTime = new Date(props.raceInfo.value.race_info.end_time).getTime();
+  
+  // 如果当前时间在开始时间之后（包括已结束的情况），也显示题目
+  return now >= startTime;
 });
 
 // 修改题目列表计算属性
