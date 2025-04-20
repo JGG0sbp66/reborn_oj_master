@@ -293,27 +293,45 @@ export default {
 
 /* 难度标签颜色 */
 .easy {
-  background-color: #fe4c61;
+  background-color: rgba(254, 76, 97, 0.1);
+  color: #fe4c61;
+  border: 1px solid rgba(254, 76, 97, 0.2);
 }
 
 .popularize {
-  background-color: #f39c11;
+  background-color: rgba(243, 156, 17, 0.1);
+  color: #f39c11;
+  border: 1px solid rgba(243, 156, 17, 0.2);
 }
 
 .improve {
-  background-color: #ffc116;
+  background-color: rgba(255, 193, 22, 0.1);
+  color: #ffc116;
+  border: 1px solid rgba(255, 193, 22, 0.2);
 }
 
 .provincial-election {
-  background-color: #52c41a;
+  background-color: rgba(82, 196, 26, 0.1);
+  color: #52c41a;
+  border: 1px solid rgba(82, 196, 26, 0.2);
 }
 
 .noi {
-  background-color: #9d3dcf;
+  background-color: rgba(157, 61, 207, 0.1);
+  color: #9d3dcf;
+  border: 1px solid rgba(157, 61, 207, 0.2);
 }
 
 .ctsc {
-  background-color: #0e1d69;
+  background-color: rgba(14, 29, 105, 0.1);
+  color: #0e1d69;
+  border: 1px solid rgba(14, 29, 105, 0.2);
+}
+
+/* 难度标签悬浮效果 */
+.difficulty-tag:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
 /* 列宽设置 */

@@ -59,19 +59,19 @@ const handleMouseLeave = (event: MouseEvent) => {
   target.classList.remove('hover-active');
 };
 
-const handleProblemClick = async (uid: number) => {
-  try {
-    console.log('点击题目:', uid);
-    localStorage.setItem("currentQuestionId", uid.toString());
-    const response = await axios.post('http://localhost:5000/api/question-detail', {
-      uid: uid
-    });
-    if (response.data.success) {
-      router.push(`/nav/questions_detail`);
-    }
-  } catch (error) {
+const handleProblemClick = (uid: number) => {
+  console.log('点击题目:', uid);
+  // 先存储ID
+  localStorage.setItem("currentQuestionId", uid.toString());
+  // 直接打开新窗口
+  window.open(`/nav/questions_detail`, '_blank');
+  
+  // 异步发送请求，不阻塞页面跳转
+  axios.post('http://localhost:5000/api/question-detail', {
+    uid: uid
+  }).catch(error => {
     console.error('获取题目详情失败:', error);
-  }
+  });
 };
 </script>
 
