@@ -133,6 +133,23 @@ interface QuestionInfo {
   title: string;
 }
 
+// API响应数据结构
+interface ApiProblemItem {
+  uid: number;
+  id?: number;
+  question: {
+    title: string;
+    description?: string;
+    time_limit?: number;
+    memory_limit?: number;
+    input_format?: string;
+    output_format?: string;
+    constraints?: string[];
+    examples?: ExampleItem[];
+  };
+  topic?: string;
+}
+
 // 当前示例类型
 interface CurrentExample {
   input: string;
@@ -235,11 +252,11 @@ const fetchQuestionsInfo = async (problemIds: number[] = []): Promise<void> => {
     
     // 获取所有可用题目
     const response = await axios.get("http://localhost:5000/api/admin-question");
-    const apiData = response.data;
+    const apiData = response.data as ApiProblemItem[];
     
     // 处理API返回的数据
-    const results = apiData.map(item => ({
-      id: item.id || apiData.indexOf(item) + 1,
+    const results = apiData.map((item: ApiProblemItem) => ({
+      id: item.uid || apiData.indexOf(item) + 1,
       title: item.question?.title || `题目 ${apiData.indexOf(item) + 1}`
     }));
     
@@ -431,7 +448,7 @@ defineExpose({
 
 .form-row {
   display: flex;
-  gap: 20px;
+  gap: 24px;
 }
 
 .form-row .el-form-item {
@@ -519,23 +536,24 @@ defineExpose({
 
 .problem-option {
   display: flex;
+  justify-content: space-between;
   align-items: center;
 }
 
 .problem-id {
-  color: #909399;
-  margin-right: 8px;
-  font-size: 0.9em;
+  font-size: 12px;
+  color: #999;
 }
 
 .problem-title {
-  font-weight: 500;
+  font-size: 14px;
+  font-weight: bold;
 }
 
 .tip-text {
   font-size: 12px;
-  color: #909399;
-  margin-top: 5px;
+  color: #999;
+  margin-top: 4px;
 }
 
 .mt-2 {

@@ -282,6 +282,7 @@ interface QuestionData {
 
 interface ApiProblem {
     id: number;
+    uid: number;
     question: QuestionData;
     topic: string;
 }
@@ -385,19 +386,18 @@ const fetchData = async () => {
             const passRate = Math.floor(Math.random() * 100);
             const submissionCount = Math.floor(Math.random() * 10000) + 1000;
 
-            // 从API返回数据中获取ID，根据截图显示的真实数据格式
-            // 优先使用item本身的id，如果不存在则使用索引+1001作为备选
-            const problemId = item.id || (1001 + index);
+            // 从API返回数据中获取UID
+            const problemId = item.uid;
             
             // 记录每个题目处理的详细信息
             console.log(`处理题目 ${index}:`, {
-                原始ID: item.id,
+                原始UID: item.uid,
                 使用的ID: problemId,
                 题目名称: item.question.title
             });
             
             return {
-                id: `P${problemId}`, // 使用带前缀的ID格式
+                id: problemId, // 直接使用原始UID作为ID
                 title: item.question.title,
                 topic: item.topic || '未分类',
                 difficulty: getDifficultyByComplexity(item.question), // 根据题目复杂度推断难度
@@ -408,10 +408,10 @@ const fetchData = async () => {
             };
         });
 
-        // 对题目按ID排序
+        // 对题目按ID排序（如果ID是数字）
         formattedProblems.sort((a, b) => {
-            const numA = parseInt(a.id.replace('P', ''));
-            const numB = parseInt(b.id.replace('P', ''));
+            const numA = typeof a.id === 'number' ? a.id : parseInt(a.id);
+            const numB = typeof b.id === 'number' ? b.id : parseInt(b.id);
             return numA - numB;
         });
 
@@ -489,7 +489,8 @@ const filteredProblems = computed(() => {
         // 搜索过滤
         const matchesSearch = searchQuery.value ?
             problem.title.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-            problem.id.toLowerCase().includes(searchQuery.value.toLowerCase()) :
+            (typeof problem.id === 'string' ? problem.id.toLowerCase().includes(searchQuery.value.toLowerCase()) : 
+             String(problem.id).includes(searchQuery.value.toLowerCase())) :
             true;
 
         // 难度过滤 - 修改这里使用topic而不是difficulty
@@ -550,8 +551,8 @@ const filteredProblems = computed(() => {
     const sorted = [...filtered].sort((a, b) => {
         // 特殊处理ID排序
         if (sortBy.value === 'id') {
-            const numA = parseInt(a.id.replace('P', ''));
-            const numB = parseInt(b.id.replace('P', ''));
+            const numA = typeof a.id === 'number' ? a.id : parseInt(a.id);
+            const numB = typeof b.id === 'number' ? b.id : parseInt(b.id);
             return sortOrder.value === 'ascending' ? numA - numB : numB - numA;
         }
 
@@ -640,7 +641,7 @@ const editProblem = (id: string) => {
         if (problem) {
             // 转换数据格式以匹配problem-edit.vue期望的格式
             const editData = {
-                id: problem.id,
+                id: problem.id, // 使用原始ID/UID
                 title: problem.question.title || problem.title,
                 description: problem.question.description || '',
                 topic: problem.topic || '入门',
@@ -666,7 +667,7 @@ const handleEditFromDetail = (problemData: any) => {
     if (problemEditRef.value) {
         // 转换数据格式以匹配problem-edit.vue期望的格式
         const editData = {
-            id: problemData.uid,
+            id: problemData.uid, // 确保使用uid作为ID
             title: problemData.title || '',
             description: problemData.description || '',
             topic: problemData.topic || '入门',
@@ -705,14 +706,12 @@ const deleteProblem = (id: string) => {
     )
         .then(async () => {
             try {
-                // 从ID中提取实际数字部分
-                // P1XXX格式，需要提取出XXX部分对应的数字
-                const matches = id.match(/P1(\d+)/);
-                const numericId = matches ? parseInt(matches[1], 10) : 0;
+                // 获取实际的数字ID
+                const numericId = typeof id === 'number' ? id : parseInt(id);
 
-                console.log(`正在删除题目，原始ID: ${id}, 实际ID: ${numericId}`);
+                console.log(`正在删除题目，ID: ${id}`);
 
-                // 使用实际ID调用接口
+                // 使用ID调用接口
                 const response = await axios({
                     url: `http://localhost:5000/api/admin-question/${numericId}`,
                     method: 'DELETE',
@@ -788,6 +787,22 @@ const displayedMiddlePages = computed(() => {
     return Array.from({ length: endPage - startPage + 1 }, (_, i) => startPage + i);
 });
 
+// 应用高级筛选
+const applyAdvancedSearch = () => {
+    // 由于使用了计算属性，我们只需要让页面知道筛选条件变更了
+    // 可以通过修改一些筛选条件的引用来触发
+    difficultyFilter.value = difficultyFilter.value;
+    
+    // 可以在这里添加一些提示信息
+    console.log('应用高级筛选');
+    
+    // 如果需要，可以在此处重新获取数据或执行其他操作
+    // 为避免频繁请求，通常我们会使用本地过滤
+    
+    // 关闭高级筛选面板
+    showAdvancedSearch.value = false;
+};
+
 // 重置筛选条件
 const resetAdvancedSearch = () => {
     searchQuery.value = '';
@@ -797,13 +812,7 @@ const resetAdvancedSearch = () => {
     submissionCountFilter.value = '';
     createTimeRange.value = [];
     // 立即应用重置的筛选条件
-    handleSearch();
-};
-
-const applyAdvancedSearch = () => {
-    // 应用高级筛选条件
-    handleSearch();
-    showAdvancedSearch.value = false;
+    applyAdvancedSearch();
 };
 </script>
 

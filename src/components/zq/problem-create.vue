@@ -359,7 +359,7 @@ const submitProblem = async () => {
       
       // 创建成功
       if (props.alertBoxRef) {
-        props.alertBoxRef.show(`题目"${problem.title}"创建成功! ID: ${response.data?.uid || '未知'}`, 0);
+        props.alertBoxRef.show(`题目"${problem.title}"创建成功! ID: ${response.data.uid || '未知'}`, 0);
       } else {
         ElMessage.success(`题目"${problem.title}"创建成功!`);
       }
