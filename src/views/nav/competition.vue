@@ -38,6 +38,25 @@
                 ></path>
               </svg>
             </span>
+            
+            <!-- 状态下拉菜单 -->
+            <div
+              class="dropdown-menu"
+              v-if="statusDropdownOpen"
+            >
+              <div class="dropdown-arrow"></div>
+              <div class="dropdown-content">
+                <div
+                  class="dropdown-item"
+                  v-for="option in statusOptions" 
+                  :key="option.value"
+                  @click="selectStatus(option.value)"
+                  :class="{ 'active': statusFilter === option.value }"
+                >
+                  <span>{{ option.label }}</span>
+                </div>
+              </div>
+            </div>
           </div>
           
           <!-- 自定义类型下拉框 -->
@@ -64,6 +83,25 @@
                 ></path>
               </svg>
             </span>
+            
+            <!-- 类型下拉菜单 -->
+            <div
+              class="dropdown-menu"
+              v-if="typeDropdownOpen"
+            >
+              <div class="dropdown-arrow"></div>
+              <div class="dropdown-content">
+                <div
+                  class="dropdown-item"
+                  v-for="option in typeOptions" 
+                  :key="option.value"
+                  @click="selectType(option.value)"
+                  :class="{ 'active': typeFilter === option.value }"
+                >
+                  <span>{{ option.label }}</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
         
@@ -93,7 +131,10 @@
           v-for="(competition, index) in paginatedCompetitions" 
           :key="index"
           class="competition-card"
-          :class="{ 'ended': competition.status === 'ended' }"
+          :class="{ 
+            'ended': competition.status === 'ended',
+            'upcoming': competition.status === 'upcoming'
+          }"
         >
           <div class="card-header" :class="getStatusClass(competition.status)">
             <h2 class="competition-title">{{ competition.title }}</h2>
@@ -171,47 +212,6 @@
     </div>
   </div>
   <foot class="page-footer" />
-  
-  <!-- 将下拉菜单放在页面最顶层 -->
-  <!-- 状态下拉菜单 -->
-  <div
-    class="dropdown-menu top-layer"
-    v-if="statusDropdownOpen"
-    :style="statusDropdownStyle"
-  >
-    <div class="dropdown-arrow"></div>
-    <div class="dropdown-content">
-      <div
-        class="dropdown-item"
-        v-for="option in statusOptions" 
-        :key="option.value"
-        @click="selectStatus(option.value)"
-        :class="{ 'active': statusFilter === option.value }"
-      >
-        <span>{{ option.label }}</span>
-      </div>
-    </div>
-  </div>
-  
-  <!-- 类型下拉菜单 -->
-  <div
-    class="dropdown-menu top-layer"
-    v-if="typeDropdownOpen"
-    :style="typeDropdownStyle"
-  >
-    <div class="dropdown-arrow"></div>
-    <div class="dropdown-content">
-      <div
-        class="dropdown-item"
-        v-for="option in typeOptions" 
-        :key="option.value"
-        @click="selectType(option.value)"
-        :class="{ 'active': typeFilter === option.value }"
-      >
-        <span>{{ option.label }}</span>
-      </div>
-    </div>
-  </div>
   <AIAgent
     title="「黄金判官·葛孚雷」"
     buttonColor="#3b82f6"
@@ -259,8 +259,8 @@ const typeDropdownWrapper = ref<HTMLElement | null>(null);
 // 下拉菜单选项
 const statusOptions = [
   { value: 'all', label: '全部状态' },
-  { value: 'upcoming', label: '未开始' },
-  { value: 'ongoing', label: '进行中' },
+  { value: 'upcoming', label: '报名中' },
+  { value: 'running', label: '进行中' },
   { value: 'ended', label: '已结束' }
 ];
 
@@ -310,19 +310,23 @@ const selectType = (value: string) => {
 
 // 点击外部关闭下拉菜单
 const handleClickOutside = (event: MouseEvent) => {
-  // 检查点击目标是否是筛选按钮
+  // 检查点击目标是否是筛选按钮或其子元素
   const target = event.target as HTMLElement;
-  const isStatusButton = target.closest('.filter-button') && 
-                         target.textContent?.includes(getStatusText.value);
-  const isTypeButton = target.closest('.filter-button') && 
-                       target.textContent?.includes(getTypeText.value);
   
-  // 如果点击的不是筛选按钮，且不在下拉菜单内，则关闭下拉菜单
-  if (!isStatusButton && !target.closest('.status-dropdown')) {
+  // 检查是否点击了状态筛选按钮或其子元素（包括SVG图标）
+  const isStatusButtonOrChild = target.closest('.filter-button') && 
+                          statusDropdownWrapper.value?.contains(target);
+  
+  // 检查是否点击了类型筛选按钮或其子元素（包括SVG图标）
+  const isTypeButtonOrChild = target.closest('.filter-button') && 
+                        typeDropdownWrapper.value?.contains(target);
+  
+  // 如果点击的不是筛选按钮或其子元素，且不在下拉菜单内，则关闭下拉菜单
+  if (!isStatusButtonOrChild && !target.closest('.dropdown-menu')) {
     statusDropdownOpen.value = false;
   }
   
-  if (!isTypeButton && !target.closest('.type-dropdown')) {
+  if (!isTypeButtonOrChild && !target.closest('.dropdown-menu')) {
     typeDropdownOpen.value = false;
   }
 };
@@ -412,8 +416,8 @@ const getStatusClass = (status: string) => {
   switch(status) {
     case 'upcoming':
       return 'status-upcoming';
-    case 'ongoing':
-      return 'status-ongoing';
+    case 'running':
+      return 'status-running';
     case 'ended':
       return 'status-ended';
     default:
@@ -522,9 +526,9 @@ const statusDropdownStyle = computed(() => {
   
   const rect = statusDropdownWrapper.value.getBoundingClientRect();
   return {
-    position: 'fixed',
-    top: `${rect.bottom + window.scrollY + 8}px`,
-    left: `${rect.left}px`,
+    position: 'absolute',
+    top: `${rect.height + 190}px`,
+    left: `${rect.width + 150}px`,
     width: `${rect.width}px`
   };
 });
@@ -534,9 +538,9 @@ const typeDropdownStyle = computed(() => {
   
   const rect = typeDropdownWrapper.value.getBoundingClientRect();
   return {
-    position: 'fixed',
-    top: `${rect.bottom + window.scrollY + 8}px`,
-    left: `${rect.left}px`,
+    position: 'absolute',
+    top: `${rect.height + 8}px`,
+    left: `0`,
     width: `${rect.width}px`
   };
 });
@@ -765,11 +769,14 @@ const typeDropdownStyle = computed(() => {
 /* 下拉菜单样式 */
 .dropdown-menu {
   position: absolute;
-  width: 160px;
+  top: calc(100% + 8px);
+  left: 0;
+  width: 100%;
+  min-width: 160px;
   background-color: white;
   border-radius: 8px;
   box-shadow: 0 6px 30px rgba(0, 0, 0, 0.2);
-  z-index: 1000; /* 提高z-index值到顶层 */
+  z-index: 1000;
   transform-origin: top center;
   animation: dropdownFadeIn 0.3s cubic-bezier(0.25, 1, 0.5, 1);
 }
@@ -946,11 +953,11 @@ const typeDropdownStyle = computed(() => {
 }
 
 .status-upcoming .competition-title::before {
-  background: linear-gradient(to bottom, #42b983, #33c6aa);
+  background: linear-gradient(to bottom, #ffaa00, #ffc107);
 }
 
-.status-ongoing .competition-title::before {
-  background: linear-gradient(to bottom, #3399ff, #2a89f3);
+.status-running .competition-title::before {
+  background: linear-gradient(to bottom, #42b983, #33c6aa);
 }
 
 .status-ended .competition-title::before {
@@ -978,13 +985,24 @@ const typeDropdownStyle = computed(() => {
   transition: all 0.3s ease;
 }
 
-.competition-card:hover .logo-badge {
-  background-color: #e8f5f0;
+.competition-card:hover .status-upcoming .logo-badge {
+  background-color: #fff8e0;
+  color: #ffaa00;
+  transform: translateY(-2px);
+  box-shadow: 0 3px 6px rgba(255, 170, 0, 0.15);
+}
+.competition-card:hover .status-running .logo-badge {
+  background-color: #e8f7f1;
   color: #42b983;
   transform: translateY(-2px);
-  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 3px 6px rgba(66, 185, 131, 0.15);
 }
-
+.competition-card:hover .status-ended .logo-badge {
+  background-color: #f0f0f0;
+  color: #888888;
+  transform: translateY(-2px);
+  box-shadow: 0 3px 6px rgba(136, 136, 136, 0.15);
+}
 .card-content {
   padding: 24px;
   display: flex;
@@ -1155,6 +1173,23 @@ const typeDropdownStyle = computed(() => {
   color: #777;
 }
 
+.upcoming .card-header {
+  background: linear-gradient(to right, #f9f9f9, #f2f2f2);
+}
+
+.upcoming .action-btn {
+  background: linear-gradient(135deg, #ffaa00, #ffc107);
+  box-shadow: 0 6px 15px rgba(255, 170, 0, 0.25);
+}
+
+.upcoming .action-btn::after {
+  background: linear-gradient(90deg, #ffc107, #ffaa00);
+}
+
+.upcoming .competition-title {
+  color: #333;
+}
+
 /* 分页样式 */
 .pagination {
   display: flex;
@@ -1310,9 +1345,9 @@ const typeDropdownStyle = computed(() => {
   cursor: not-allowed;
 }
 
-/* 顶层下拉菜单 */
+/* 移除旧的顶层下拉菜单样式 */
 .dropdown-menu.top-layer {
-  position: fixed;
+  position: absolute;
   z-index: 9999;
 }
 </style>
