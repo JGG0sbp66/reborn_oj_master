@@ -1,9 +1,12 @@
 <template>
     <!-- 通过路由来渲染所有的页面组件 -->
     <router-view />
+    <!-- 自定义光标组件 -->
+    <CustomCursor />
 </template>
 
 <script setup lang="ts">
+import CustomCursor from './components/common/CustomCursor.vue';
 </script>
 
 <style>
