@@ -51,7 +51,7 @@ const props = defineProps({
 
 const statsData = ref<StatItem[]>([
   { value: 0, label: '题目总数' },
-  { value: 0, label: '活跃用户' },
+  { value: 0, label: '注册用户' },
   { value: 0, label: '近期比赛' }
 ]);
 
@@ -61,7 +61,7 @@ const fetchStats = async () => {
     if (response.data.success) {
       statsData.value = [
         { value: response.data.题目数量, label: '题目总数' },
-        { value: response.data.注册用户数量, label: '活跃用户' },
+        { value: response.data.注册用户数量, label: '注册用户' },
         { value: response.data.竞赛数量, label: '近期比赛' }
       ];
     }
