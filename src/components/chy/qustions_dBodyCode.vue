@@ -263,7 +263,7 @@ export default {
           color: "#F4A460",
         },
         {
-          status: `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 1024 1024" style="width: 18px; height: 18px; position: relative; top: 4px; color: #9932CC;"><path d="M512 64C264.6 64 64 264.6 64 512s200.6 448 448 448s448-200.6 448-448S759.4 64 512 64zm0 820c-205.4 0-372-166.6-372-372s166.6-372 372-372s372 166.6 372 372s-166.6 372-372 372z" fill="currentColor"></path><path d="M464 688a48 48 0 1 0 96 0a48 48 0 1 0-96 0zm24-112h48c4.4 0 8-3.6 8-8V296c0-4.4-3.6-8-8-8h-48c-4.4 0-8 3.6-8 8v272c0 4.4 3.6 8 8 8z" fill="currentColor"></path></svg>
+          status: `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 1024 1024" style="width: 18px; height: 18px; position: relative; top: 4px; color: #9932CC;"><path d="M512 64C264.6 64 64 264.6 64 512s200.6 448 448 448s448-200.6 448-448S759.4 64 512 64zm0 820c-205.4 0-372-166.6-372-372s166.6-372 372-372s372 166.6 372 372s-166.6 372-372 372z" fill="currentColor"></path><path d="M464 688a48 48 0 1 0 96 0a48 48 0 1 0-96 0zm24-112h48c4.4 0 8-3.6 8-8V296c0-4.4-3.6-8-8-8H488c-4.4 0-8 3.6-8 8v272c0 4.4 3.6 8 8 8z" fill="currentColor"></path></svg>
             <span style="margin-left: 5px;color: #9932CC;">运行错误</span>`,
           color: "#9932CC",
         },
@@ -1332,36 +1332,33 @@ export default {
         this.codeLines = [""];
 
       } catch (error) {
-        console.error("提交失败:", error);
+        // console.error("提交失败:", error);
 
-        // 如果是未登录错误，直接显示提示，不添加任何提交记录
-        if (error.message === "用户未登录") {
+        if(error.response){
           this.$emit("show-alert", {
             type: "error",
-            message: "请先登录后再提交代码",
+            message: error.response.data.message,
           });
-          return;
-        }
 
-        // 如果已经开始评测但失败了，更新为错误状态
-        if (this.submissions.some((s) => s.isPending)) {
-          const errorSubmission = {
+          const submission = {
             status: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="width: 18px; height: 18px; position: relative; top: 4px; color: #F53F3F;">
-          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" fill="currentColor"/>
-        </svg>
-        <span style="margin-left: 5px;color: #F53F3F;">提交失败</span>`,
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" fill="currentColor"/>
+            </svg>
+            <span style="margin-left: 5px; color: #F53F3F;">提交失败</span>`,
             language: this.selectedLanguage,
             runTime: "-",
             memoryUsage: "-",
             submitTime: this.getSubmitTime(),
-            isPending: false,
-            index: Date.now(),
+            aiFeedback: "提交失败",
+            isPending: false, // 改为false表示已完成
+            index: -1,
           };
 
           this.$emit("update-submission", {
-            index: errorSubmission.index,
-            submission: errorSubmission,
+            index: -1,
+            submission: submission,
           });
+          this.getStatusFromAiResponse("提交失败");
         }
       }
     },
@@ -1374,6 +1371,7 @@ export default {
       if (response.includes("内存超限")) return "内存超限";
       if (response.includes("运行超时")) return "运行超时";
       if (response.includes("运行错误")) return "运行错误";
+      if (response.includes("提交失败")) return "提交失败";
       return "编译错误"; // 默认返回编译错误
     },
     getLanguageMode() {
@@ -1985,6 +1983,33 @@ export default {
 
 .spinner {
   animation: spin 1s linear infinite;
+}
+
+/* 修改选择区域的样式 */
+.AlineDiv.selected {
+  background-color: rgba(3, 102, 214, 0.05) !important; /* 降低透明度 */
+}
+
+/* 选中行悬停样式 */
+.AlineDiv.selected-line:hover {
+  background-color: rgba(3, 102, 214, 0.1) !important; /* 降低透明度 */
+}
+
+/* 选中行样式 */
+.AlineDiv.selected-line {
+  background-color: rgba(3, 102, 214, 0.08) !important; /* 降低透明度 */
+  transition: background-color 0.3s ease;
+  box-shadow: inset 0 0 0 1px rgba(3, 102, 214, 0.15); /* 更浅的边框 */
+}
+
+/* 普通行悬停效果 */
+.AlineDiv:hover {
+  background-color: rgba(3, 102, 214, 0.03); /* 更浅的悬停背景 */
+}
+
+/* 当前行高亮 */
+.AlineDiv:focus-within {
+  background-color: rgba(3, 102, 214, 0.05); /* 更浅的焦点背景 */
 }
 </style>
 
