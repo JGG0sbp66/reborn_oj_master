@@ -158,10 +158,14 @@
               </div>
             </div>
   <foot class="page-footer" />
+  
+  <!-- 添加alertbox组件 -->
+  <alertbox ref="alertBox" />
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted, watch, defineAsyncComponent, defineExpose, onBeforeUnmount } from 'vue';
+import type { Ref } from 'vue';
 import { useRoute } from 'vue-router';
 import headerheader from '@/components/headerheader.vue';
 import foot from '@/components/foot.vue';
@@ -169,6 +173,8 @@ import UserProfile from '@/components/yao/UserProfile.vue';
 import SolvedProblems from '@/components/yao/SolvedProblems.vue';
 import CompetitionRecords from '@/components/yao/CompetitionRecords.vue';
 import AccountSettings from '@/components/yao/AccountSettings.vue';
+// 引入alertbox组件
+import alertbox from '@/components/JGG/alertbox.vue';
 // 使用异步组件延迟加载热力图组件
 const ActivityHeatmap = defineAsyncComponent(() => 
   import('@/components/ActivityHeatmap.vue')
@@ -643,6 +649,9 @@ interface UserProfileData {
   bio: string;
 }
 
+// 添加alertBox引用，使用简单方式声明
+const alertBox = ref(null);
+
 const handleProfileUpdated = (updatedProfile: UserProfileData) => {
   // 更新本地状态
   if (username.value !== updatedProfile.username) {
@@ -662,6 +671,9 @@ const handleProfileUpdated = (updatedProfile: UserProfileData) => {
   
   email.value = updatedProfile.email;
   bio.value = updatedProfile.bio;
+  
+  // 显示成功提示
+  alertBox.value?.show('个人资料已成功更新', 0);
   
   // 可以在这里做一些其他操作，比如保存到localStorage或其他状态管理
   console.log('Profile updated:', updatedProfile);
@@ -683,6 +695,9 @@ const handleSecuritySettingsUpdated = (settings: SecuritySettings) => {
   twoFactorEnabled.value = settings.twoFactorEnabled;
   loginNotificationsEnabled.value = settings.loginNotificationsEnabled;
   
+  // 显示成功提示
+  alertBox.value?.show('安全设置已成功更新', 0);
+  
   // 可以在这里做一些其他操作，比如保存到后端
   console.log('Security settings updated:', settings);
 };
@@ -692,12 +707,17 @@ const handlePrivacySettingsUpdated = (settings: PrivacySettings) => {
   publicSolvedProblems.value = settings.publicSolvedProblems;
   publicRanking.value = settings.publicRanking;
   
+  // 显示成功提示
+  alertBox.value?.show('隐私设置已成功更新', 0);
+  
   // 可以在这里做一些其他操作，比如保存到后端
   console.log('Privacy settings updated:', settings);
 };
 
 const handlePasswordChanged = () => {
   console.log('Password has been changed');
+  // 显示成功提示
+  alertBox.value?.show('密码已成功修改', 0);
   // 这里可以做一些额外的操作，比如显示全局通知等
 };
 
@@ -761,36 +781,27 @@ const triggerFileUpload = (): void => {
   }
 };
 
-// 修改onFileChange函数，保存用户ID与头像的关联
+// 修改onFileChange函数，添加成功或失败提示
 const onFileChange = (event: Event): void => {
   const input = event.target as HTMLInputElement;
   if (input.files && input.files.length > 0) {
     const file = input.files[0];
     // 检查文件类型
     if (!file.type.startsWith('image/')) {
-      ElMessage({
-        message: '请上传图片文件',
-        type: 'warning' as const
-      });
+      alertBox.value?.show('请上传图片文件', 2);
       return;
     }
     
     // 检查文件大小 (限制为 2MB)
     if (file.size > 2 * 1024 * 1024) {
-      ElMessage({
-        message: '图片大小不能超过 2MB',
-        type: 'warning' as const
-      });
+      alertBox.value?.show('图片大小不能超过 2MB', 2);
       return;
     }
     
     // 获取当前用户ID
     const userId = localStorage.getItem('uid');
     if (!userId) {
-      ElMessage({
-        message: '无法识别当前用户，请重新登录',
-        type: 'error' as const
-      });
+      alertBox.value?.show('无法识别当前用户，请重新登录', 2);
       return;
     }
     
@@ -839,17 +850,13 @@ const onFileChange = (event: Event): void => {
               timestamp: timestamp
             });
             
-            ElMessage({
-              message: '头像更新成功',
-              type: 'success' as const
-            });
+            // 替换ElMessage为alertBox
+            alertBox.value?.show('头像更新成功', 0);
           } else {
             // 处理服务器返回的错误信息
             const errorMsg = response.data?.message || '头像上传失败';
-            ElMessage({
-              message: errorMsg,
-              type: 'error' as const
-            });
+            // 替换ElMessage为alertBox
+            alertBox.value?.show(errorMsg, 2);
             
             // 恢复之前的头像
             avatarUrl.value = localStorage.getItem('avatarBase64') || '';
@@ -870,10 +877,8 @@ const onFileChange = (event: Event): void => {
             errorMessage = '服务器未响应，请检查网络连接';
           }
           
-          ElMessage({
-            message: errorMessage,
-            type: 'error' as const
-          });
+          // 替换ElMessage为alertBox
+          alertBox.value?.show(errorMessage, 2);
           
           // 恢复之前的头像
           avatarUrl.value = localStorage.getItem('avatarBase64') || '';
