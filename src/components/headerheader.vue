@@ -286,12 +286,23 @@ const defaultAvatarUrl = computed(() => {
     if (cachedAvatarBase64) return cachedAvatarBase64;
   }
   
-  // 否则生成默认头像，使用uid而不是username
-  const uid = localStorage.getItem('uid');
-  if (!uid) return '';
+  // 否则生成默认头像，优先使用内存中的username，其次使用uid
+  // 这样确保登录后立刻有默认头像，不必等待刷新
+  let idForAvatar = '';
+  if (username.value) {
+    idForAvatar = username.value;
+  } else {
+    const uid = localStorage.getItem('uid');
+    if (uid) {
+      idForAvatar = uid;
+    } else {
+      // 如果都没有，使用一个固定值确保显示
+      idForAvatar = 'user';
+    }
+  }
   
-  // 使用uid生成默认头像，确保即使用户名变化，头像也保持一致
-  return generateAvatarSvg(uid);
+  // 使用idForAvatar生成默认头像
+  return generateAvatarSvg(idForAvatar);
 });
 
 // 验证用户状态
@@ -363,6 +374,12 @@ const verifyUserState = async () => {
         // 如果之前没有获取头像，尝试用获取到的ID获取
         if (!avatarUrl.value) {
           tryRefreshAvatar(user.uid);
+          
+          // 强制触发defaultAvatarUrl的重新计算
+          // 为确保没有头像时也能立即显示默认头像
+          const dummyKey = 'avatar_update_' + Date.now();
+          localStorage.setItem(dummyKey, '1');
+          localStorage.removeItem(dummyKey);
         }
       }
       
