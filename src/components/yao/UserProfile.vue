@@ -104,7 +104,7 @@ const getVerificationCode = async () => {
     });
 
     // 发送获取验证码请求
-    const response = await axios.post('http://localhost:5000/api/send-email-code', {
+    const response = await axios.post('/api/send-email-code', {
       email: email.value
     }, {
       withCredentials: true
@@ -171,7 +171,7 @@ const saveProfile = async (): Promise<void> => {
         });
         
         // 发送修改邮箱请求
-        const emailResponse = await axios.post('http://localhost:5000/api/user-change-email', {
+        const emailResponse = await axios.post('/api/user-change-email', {
           new_email: email.value,
           new_email_code: verificationCode.value
         }, {
@@ -225,7 +225,7 @@ const saveProfile = async (): Promise<void> => {
         });
         
         // 发送修改用户名请求
-        const usernameResponse = await axios.post('http://localhost:5000/api/user-change-username', {
+        const usernameResponse = await axios.post('/api/user-change-username', {
           new_username: username.value,
         }, {
           withCredentials: true
@@ -271,7 +271,7 @@ const saveProfile = async (): Promise<void> => {
       });
       
       try {
-        const response = await axios.post('http://localhost:5000/api/update-user-info', {
+        const response = await axios.post('/api/update-user-info', {
           bio: bio.value
         }, {
           withCredentials: true

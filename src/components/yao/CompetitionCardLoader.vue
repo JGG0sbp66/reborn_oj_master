@@ -58,7 +58,7 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  apiUrl: 'http://localhost:5000/api/competitions',
+  apiUrl: '/api/competitions',
   limit: 10,
   actionText: "Let's go",
   customActionLink: '',

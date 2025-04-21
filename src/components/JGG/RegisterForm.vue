@@ -224,7 +224,7 @@ const sendVerificationCode = async () => {
     countdown.value = 60;
 
     await axios({
-      url: "http://localhost:5000/api/send-email-code",
+      url: "/api/send-email-code",
       method: "post",
       data: {
         email: form.value.email,
@@ -282,7 +282,7 @@ const handleSubmit = async () => {
     }
     // 验证账号密码是否正确
     const { data: userData } = await axios({
-      url: "http://localhost:5000/api/register",
+      url: "/api/register",
       method: "post",
       data: {
         username: form.value.username,

@@ -49,7 +49,7 @@
                                 <div class="player-info">
                                     <div class="player-avatar">
                                         <img 
-                                            :src="`http://localhost:5000/api/avatar-get/${rank.user_info.uid}`" 
+                                            :src="`/api/avatar-get/${rank.user_info.uid}`" 
                                             :alt="rank.user_info.username"
                                             @error="handleAvatarError"
                                         />

@@ -92,7 +92,7 @@ const viewMoreCompetitions = (): void => {
 const fetchRecentCompetitions = async (): Promise<void> => {
     try {
         // 获取所有竞赛
-        const response = await axios.get('http://localhost:5000/api/races');
+        const response = await axios.get('/api/races');
         const allCompetitions = response.data;
         
         // 处理数据

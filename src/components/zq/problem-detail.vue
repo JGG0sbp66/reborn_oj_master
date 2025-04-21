@@ -199,7 +199,7 @@ const fetchProblemDetails = async (problemId: number) => {
         console.log(`正在获取题目详情,ID: ${numericId}`);
 
         const response = await axios({
-            url: `http://localhost:5000/api/admin-question/${numericId}`,
+            url: `/api/admin-question/${numericId}`,
             method: 'get'
         });
 

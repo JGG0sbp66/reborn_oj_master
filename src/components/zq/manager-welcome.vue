@@ -74,7 +74,7 @@ const animateValue = (start: number, end: number, duration: number, setter: (val
 
 const fetchStats = async () => {
     try {
-        const response = await axios.get('http://localhost:5000/api/getStats');
+        const response = await axios.get('/api/getStats');
         if (response.data.success) {
             // 使用动画更新数值
             animateValue(0, response.data.注册用户数量, 1500, (val) => userCount.value = val);

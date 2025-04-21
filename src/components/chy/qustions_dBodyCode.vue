@@ -1296,7 +1296,7 @@ export default {
         formData.append("race_uid", this.race_uid);
 
         const { data: response } = await axios({
-          url: "http://localhost:5000/api/askAi-question",
+          url: "/api/askAi-question",
           method: "post",
           data: formData,
           headers: {

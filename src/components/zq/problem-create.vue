@@ -349,7 +349,7 @@ const submitProblem = async () => {
     try {
       // 发送创建题目请求
       const response = await axios({
-        url: 'http://localhost:5000/api/admin-question',
+        url: '/api/admin-question',
         method: 'post',
         data: submitData
       });

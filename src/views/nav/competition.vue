@@ -436,7 +436,7 @@ const competitionData = ref<Competition[]>([]);
 const fetchCompetitions = async () => {
   try {
     const response = await axios({
-      url: 'http://127.0.0.1:5000/api/race-list',
+      url: '/api/race-list',
       method: 'get',
       data: {}
     });
