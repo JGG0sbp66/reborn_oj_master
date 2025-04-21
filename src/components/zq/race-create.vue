@@ -257,8 +257,17 @@ const fetchQuestionsInfo = async (problemIds: number[] = []): Promise<void> => {
     // 处理API返回的数据
     const results = apiData.map((item: ApiProblemItem) => ({
       id: item.uid || apiData.indexOf(item) + 1,
-      title: item.question?.title || `题目 ${apiData.indexOf(item) + 1}`
+      title: item.question?.title || ''
     }));
+    
+    // 过滤掉没有标题的题目
+    const validResults = results.filter(item => item.title);
+    
+    // 如果有标题为空的题目，尝试单独获取它们的标题
+    const emptyTitleItems = results.filter(item => !item.title);
+    if (emptyTitleItems.length > 0) {
+      await Promise.all(emptyTitleItems.map(item => fetchSingleProblemTitle(item.id)));
+    }
     
     allProblems.value = results;
     filteredProblems.value = results;
@@ -268,6 +277,27 @@ const fetchQuestionsInfo = async (problemIds: number[] = []): Promise<void> => {
     console.error('获取题目信息失败:', error);
   } finally {
     problemsLoading.value = false;
+  }
+};
+
+// 获取单个题目的标题
+const fetchSingleProblemTitle = async (problemId: number): Promise<void> => {
+  try {
+    const response = await axios.get(`/api/${problemId}`);
+    const title = response.data.question?.title || '';
+    if (title) {
+      // 更新到缓存
+      const index = allProblems.value.findIndex(p => p.id === problemId);
+      if (index >= 0) {
+        allProblems.value[index].title = title;
+        const filterIndex = filteredProblems.value.findIndex(p => p.id === problemId);
+        if (filterIndex >= 0) {
+          filteredProblems.value[filterIndex].title = title;
+        }
+      }
+    }
+  } catch (error) {
+    console.error(`获取题目 ${problemId} 标题失败:`, error);
   }
 };
 

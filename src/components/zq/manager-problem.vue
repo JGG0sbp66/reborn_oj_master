@@ -190,6 +190,7 @@
                 </template>
             </el-table-column>
             <el-table-column prop="submissionCount" label="提交次数" width="120" align="center" />
+            <el-table-column prop="solvedCount" label="解决次数" width="120" align="center" />
             <el-table-column prop="createTime" label="创建时间" width="170" align="center" />
             <el-table-column label="操作" width="180" fixed="right" align="center">
                 <template #default="scope">
@@ -285,6 +286,8 @@ interface ApiProblem {
     uid: number;
     question: QuestionData;
     topic: string;
+    submit_num: number;
+    solve_num: number;
 }
 
 // AlertBox引用
@@ -382,9 +385,12 @@ const fetchData = async () => {
 
         // 处理API返回的数据，转换为组件需要的格式
         const formattedProblems = apiData.map((item, index) => {
-            // 生成一个随机的通过率和提交次数（实际应用中这些应该从API获取）
-            const passRate = Math.floor(Math.random() * 100);
-            const submissionCount = Math.floor(Math.random() * 10000) + 1000;
+            // 使用后端提供的submit_num和solve_num字段
+            const submissionCount = item.submit_num || 0;
+            const solvedCount = item.solve_num || 0;
+            
+            // 计算通过率，避免除以0的情况
+            const passRate = submissionCount > 0 ? Math.floor((solvedCount / submissionCount) * 100) : 0;
 
             // 从API返回数据中获取UID
             const problemId = item.uid;
@@ -393,7 +399,10 @@ const fetchData = async () => {
             console.log(`处理题目 ${index}:`, {
                 原始UID: item.uid,
                 使用的ID: problemId,
-                题目名称: item.question.title
+                题目名称: item.question.title,
+                提交次数: submissionCount,
+                解决次数: solvedCount,
+                通过率: passRate
             });
             
             return {
@@ -403,6 +412,7 @@ const fetchData = async () => {
                 difficulty: getDifficultyByComplexity(item.question), // 根据题目复杂度推断难度
                 passRate: passRate,
                 submissionCount: submissionCount,
+                solvedCount: solvedCount, // 添加解决次数
                 createTime: new Date().toISOString().split('T')[0], // 使用当前日期
                 question: item.question
             };
