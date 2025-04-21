@@ -455,7 +455,27 @@ const goToUserProfile = () => {
 const handleShare = async () => {
   try {
     const currentUrl = window.location.href;
-    await navigator.clipboard.writeText(currentUrl);
+    
+    // 尝试使用现代 Clipboard API
+    if (navigator.clipboard) {
+      await navigator.clipboard.writeText(currentUrl);
+    } else {
+      // 回退到传统方法
+      const textarea = document.createElement('textarea');
+      textarea.value = currentUrl;
+      textarea.style.position = 'fixed';  // 避免滚动到页面底部
+      document.body.appendChild(textarea);
+      textarea.select();
+      
+      try {
+        const successful = document.execCommand('copy');
+        if (!successful) throw new Error('Copy command failed');
+      } catch (err) {
+        throw err;
+      } finally {
+        document.body.removeChild(textarea);
+      }
+    }
     
     ElNotification({
       title: '复制成功',
@@ -470,6 +490,10 @@ const handleShare = async () => {
       message: '请手动选择文本并复制',
       duration: 2000
     });
+    
+    // 提供手动复制选项
+    const currentUrl = window.location.href;
+    prompt('请手动复制以下链接:', currentUrl);
   }
 };
 
