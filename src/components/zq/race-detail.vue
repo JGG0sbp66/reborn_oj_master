@@ -232,11 +232,11 @@ const fetchQuestionsInfo = async (problemIds: number[]) => {
       axios.get(`/api/${id}`)
         .then(response => ({
           id,
-          title: response.data.question?.title || `题目 ${id}`
+          title: response.data.question?.title || ''
         }))
         .catch(() => ({
           id,
-          title: `题目 ${id}`
+          title: ''
         }))
     );
     
@@ -251,7 +251,32 @@ const fetchQuestionsInfo = async (problemIds: number[]) => {
 // 根据ID获取题目标题
 const getProblemTitle = (problemId: number): string => {
   const problem = problemsInfo.value.find(p => p.id === problemId);
-  return problem ? problem.title : `题目 ${problemId}`;
+  if (problem && problem.title) {
+    return problem.title;
+  }
+  
+  // 如果找不到题目或标题为空，尝试单独获取题目
+  fetchSingleProblem(problemId);
+  return '加载中...';
+};
+
+// 获取单个题目信息
+const fetchSingleProblem = async (problemId: number) => {
+  try {
+    const response = await axios.get(`/api/admin-question/${problemId}`);
+    const title = response.data.question?.title || '';
+    if (title) {
+      // 更新到缓存
+      const existingIndex = problemsInfo.value.findIndex(p => p.id === problemId);
+      if (existingIndex >= 0) {
+        problemsInfo.value[existingIndex].title = title;
+      } else {
+        problemsInfo.value.push({ id: problemId, title });
+      }
+    }
+  } catch (error) {
+    console.error(`获取题目 ${problemId} 信息失败:`, error);
+  }
 };
 
 // 打开竞赛详情对话框

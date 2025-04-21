@@ -327,8 +327,14 @@ const fetchQuestionsInfo = async (problemIds: number[] = []) => {
     // 处理API返回的数据
     const results = apiData.map((item: ApiProblemItem, index: number) => ({
       id: item.uid || index + 1,
-      title: item.question?.title || `题目 ${index + 1}`
+      title: item.question?.title || ''
     }));
+    
+    // 如果有标题为空的题目，尝试单独获取它们的标题
+    const emptyTitleItems = results.filter(item => !item.title);
+    if (emptyTitleItems.length > 0) {
+      await Promise.all(emptyTitleItems.map(item => fetchSingleProblemTitle(item.id)));
+    }
     
     allProblems.value = results;
     filteredProblems.value = results;
@@ -338,6 +344,31 @@ const fetchQuestionsInfo = async (problemIds: number[] = []) => {
     console.error('获取题目信息失败:', error);
   } finally {
     problemsLoading.value = false;
+  }
+};
+
+// 获取单个题目的标题
+const fetchSingleProblemTitle = async (problemId: number) => {
+  try {
+    const response = await axios.get(`/api/${problemId}`);
+    const title = response.data.question?.title || '';
+    if (title) {
+      // 更新到缓存
+      const index = allProblems.value.findIndex(p => p.id === problemId);
+      if (index >= 0) {
+        allProblems.value[index].title = title;
+        const filterIndex = filteredProblems.value.findIndex(p => p.id === problemId);
+        if (filterIndex >= 0) {
+          filteredProblems.value[filterIndex].title = title;
+        }
+      } else {
+        // 添加新题目
+        allProblems.value.push({ id: problemId, title });
+        filteredProblems.value.push({ id: problemId, title });
+      }
+    }
+  } catch (error) {
+    console.error(`获取题目 ${problemId} 标题失败:`, error);
   }
 };
 

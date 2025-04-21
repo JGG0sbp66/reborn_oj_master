@@ -88,7 +88,7 @@ const getDifficultyByComplexity = (question: any): string => {
 const fetchRecentQuestions = async (): Promise<void> => {
     try {
         // 获取所有题目
-        const response = await axios.get('/api/');
+        const response = await axios.get('/api/admin-question');
         const allQuestions = response.data;
         
         // 处理数据，添加创建时间和难度
