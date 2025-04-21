@@ -57,7 +57,7 @@ const statsData = ref<StatItem[]>([
 
 const fetchStats = async () => {
   try {
-    const response = await axios.get<StatsResponse>('http://localhost:5000/api/getStats');
+    const response = await axios.get<StatsResponse>('/api/getStats');
     if (response.data.success) {
       statsData.value = [
         { value: response.data.题目数量, label: '题目总数' },

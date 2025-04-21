@@ -126,7 +126,7 @@ export default {
       // 从后端获取数据
       try {
         const { data: response } = await axios({
-          url: "http://localhost:5000/api/questions",
+          url: "/api/questions",
           method: "post",
           data: {
             "page": page,

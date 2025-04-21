@@ -136,7 +136,7 @@ export default {
     },
     apiEndpoint: {
       type: String,
-      default: "http://localhost:5000/api/askAi-msg",
+      default: "/api/askAi-msg",
     },
     initialGreeting: {
       type: String,

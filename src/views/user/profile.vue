@@ -386,7 +386,7 @@ const generateAvatarSvg = (seed: string): string => {
 const refreshUserAvatar = async (userId: string): Promise<void> => {
   try {
     // 向服务器请求用户头像
-    const avatarResponse = await axios.get(`http://localhost:5000/api/user-avatar/${userId}`, {
+    const avatarResponse = await axios.get(`/api/user-avatar/${userId}`, {
       responseType: 'blob',
       withCredentials: true
     });
@@ -513,7 +513,7 @@ const fetchUserProfile = async (): Promise<void> => {
     
     // 从新的API获取用户信息
     try {
-      const response = await axios.get('http://localhost:5000/api/get-user-info', {
+      const response = await axios.get('/api/get-user-info', {
         withCredentials: true
       });
       
@@ -728,7 +728,7 @@ onMounted(() => {
 const fetchSolvedProblems = async () => {
   try {
     isLoadingSolvedProblems.value = true;
-    const response = await axios.get('http://localhost:5000/api/user-questions');
+    const response = await axios.get('/api/user-questions');
     if (response.data && Array.isArray(response.data)) {
       solvedProblemsData.value = response.data;
     }
@@ -743,7 +743,7 @@ const fetchSolvedProblems = async () => {
 const fetchCompetitionRecords = async () => {
   try {
     isLoadingCompetitions.value = true;
-    const response = await axios.get('http://localhost:5000/api/user-race');
+    const response = await axios.get('/api/user-race');
     if (response.data && Array.isArray(response.data)) {
       competitionRecordsData.value = response.data;
     }
@@ -813,7 +813,7 @@ const onFileChange = (event: Event): void => {
         });
         
         // 将头像上传到服务器
-        axios.post('http://localhost:5000/api/avatar-upload', formData, {
+        axios.post('/api/avatar-upload', formData, {
           headers: {
             'Content-Type': 'multipart/form-data'
           },

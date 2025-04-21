@@ -381,7 +381,7 @@ export default {
         localStorage.setItem("currentQuestionId", questionId);
 
         const { data: response } = await axios({
-          url: "http://localhost:5000/api/question-detail",
+          url: "/api/question-detail",
           method: "post",
           data: {
             uid: questionId,

@@ -36,7 +36,7 @@ const uid = route.query.uid;
 const get_race_info = async () => {
     try {
         const { data } = await axios({
-            url: "http://localhost:5000/api/race-info",
+            url: "/api/race-info",
             method: "post",
             data: { uid: uid },
         });
@@ -59,7 +59,7 @@ const get_race_info = async () => {
 const get_race_rank = async () => {
     try {
         const { data } = await axios({
-            url: "http://localhost:5000/api/race-rank",
+            url: "/api/race-rank",
             method: "post",
             data: { uid: uid },
         });

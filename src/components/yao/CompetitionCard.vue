@@ -193,7 +193,7 @@ const fetchCompetitionData = async () => {
   
   try {
     const { data } = await axios({
-      url: 'http://localhost:5000/api/competition',
+      url: '/api/competition',
       method: 'post',
       data: { 
         id: props.competitionId 

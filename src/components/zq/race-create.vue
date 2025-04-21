@@ -251,7 +251,7 @@ const fetchQuestionsInfo = async (problemIds: number[] = []): Promise<void> => {
     }
     
     // 获取所有可用题目
-    const response = await axios.get("http://localhost:5000/api/admin-question");
+    const response = await axios.get("/api/admin-question");
     const apiData = response.data as ApiProblemItem[];
     
     // 处理API返回的数据
@@ -363,7 +363,7 @@ const submitCompetition = async (): Promise<void> => {
     
     // 发送创建竞赛请求
     const response = await axios({
-      url: 'http://localhost:5000/api/races',
+      url: '/api/races',
       method: 'post',
       data: competition
     });

@@ -68,7 +68,7 @@ const handleSignup = async () => {
     
     try {
     loading.value = true;
-    const { data } = await axios.post("http://localhost:5000/api/race-register", { race_uid: props.uid });
+    const { data } = await axios.post("/api/race-register", { race_uid: props.uid });
     
     if (data.success) {
       // 直接更新本地状态

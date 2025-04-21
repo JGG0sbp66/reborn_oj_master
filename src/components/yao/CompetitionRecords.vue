@@ -78,7 +78,7 @@ const competitions = computed(() => {
 onMounted(async () => {
   if (!props.competitions) {
     try {
-      const response = await axios.get('http://localhost:5000/api/user-race');
+      const response = await axios.get('/api/user-race');
       if (response.data && Array.isArray(response.data)) {
         localCompetitions.value = response.data;
       }

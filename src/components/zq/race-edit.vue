@@ -272,7 +272,7 @@ const searchProblems = async (query: string): Promise<void> => {
     // 如果没有本地匹配结果，可以考虑从API获取更多题目
     if (filteredProblems.value.length === 0 && allProblems.value.length > 0) {
       try {
-        const response = await axios.get("http://localhost:5000/api/problems", {
+        const response = await axios.get("/api/problems", {
           params: { query }
         });
         
@@ -321,7 +321,7 @@ const fetchQuestionsInfo = async (problemIds: number[] = []) => {
     }
     
     // 获取所有可用题目
-    const response = await axios.get("http://localhost:5000/api/admin-question");
+    const response = await axios.get("/api/admin-question");
     const apiData = response.data as ApiProblemItem[];
     
     // 处理API返回的数据
@@ -393,7 +393,7 @@ const openEditDialog = async (competitionData: CompetitionData) => {
     if (competition.user_list && competition.user_list.length > 0) {
       try {
         const promises = competition.user_list.map(uid => 
-          axios.get(`http://localhost:5000/api/get-username/${uid}`)
+          axios.get(`/api/get-username/${uid}`)
         );
         const responses = await Promise.all(promises);
         responses.forEach((response, index) => {
@@ -483,7 +483,7 @@ const updateCompetition = async () => {
     
     // 发送更新竞赛请求
     const response = await axios({
-      url: `http://localhost:5000/api/races/${submissionData.uid}`,
+      url: `/api/races/${submissionData.uid}`,
       method: 'put',
       data: submissionData
     });
@@ -524,7 +524,7 @@ const fetchRaceDetails = async (uid: number) => {
     console.log(`正在获取竞赛详情，ID: ${uid}`);
     
     const response = await axios({
-      url: `http://localhost:5000/api/races/${uid}`,
+      url: `/api/races/${uid}`,
       method: 'get'
     });
     
@@ -625,7 +625,7 @@ const addUser = async () => {
       return;
     }
 
-    const response = await axios.get(`http://localhost:5000/api/get-username/${uid}`);
+    const response = await axios.get(`/api/get-username/${uid}`);
     
     if (response.data.success) {
       const username = response.data.message;
