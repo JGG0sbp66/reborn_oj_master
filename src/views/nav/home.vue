@@ -270,7 +270,7 @@ const latestProblemsBackup = [
 // 统计数据
 const statsData = [
   { value: 24680, label: "题目总数" },
-  { value: 1243, label: "活跃用户" },
+  { value: 1243, label: "注册用户" },
   { value: 89, label: "近期比赛" },
 ];
 

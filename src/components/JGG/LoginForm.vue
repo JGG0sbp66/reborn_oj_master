@@ -224,7 +224,7 @@ const handleSubmit = async () => {
     });
 
     if (userData.success) {
-      alertboxRef.value?.show("登录成功！", 0);
+      alertboxRef.value?.show("登录成功", 0);
 
       // 更新登录状态并存储在localStorage
       localStorage.setItem("isLoggedIn", "true");
