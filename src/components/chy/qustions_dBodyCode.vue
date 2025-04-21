@@ -1250,42 +1250,44 @@ export default {
       }
       try {
         const { authenticated } = await checkAuth();
-        console.log("用户认证状态:", authenticated);
         if (!authenticated) {
           throw new Error("用户未登录");
         }
+
+        // 显示提交成功的提示
         this.$emit("show-alert", {
           type: "success",
           message: "提交成功",
         });
-        // 如果已登录，继续提交流程
+
+        // 创建唯一的提交标识
+        const submissionId = Date.now();
+
         const pendingSubmission = {
           status: `
-    <div style="display: inline-flex; align-items: center;">
-      <span>评测中</span>
-        <div class="spinner" style="
-        width: 12px;
-        height: 12px;
-        border: 2px solid #ccc;
-        border-top-color: #18a058;
-        border-radius: 50%;
-        margin-left: 5px;
-        margin-top: 3px;
-        animation: spin 1s linear infinite;
-      "></div>
-    </div>
-  `,
+            <div style="display: inline-flex; align-items: center;">
+              <span>评测中</span>
+              <div class="spinner" style="
+                width: 12px;
+                height: 12px;
+                border: 2px solid #ccc;
+                border-top-color: #18a058;
+                border-radius: 50%;
+                margin-left: 5px;
+                margin-top: 3px;
+                animation: spin 1s linear infinite;
+              "></div>
+            </div>
+          `,
           language: this.selectedLanguage,
           runTime: "-",
           memoryUsage: "-",
           submitTime: this.getSubmitTime(),
           isPending: true,
-          index: Date.now(), // 添加唯一标识
+          index: submissionId,
         };
-        this.$emit("add-pending-submission", pendingSubmission);
 
-        // 模拟API请求延迟
-        // await new Promise((resolve) => setTimeout(resolve, 1500));
+        this.$emit("add-pending-submission", pendingSubmission);
 
         const formData = new FormData();
         formData.append("question_uid", this.id);
@@ -1294,7 +1296,7 @@ export default {
         formData.append("race_uid", this.race_uid);
 
         const { data: response } = await axios({
-          url: "http://localhost:5000/api/askAi-question",
+          url: "/api/askAi-question",
           method: "post",
           data: formData,
           headers: {
@@ -1302,10 +1304,7 @@ export default {
           },
         });
 
-        // 解析AI返回的结果
         const aiResponse = response.message;
-        // const aiResponse = "编译错误"; // 测试用的假数据
-        // console.log(aiResponse);
         let statusOption = this.stateOptions.find((option) =>
           option.status.includes(this.getStatusFromAiResponse(aiResponse))
         );
@@ -1322,16 +1321,16 @@ export default {
           submitTime: this.getSubmitTime(),
           aiFeedback: aiResponse,
           isPending: false,
-          index: pendingSubmission.index, // 保持相同的唯一标识
+          index: submissionId, // 保持相同的唯一标识
         };
 
-        // 确保传递正确的index
         this.$emit("update-submission", {
-          index: pendingSubmission.index,
+          index: submissionId,
           submission: submission,
         });
 
         this.codeLines = [""];
+
       } catch (error) {
         console.error("提交失败:", error);
 
@@ -1432,30 +1431,30 @@ export default {
       const input = this.$refs[`input_${index}`][0];
       const cursorPos = input.selectionStart;
       const line = this.codeLines[index];
+      const indent = this.getCurrentIndent(line); // 获取当前缩进
+      const beforeCursor = line.substring(0, cursorPos);
+      const afterCursor = line.substring(cursorPos);
+      const closingBracket = key === '{' ? '}' : ')';
 
-      // 处理 { 补全
-      if (key === "{") {
-        const newLine =
-          line.substring(0, cursorPos) + "{}" + line.substring(cursorPos);
-        this.codeLines[index] = newLine;
-        this.$nextTick(() => {
-          input.setSelectionRange(cursorPos + 1, cursorPos + 1); // 将光标定位在 {} 中间
-        });
-        return true; // 表示已处理
-      }
+      // 创建三行：第一行到括号，第二行缩进，第三行闭合括号
+      const newLines = [
+        beforeCursor + key,           // 第一行：光标前内容加开括号
+        indent + "  ",               // 第二行：增加缩进
+        indent + closingBracket + afterCursor   // 第三行：闭合括号加上光标后内容
+      ];
 
-      // 处理 ( 补全
-      if (key === "(") {
-        const newLine =
-          line.substring(0, cursorPos) + "()" + line.substring(cursorPos);
-        this.codeLines[index] = newLine;
-        this.$nextTick(() => {
-          input.setSelectionRange(cursorPos + 1, cursorPos + 1); // 将光标定位在 () 中间
-        });
-        return true; // 表示已处理
-      }
+      // 替换当前行并插入新行
+      this.codeLines.splice(index, 1, ...newLines);
 
-      return false; // 未处理
+      // 设置光标位置到新行
+      this.$nextTick(() => {
+        const newInput = this.$refs[`input_${index + 1}`][0];
+        if (newInput) {
+          newInput.focus();
+          newInput.setSelectionRange(indent.length + 2, indent.length + 2);
+        }
+      });
+      return true;
     },
 
     // 处理在括号内按回车的情况

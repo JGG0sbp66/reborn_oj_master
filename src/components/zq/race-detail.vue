@@ -229,7 +229,7 @@ const fetchQuestionsInfo = async (problemIds: number[]) => {
   
   try {
     const promises = problemIds.map(id => 
-      axios.get(`http://localhost:5000/api/${id}`)
+      axios.get(`/api/${id}`)
         .then(response => ({
           id,
           title: response.data.question?.title || `题目 ${id}`
@@ -266,7 +266,7 @@ const fetchRaceDetails = async (raceId: number) => {
   
   try {
     const response = await axios({
-      url: `http://localhost:5000/api/races/${raceId}`,
+      url: `/api/races/${raceId}`,
       method: 'get'
     });
     

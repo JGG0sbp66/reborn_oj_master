@@ -232,7 +232,7 @@ const tryRefreshAvatar = async (userId?: string | number) => {
     const timestamp = localStorage.getItem('avatar_timestamp') || Date.now().toString();
     
     // 检查是否有头像
-    const avatarResponse = await axios.get(`http://localhost:5000/api/avatar-get/${id}?t=${timestamp}`, {
+    const avatarResponse = await axios.get(`/api/avatar-get/${id}?t=${timestamp}`, {
       responseType: 'blob',  // 以二进制blob格式接收数据
       withCredentials: true
     });
@@ -413,7 +413,7 @@ const logout = async () => {
     }
     
     // 发送退出登录请求
-    await axios.post('http://localhost:5000/api/logout');
+    await axios.post('/api/logout');
     isAuthenticated.value = false;
     showUserMenu.value = false;
     

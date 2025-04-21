@@ -67,7 +67,7 @@ const handleProblemClick = (uid: number) => {
   window.open(`/nav/questions_detail`, '_blank');
   
   // 异步发送请求，不阻塞页面跳转
-  axios.post('http://localhost:5000/api/question-detail', {
+  axios.post('/api/question-detail', {
     uid: uid
   }).catch(error => {
     console.error('获取题目详情失败:', error);

@@ -328,7 +328,7 @@ const CreateRace = () => {
 
 const get_race_info = async (): Promise<ApiCompetition[]> => {
   const { data: userData } = await axios({
-    url: "http://localhost:5000/api/races",
+    url: "/api/races",
     method: "get",
   });
   return userData;
@@ -653,7 +653,7 @@ const deleteCompetition = (id: string) => {
             
             // 发送删除请求到后端，使用正确的DELETE方法和路径
             const response = await axios({
-                url: `http://localhost:5000/api/races/${uid}`,
+                url: `/api/races/${uid}`,
                 method: "delete",
             });
             

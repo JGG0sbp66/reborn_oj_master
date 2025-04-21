@@ -172,7 +172,7 @@ const problemsWithAvatars = computed(() => {
 
 // 获取头像URL
 const getAvatarUrl = (uid: string) => {
-  return `http://localhost:5000/api/avatar-get/${uid}`;
+  return `/api/avatar-get/${uid}`;
 };
 
 // 获取字母索引（A, B, C...）

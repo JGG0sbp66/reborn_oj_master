@@ -314,7 +314,7 @@ const searchTimeout = ref(null);
 const problems = ref([]);
 const get_problem_info = async (): Promise<ApiProblem[]> => {
     const { data: userData } = await axios({
-        url: "http://localhost:5000/api/admin-question",
+        url: "/api/admin-question",
         method: "get",
     });
     return userData;
@@ -713,7 +713,7 @@ const deleteProblem = (id: string) => {
 
                 // 使用ID调用接口
                 const response = await axios({
-                    url: `http://localhost:5000/api/admin-question/${numericId}`,
+                    url: `/api/admin-question/${numericId}`,
                     method: 'DELETE',
                     headers: {
                         'Content-Type': 'application/json'

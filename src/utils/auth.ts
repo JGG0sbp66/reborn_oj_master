@@ -16,7 +16,7 @@ interface AuthResponse {
 export const checkAuth = async (): Promise<AuthResponse> => {
   try {
     const res: AxiosResponse<AuthResponse> = await axios.get(
-      'http://localhost:5000/api/verify-token',
+      '/api/verify-token',
       { withCredentials: true }
     );
     return res.data;

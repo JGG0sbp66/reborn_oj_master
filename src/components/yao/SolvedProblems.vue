@@ -52,7 +52,7 @@ const problems = computed(() => {
 onMounted(async () => {
   if (!props.problems) {
     try {
-      const response = await axios.get('http://localhost:5000/api/user-questions');
+      const response = await axios.get('/api/user-questions');
       if (response.data && Array.isArray(response.data)) {
         localProblems.value = response.data;
       }

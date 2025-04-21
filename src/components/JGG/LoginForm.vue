@@ -215,7 +215,7 @@ const handleSubmit = async () => {
     
     // 验证账号密码是否正确
     const { data: userData } = await axios({
-      url: "http://localhost:5000/api/login",
+      url: "/api/login",
       method: "post",
       data: {
         username: form.value.username,
@@ -239,7 +239,7 @@ const handleSubmit = async () => {
         if (user.uid) {
           try {
             // 向服务器请求用户头像
-            const avatarResponse = await axios.get(`http://localhost:5000/api/user-avatar/${user.uid}`, {
+            const avatarResponse = await axios.get(`/api/user-avatar/${user.uid}`, {
               responseType: 'blob',
               withCredentials: true
             });

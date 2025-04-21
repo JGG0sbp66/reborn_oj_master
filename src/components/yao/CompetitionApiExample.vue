@@ -72,7 +72,7 @@ import { ref, reactive, computed, watch } from 'vue';
 import CompetitionCardLoader from './CompetitionCardLoader.vue';
 
 // API 配置
-const apiUrl = ref('http://localhost:5000/api/competitions');
+const apiUrl = ref('/api/competitions');
 
 // 分页配置
 const currentPage = ref(1);

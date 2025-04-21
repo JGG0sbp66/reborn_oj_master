@@ -35,7 +35,7 @@ console.log("uid", uid); // 打印 uid 以调试
 
 const get_race_info = async () => {
   const { data: userData } = await axios({
-    url: "http://localhost:5000/api/race-info",
+    url: "/api/race-info",
     method: "post",
     data: { uid: uid.value },
   });

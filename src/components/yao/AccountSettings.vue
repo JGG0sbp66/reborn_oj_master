@@ -112,7 +112,7 @@ const changePassword = async (): Promise<void> => {
     });
     
     // 发送请求到后端修改密码
-    const response = await axios.post('http://localhost:5000/api/user-change-password', {
+    const response = await axios.post('/api/user-change-password', {
       old_password: oldPassword.value,
       new_password: newPassword.value,
       re_new_password: confirmPassword.value

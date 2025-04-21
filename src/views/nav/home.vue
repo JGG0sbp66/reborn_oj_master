@@ -239,7 +239,7 @@ const latestProblems = ref([]);
 // 获取最新题目数据
 const fetchLatestProblems = async () => {
   try {
-    const response = await axios.get('http://localhost:5000/api/home-get-question');
+    const response = await axios.get('/api/home-get-question');
     if (response.data.success) {
       // console.log('获取最新题目数据:', response.data.questions);
       latestProblems.value = response.data.questions.map(question => ({
@@ -312,7 +312,7 @@ const contestData = ref(null);
 const fetchCompetitions = async () => {
   try {
     const response = await axios({
-      url: "http://127.0.0.1:5000/api/race-list",
+      url: "/api/race-list",
       method: "get",
       data: {},
     });
