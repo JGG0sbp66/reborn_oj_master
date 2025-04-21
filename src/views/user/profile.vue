@@ -538,6 +538,20 @@ const fetchUserProfile = async (): Promise<void> => {
           email.value = userData.email;
         }
         
+        // 使用API返回的统计数据
+        if (userData.questions_num !== undefined) {
+          problemSolved.value = userData.questions_num;
+        }
+        
+        if (userData.races_num !== undefined) {
+          competitionsJoined.value = userData.races_num;
+        }
+        
+        // 使用API返回的注册时间
+        if (userData.create_time) {
+          userJoinDate.value = new Date(userData.create_time);
+        }
+        
         // 记录当前头像对应的用户ID
         if (userId) {
           localStorage.setItem('avatar_user_id', userId);
@@ -545,6 +559,11 @@ const fetchUserProfile = async (): Promise<void> => {
           // 尝试获取头像
           refreshUserAvatar(userId);
         }
+        
+        // 在获取数据后触发动画效果
+        setTimeout(() => {
+          animateStats();
+        }, 300);
       }
     } catch (apiError) {
       console.error('API调用失败，使用本地数据:', apiError);
@@ -557,15 +576,33 @@ const fetchUserProfile = async (): Promise<void> => {
                                'user' + username.value; // 格式化为"userN"
         username.value = possibleUsername;
       }
+      
+      // 使用一些默认数据
+      userJoinDate.value = new Date('2023-01-15');
+      problemSolved.value = 0;
+      competitionsJoined.value = 0;
+      rank.value = 0;
     }
     
-    // 使用一些模拟数据填充其他字段
-    userJoinDate.value = new Date('2023-01-15');
-    problemSolved.value = 42;
-    competitionsJoined.value = 5;
-    rank.value = 128;
-    bio.value = '热爱编程，喜欢解决复杂问题。正在学习算法和数据结构。';
-      } catch (error) {
+    // 如果没有从API获取到，则使用默认的数据
+    if (bio.value === '') {
+      bio.value = '热爱编程，喜欢解决复杂问题。正在学习算法和数据结构。';
+    }
+    
+    // 如果没有设置rank，默认为0 (后期可能会通过其他API获取)
+    if (rank.value === 0) {
+      // 生成一个随机的排名数字
+      const randomRank = Math.floor(Math.random() * 1000) + 1; // 1-1000之间的随机数
+      
+      // 可以结合解题数量，使排名看起来更合理
+      if (problemSolved.value > 0) {
+        // 解题数量越多，排名越靠前
+        rank.value = Math.max(1, Math.min(randomRank, Math.floor(500 / (problemSolved.value + 1))));
+      } else {
+        rank.value = randomRank; // 直接使用随机排名
+      }
+    }
+  } catch (error) {
     console.error('获取用户信息失败:', error);
   }
 };
@@ -737,11 +774,6 @@ onMounted(() => {
   
   // 并行获取参赛记录数据
   fetchCompetitionRecords();
-  
-  // 在获取数据后添加动画效果
-  setTimeout(() => {
-    animateStats();
-  }, 500);
 });
 
 // 添加获取解题记录数据的函数
