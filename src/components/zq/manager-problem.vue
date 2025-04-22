@@ -111,10 +111,10 @@
                         <el-select v-model="submissionCountFilter" placeholder="提交次数" clearable @change="handleSearch"
                             class="submission-select">
                             <el-option label="全部" value="" />
-                            <el-option label="1000以下" value="<1000" />
-                            <el-option label="1000-5000" value="1000-5000" />
-                            <el-option label="5000-10000" value="5000-10000" />
-                            <el-option label="10000以上" value=">10000" />
+                            <el-option label="50以下" value="<50" />
+                            <el-option label="50-100" value="50-100" />
+                            <el-option label="100-200" value="100-200" />
+                            <el-option label="200-500" value="200-500" />
                         </el-select>
                     </div>
                     <div class="search-item">
@@ -340,8 +340,9 @@ const handleSearch = () => {
             createTimeRange: createTimeRange.value
         });
 
-        // 触发过滤计算
-        // 如果是API请求，这里不需要手动触发，因为计算属性会自动重新计算
+        // 如果需要强制刷新计算属性
+        // 这里可以设置一个标志，表示筛选条件已更新
+        currentPage.value = currentPage.value;
     }, 300);
 };
 
@@ -437,6 +438,9 @@ const fetchData = async () => {
             console.log('没有找到任何题目');
         }
 
+        // 重置到第一页并刷新计算属性
+        currentPage.value = 1;
+
     } catch (error) {
         console.error('获取题目数据失败:', error);
         // 发生错误时显示提示
@@ -522,17 +526,17 @@ const filteredProblems = computed(() => {
         if (submissionCountFilter.value) {
             const count = problem.submissionCount;
             switch (submissionCountFilter.value) {
-                case '<1000':
-                    matchesSubmissionCount = count < 1000;
+                case '<50':
+                    matchesSubmissionCount = count < 50;
                     break;
-                case '1000-5000':
-                    matchesSubmissionCount = count >= 1000 && count <= 5000;
+                case '50-100':
+                    matchesSubmissionCount = count >= 50 && count <= 100;
                     break;
-                case '5000-10000':
-                    matchesSubmissionCount = count > 5000 && count <= 10000;
+                case '100-200':
+                    matchesSubmissionCount = count > 100 && count <= 200;
                     break;
-                case '>10000':
-                    matchesSubmissionCount = count > 10000;
+                case '200-500':
+                    matchesSubmissionCount = count > 200 && count <= 500;
                     break;
             }
         }
@@ -804,10 +808,16 @@ const applyAdvancedSearch = () => {
     difficultyFilter.value = difficultyFilter.value;
     
     // 可以在这里添加一些提示信息
-    console.log('应用高级筛选');
+    console.log('应用高级筛选', {
+        searchQuery: searchQuery.value,
+        difficulty: difficultyFilter.value,
+        passRateRange: passRateRange.value,
+        submissionCount: submissionCountFilter.value,
+        createTimeRange: createTimeRange.value
+    });
     
-    // 如果需要，可以在此处重新获取数据或执行其他操作
-    // 为避免频繁请求，通常我们会使用本地过滤
+    // 强制刷新筛选的计算属性
+    currentPage.value = 1;
     
     // 关闭高级筛选面板
     showAdvancedSearch.value = false;
@@ -821,8 +831,21 @@ const resetAdvancedSearch = () => {
     passRateRange.value = [0, 100];
     submissionCountFilter.value = '';
     createTimeRange.value = [];
-    // 立即应用重置的筛选条件
-    applyAdvancedSearch();
+
+    // 打印重置后的状态
+    console.log('重置筛选条件', {
+        searchQuery: searchQuery.value,
+        difficulty: difficultyFilter.value,
+        passRateRange: passRateRange.value,
+        submissionCount: submissionCountFilter.value,
+        createTimeRange: createTimeRange.value
+    });
+
+    // 立即应用重置的筛选条件并强制刷新
+    currentPage.value = 1;
+    
+    // 可以选择性地关闭高级筛选面板
+    // showAdvancedSearch.value = false;
 };
 </script>
 
