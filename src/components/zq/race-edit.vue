@@ -44,6 +44,35 @@
             </el-button>
           </el-form-item>
           
+          <el-form-item label="比赛类型" prop="tags">
+            <el-select 
+              v-model="competition.tags" 
+              multiple 
+              placeholder="请选择比赛类型" 
+              value-key="type"
+              :popper-append-to-body="false"
+            >
+              <el-option 
+                v-for="option in tagTypeOptions" 
+                :key="option.type" 
+                :label="option.name" 
+                :value="option"
+              ></el-option>
+            </el-select>
+            <div class="custom-tag-type-input" v-if="showCustomTagTypeInput">
+              <el-input 
+                v-model="customTagTypeName" 
+                placeholder="输入自定义比赛类型名称" 
+                @keyup.enter="addCustomTagType"
+              ></el-input>
+              <el-button @click="addCustomTagType" :disabled="!customTagTypeName.trim()">添加</el-button>
+              <el-button @click="showCustomTagTypeInput = false">取消</el-button>
+            </div>
+            <el-button size="small" @click="showCustomTagTypeInput = true" v-if="!showCustomTagTypeInput" class="mt-2">
+              + 添加自定义比赛类型
+            </el-button>
+          </el-form-item>
+          
           <div class="form-row">
             <el-form-item label="开始时间" prop="start_time">
               <el-date-picker
@@ -161,16 +190,18 @@ const props = defineProps({
 
 const emits = defineEmits(['refreshData']);
 
-// 定义竞赛数据结构
+// 定义比赛数据接口
 interface CompetitionData {
+  uid?: number;
   title: string;
   logos: string[];
   start_time: string;
   end_time: string;
   status: string;
   problems_list: number[];
-  user_list: number[]; // 改为number[]类型
-  uid?: number;
+  user_list: number[];
+  tags: string[];
+  tagTypes: string[];
 }
 
 // 添加用户信息接口
@@ -214,6 +245,19 @@ const loading = ref(false);
 const showCustomTagInput = ref(false);
 const customTagName = ref('');
 
+// 自定义比赛类型相关
+const showCustomTagTypeInput = ref(false);
+const customTagTypeName = ref('');
+const customTagTypeValue = ref('');
+
+// 比赛类型选项
+const tagTypeOptions = ref([
+  { name: '个人赛', type: 'individual' },
+  { name: '团队赛', type: 'team' },
+  { name: '限时赛', type: 'timed' },
+  { name: '公开赛', type: 'public' }
+]);
+
 // 题目数据
 const problemsInfo = ref<QuestionInfo[]>([]);
 const filteredProblems = ref<QuestionInfo[]>([]);
@@ -240,15 +284,17 @@ const competitionRules = reactive({
   ]
 }) as FormRules;
 
-// 竞赛数据
+// 表单状态
 const competition = reactive<CompetitionData>({
   title: '',
   logos: [],
   start_time: '',
   end_time: '',
-  status: 'upcoming', // 默认为报名中状态
+  status: 'pending',
   problems_list: [],
-  user_list: [] // 存储uid
+  user_list: [],
+  tags: [],
+  tagTypes: []
 });
 
 const newUserId = ref('');
@@ -292,11 +338,11 @@ const searchProblems = async (query: string): Promise<void> => {
             problem.id.toString().includes(query)
           );
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error('API搜索题目失败:', error);
       }
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error('搜索题目时出错:', error);
     if (props.alertBoxRef) {
       props.alertBoxRef.show('搜索题目时出错', 1);
@@ -309,7 +355,7 @@ const searchProblems = async (query: string): Promise<void> => {
 };
 
 // 获取题目标题信息
-const fetchQuestionsInfo = async (problemIds: number[] = []) => {
+const fetchQuestionsInfo = async (problemIds: number[] = []): Promise<void> => {
   problemsLoading.value = true;
   
   try {
@@ -340,7 +386,7 @@ const fetchQuestionsInfo = async (problemIds: number[] = []) => {
     filteredProblems.value = results;
     problemsInfo.value = results;
     
-  } catch (error) {
+  } catch (error: any) {
     console.error('获取题目信息失败:', error);
   } finally {
     problemsLoading.value = false;
@@ -348,7 +394,7 @@ const fetchQuestionsInfo = async (problemIds: number[] = []) => {
 };
 
 // 获取单个题目的标题
-const fetchSingleProblemTitle = async (problemId: number) => {
+const fetchSingleProblemTitle = async (problemId: number): Promise<void> => {
   try {
     const response = await axios.get(`/api/${problemId}`);
     const title = response.data.question?.title || '';
@@ -373,7 +419,7 @@ const fetchSingleProblemTitle = async (problemId: number) => {
 };
 
 // 打开编辑竞赛对话框
-const openEditDialog = async (competitionData: CompetitionData) => {
+const openEditDialog = async (competitionData: CompetitionData): Promise<void> => {
   // 立即显示对话框和加载动画
   dialogVisible.value = true;
   loading.value = true;
@@ -392,7 +438,9 @@ const openEditDialog = async (competitionData: CompetitionData) => {
       end_time: '',
       status: 'upcoming', // 修改默认状态
       problems_list: [],
-      user_list: []
+      user_list: [],
+      tags: [],
+      tagTypes: []
     });
     
     // 填充竞赛数据
@@ -410,6 +458,15 @@ const openEditDialog = async (competitionData: CompetitionData) => {
     
     if (!Array.isArray(competition.user_list)) {
       competition.user_list = [];
+    }
+    
+    // 确保tags和tagTypes是数组
+    if (!Array.isArray(competition.tags)) {
+      competition.tags = [];
+    }
+    
+    if (!Array.isArray(competition.tagTypes)) {
+      competition.tagTypes = [];
     }
     
     console.log('打开编辑对话框,当前竞赛数据:', JSON.stringify(competition));
@@ -457,7 +514,7 @@ const openEditDialog = async (competitionData: CompetitionData) => {
 };
 
 // 提交更新的竞赛信息
-const updateCompetition = async () => {
+const updateCompetition = async (): Promise<void> => {
   if (!competitionFormRef.value) return;
   
   try {
@@ -488,6 +545,15 @@ const updateCompetition = async () => {
     
     if (!Array.isArray(submissionData.user_list)) {
       submissionData.user_list = [];
+    }
+    
+    // 确保tags和tagTypes是数组
+    if (!Array.isArray(submissionData.tags)) {
+      submissionData.tags = [];
+    }
+    
+    if (!Array.isArray(submissionData.tagTypes)) {
+      submissionData.tagTypes = [];
     }
     
     // 转换日期格式为ISO字符串（如果需要）
@@ -550,7 +616,7 @@ const updateCompetition = async () => {
 };
 
 // 获取特定竞赛的详细信息
-const fetchRaceDetails = async (uid: number) => {
+const fetchRaceDetails = async (uid: number): Promise<void> => {
   try {
     console.log(`正在获取竞赛详情，ID: ${uid}`);
     
@@ -569,7 +635,9 @@ const fetchRaceDetails = async (uid: number) => {
       end_time: '',
       status: 'pending',
       problems_list: [],
-      user_list: []
+      user_list: [],
+      tags: [],
+      tagTypes: []
     });
     
     // 填充竞赛数据
@@ -584,7 +652,9 @@ const fetchRaceDetails = async (uid: number) => {
       end_time: raceData.end_time || new Date().toISOString(),
       status: raceData.status || 'pending',
       problems_list: Array.isArray(raceData.problems_list) ? raceData.problems_list : [],
-      user_list: Array.isArray(raceData.user_list) ? raceData.user_list : []
+      user_list: Array.isArray(raceData.user_list) ? raceData.user_list : [],
+      tags: Array.isArray(raceData.tags) ? raceData.tags : [],
+      tagTypes: Array.isArray(raceData.tagTypes) ? raceData.tagTypes : []
     });
     
     console.log('处理后的竞赛数据:', JSON.stringify(competition));
@@ -593,8 +663,24 @@ const fetchRaceDetails = async (uid: number) => {
     if (competition.problems_list && competition.problems_list.length > 0) {
       await fetchQuestionsInfo(competition.problems_list);
     }
-    
-    return response.data;
+
+    // 获取所有用户的用户名
+    userMap.value.clear();
+    if (competition.user_list && competition.user_list.length > 0) {
+      try {
+        const promises = competition.user_list.map(uid => 
+          axios.get(`/api/get-username/${uid}`)
+        );
+        const responses = await Promise.all(promises);
+        responses.forEach((response, index) => {
+          if (response.data.success) {
+            userMap.value.set(competition.user_list[index], response.data.message);
+          }
+        });
+      } catch (error) {
+        console.error('获取用户名列表失败:', error);
+      }
+    }
   } catch (error) {
     console.error('获取竞赛详情失败:', error);
     if (props.alertBoxRef) {
@@ -602,47 +688,39 @@ const fetchRaceDetails = async (uid: number) => {
     } else {
       ElMessage.error('获取竞赛详情失败，请稍后重试');
     }
-    return null;
   }
 };
 
 // 添加自定义标签
-const addCustomTag = () => {
-  const tagName = customTagName.value.trim();
-  if (!tagName) {
-    if (props.alertBoxRef) {
-      props.alertBoxRef.show('标签名称不能为空', 1);
-    } else {
-      ElMessage.warning('标签名称不能为空');
+const addCustomTag = (): void => {
+  if (customTagName.value.trim() !== '') {
+    if (!competition.logos.includes(customTagName.value)) {
+      competition.logos.push(customTagName.value);
     }
-    return;
+    customTagName.value = '';
+    showCustomTagInput.value = false;
   }
-  
-  // 检查是否已有相同名称的标签
-  if (competition.logos.includes(tagName)) {
-    if (props.alertBoxRef) {
-      props.alertBoxRef.show(`标签 "${tagName}" 已存在`, 1);
-    } else {
-      ElMessage.warning(`标签 "${tagName}" 已存在`);
+};
+
+// 添加自定义比赛类型
+const addCustomTagType = (): void => {
+  if (customTagTypeName.value.trim() !== '' && customTagTypeValue.value.trim() !== '') {
+    if (!competition.tagTypes.includes(customTagTypeValue.value)) {
+      competition.tagTypes.push(customTagTypeValue.value);
+      // 添加到选项中，如果需要的话
+      tagTypeOptions.value.push({
+        name: customTagTypeName.value,
+        type: customTagTypeValue.value
+      });
     }
-    return;
+    customTagTypeName.value = '';
+    customTagTypeValue.value = '';
+    showCustomTagTypeInput.value = false;
   }
-  
-  // 添加自定义标签
-  competition.logos.push(tagName);
-  if (props.alertBoxRef) {
-    props.alertBoxRef.show(`添加了自定义标签 "${tagName}"`, 0);
-  } else {
-    ElMessage.success(`添加了自定义标签 "${tagName}"`);
-  }
-  
-  // 重置表单
-  customTagName.value = '';
-  showCustomTagInput.value = false;
 };
 
 // 添加用户
-const addUser = async () => {
+const addUser = async (): Promise<void> => {
   if (!newUserId.value) return;
   
   try {
@@ -698,12 +776,8 @@ const addUser = async () => {
 };
 
 // 移除用户
-const removeUser = (uid: number) => {
-  const index = competition.user_list.indexOf(uid);
-  if (index > -1) {
-    competition.user_list.splice(index, 1);
-    userMap.value.delete(uid);
-  }
+const removeUser = (uid: number): void => {
+  competition.user_list = competition.user_list.filter(id => id !== uid);
 };
 
 // 获取当前竞赛数据

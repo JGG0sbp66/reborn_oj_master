@@ -43,6 +43,35 @@
             </el-button>
           </el-form-item>
           
+          <el-form-item label="比赛类型" prop="tags">
+            <el-select 
+              v-model="competition.tags" 
+              multiple 
+              placeholder="请选择比赛类型" 
+              value-key="type"
+              :popper-append-to-body="false"
+            >
+              <el-option 
+                v-for="option in tagTypeOptions" 
+                :key="option.type" 
+                :label="option.name" 
+                :value="option"
+              ></el-option>
+            </el-select>
+            <div class="custom-tag-type-input" v-if="showCustomTagTypeInput">
+              <el-input 
+                v-model="customTagTypeName" 
+                placeholder="输入自定义比赛类型名称" 
+                @keyup.enter="addCustomTagType"
+              ></el-input>
+              <el-button @click="addCustomTagType" :disabled="!customTagTypeName.trim()">添加</el-button>
+              <el-button @click="showCustomTagTypeInput = false">取消</el-button>
+            </div>
+            <el-button size="small" @click="showCustomTagTypeInput = true" v-if="!showCustomTagTypeInput" class="mt-2">
+              + 添加自定义比赛类型
+            </el-button>
+          </el-form-item>
+          
           <div class="form-row">
             <el-form-item label="开始时间" prop="start_time">
               <el-date-picker
@@ -104,7 +133,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue';
+import { ref, reactive, onMounted, watch } from 'vue';
 import { ElMessage } from 'element-plus';
 import type { FormInstance, FormRules } from 'element-plus';
 import { Plus, Delete } from '@element-plus/icons-vue';
@@ -125,6 +154,7 @@ interface CreateCompetitionData {
   end_time: string;
   problems_list: number[];
   topic?: string;
+  tags?: Array<{name: string, type: string}>;
 }
 
 // 题目信息缓存
@@ -187,7 +217,8 @@ const competition = reactive<CreateCompetitionData>({
   output_format: '',
   constraints: [],
   examples: [],
-  topic: '入门'
+  topic: '入门',
+  tags: [{name: '个人赛', type: 'individual'}] // 默认选择个人赛
 });
 
 // 表单验证规则
@@ -216,11 +247,24 @@ const currentExample = reactive<CurrentExample>({
 const showCustomTagInput = ref(false);
 const customTagName = ref('');
 
+// 自定义比赛类型相关
+const showCustomTagTypeInput = ref(false);
+const customTagTypeName = ref('');
+const customTagTypeValue = ref('');
+
 // 题目数据
 const problemsInfo = ref<QuestionInfo[]>([]);
 const filteredProblems = ref<QuestionInfo[]>([]);
 const problemsLoading = ref(false);
 const allProblems = ref<QuestionInfo[]>([]);
+
+// 比赛类型选项
+const tagTypeOptions = [
+  {name: '个人赛', type: 'individual'},
+  {name: '团队赛', type: 'team'},
+  {name: 'OI赛制', type: 'oi'},
+  {name: 'ACM赛制', type: 'acm'}
+];
 
 // 搜索题目
 const searchProblems = (query: string): void => {
@@ -336,6 +380,44 @@ const addCustomTag = (): void => {
   showCustomTagInput.value = false;
 };
 
+// 添加自定义比赛类型
+const addCustomTagType = (): void => {
+  const tagName = customTagTypeName.value.trim();
+  
+  if (!tagName) {
+    if (props.alertBoxRef) {
+      props.alertBoxRef.show('比赛类型名称不能为空', 1);
+    } else {
+      ElMessage.warning('比赛类型名称不能为空');
+    }
+    return;
+  }
+  
+  // 检查是否已有相同名称的类型
+  if (competition.tags.some(tag => tag.name === tagName)) {
+    if (props.alertBoxRef) {
+      props.alertBoxRef.show(`比赛类型 "${tagName}" 已存在`, 1);
+    } else {
+      ElMessage.warning(`比赛类型 "${tagName}" 已存在`);
+    }
+    return;
+  }
+  
+  // 添加自定义类型
+  const customType = 'custom_' + tagName.toLowerCase().replace(/\s+/g, '_');
+  competition.tags.push({name: tagName, type: customType});
+  
+  if (props.alertBoxRef) {
+    props.alertBoxRef.show(`添加了自定义比赛类型 "${tagName}"`, 0);
+  } else {
+    ElMessage.success(`添加了自定义比赛类型 "${tagName}"`);
+  }
+  
+  // 重置表单
+  customTagTypeName.value = '';
+  showCustomTagTypeInput.value = false;
+};
+
 // 打开创建竞赛对话框
 const openCreateDialog = async (): Promise<void> => {
   console.log('openCreateDialog被调用，正在打开创建竞赛对话框');
@@ -346,6 +428,7 @@ const openCreateDialog = async (): Promise<void> => {
     start_time: '',
     end_time: '',
     problems_list: [],
+    tags: [{name: '个人赛', type: 'individual'}]
   });
   
   // 获取题目数据
@@ -365,6 +448,11 @@ const openCreateDialog = async (): Promise<void> => {
   // 重置自定义标签表单
   customTagName.value = '';
   showCustomTagInput.value = false;
+  
+  // 重置自定义比赛类型表单
+  customTagTypeName.value = '';
+  customTagTypeValue.value = '';
+  showCustomTagTypeInput.value = false;
 };
 
 // 提交创建竞赛表单
