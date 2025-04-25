@@ -1330,11 +1330,17 @@ export default {
         });
 
         this.codeLines = [""];
-
       } catch (error) {
         // console.error("提交失败:", error);
 
-        if(error.response){
+        if (error.message === "用户未登录") {
+          this.$emit("show-alert", {
+            type: "error",
+            message: "请先登录后再提交代码",
+          });
+        }
+
+        if (error.response) {
           this.$emit("show-alert", {
             type: "error",
             message: error.response.data.message,
@@ -1429,17 +1435,17 @@ export default {
       const input = this.$refs[`input_${index}`][0];
       const cursorPos = input.selectionStart;
       const line = this.codeLines[index];
-      
-      if (key === '{') {
+
+      if (key === "{") {
         // 花括号保持原有的换行缩进功能
         const indent = this.getCurrentIndent(line);
         const beforeCursor = line.substring(0, cursorPos);
         const afterCursor = line.substring(cursorPos);
 
         const newLines = [
-          beforeCursor + '{',
+          beforeCursor + "{",
           indent + "  ",
-          indent + '}' + afterCursor
+          indent + "}" + afterCursor,
         ];
 
         this.codeLines.splice(index, 1, ...newLines);
@@ -1452,13 +1458,11 @@ export default {
           }
         });
         return true;
-      } else if (key === '(') {
+      } else if (key === "(") {
         // 圆括号保持在同一行
-        const newLine = 
-          line.substring(0, cursorPos) + 
-          '()' + 
-          line.substring(cursorPos);
-        
+        const newLine =
+          line.substring(0, cursorPos) + "()" + line.substring(cursorPos);
+
         this.codeLines[index] = newLine;
         this.$nextTick(() => {
           input.setSelectionRange(cursorPos + 1, cursorPos + 1);
