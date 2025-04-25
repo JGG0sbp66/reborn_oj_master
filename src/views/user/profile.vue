@@ -119,6 +119,7 @@
                 email, 
                 bio
               }" 
+              :alert-box="alertBox"
               @profile-updated="handleProfileUpdated" 
             />
           </div>
@@ -148,6 +149,7 @@
                 publicSolvedProblems,
                 publicRanking
               }"
+              :alert-box="alertBox"
               @security-settings-updated="handleSecuritySettingsUpdated"
               @privacy-settings-updated="handlePrivacySettingsUpdated"
               @password-changed="handlePasswordChanged"
