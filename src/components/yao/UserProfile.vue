@@ -43,7 +43,7 @@
 
 <script setup lang="ts">
 import { defineProps, defineEmits, ref, computed, onMounted, watch } from 'vue';
-import { ElMessage, ElLoading } from 'element-plus';
+import { ElLoading } from 'element-plus';
 import axios from 'axios';
 
 interface UserProfileData {
@@ -54,6 +54,7 @@ interface UserProfileData {
 
 const props = defineProps<{
   userProfile: UserProfileData;
+  alertBox?: any;
 }>();
 
 const emit = defineEmits<{
@@ -88,10 +89,7 @@ const getVerificationCode = async () => {
   // 验证邮箱格式
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!email.value || !emailRegex.test(email.value)) {
-    ElMessage({
-      message: '请输入有效的电子邮箱',
-      type: 'warning'
-    });
+    props.alertBox?.show('请输入有效的电子邮箱', 1);
     return;
   }
 
@@ -114,10 +112,7 @@ const getVerificationCode = async () => {
     loadingInstance.close();
 
     if (response.data && response.data.success) {
-      ElMessage({
-        message: response.data.message || '验证码已发送，请查收邮箱',
-        type: 'success'
-      });
+      props.alertBox?.show(response.data.message || '验证码已发送，请查收邮箱', 0);
 
       // 设置冷却时间（60秒）
       cooldown.value = 60;
@@ -132,10 +127,7 @@ const getVerificationCode = async () => {
     }
   } catch (error: any) {
     console.error('发送验证码失败:', error);
-    ElMessage({
-      message: error.response?.data?.message || error.message || '发送验证码失败，请稍后重试',
-      type: 'error'
-    });
+    props.alertBox?.show(error.response?.data?.message || error.message || '发送验证码失败，请稍后重试', 2);
   }
 };
 
@@ -144,20 +136,14 @@ const saveProfile = async (): Promise<void> => {
   try {
     // 验证用户名
     if (!username.value.trim()) {
-      ElMessage({
-        message: '用户名不能为空',
-        type: 'warning'
-      });
+      props.alertBox?.show('用户名不能为空', 2);
       return;
     }
     
     // 处理邮箱变更 - 如果邮箱有变更且提供了验证码
     if (email.value !== props.userProfile.email) {
       if (!verificationCode.value.trim()) {
-        ElMessage({
-          message: '更改邮箱需要验证码',
-          type: 'warning'
-        });
+        props.alertBox?.show('更改邮箱需要验证码', 2);
         return;
       }
       
@@ -183,18 +169,12 @@ const saveProfile = async (): Promise<void> => {
         
         if (!emailResponse.data || !emailResponse.data.success) {
           // 邮箱修改失败，显示错误信息
-          ElMessage({
-            message: emailResponse.data?.message || '邮箱修改失败',
-            type: 'error'
-          });
+          props.alertBox?.show(emailResponse.data?.message || '邮箱修改失败', 2);
           return; // 终止后续操作
         }
         
         // 邮箱修改成功
-        ElMessage({
-          message: emailResponse.data.message || '邮箱修改成功',
-          type: 'success'
-        });
+        props.alertBox?.show(emailResponse.data.message || '邮箱修改成功', 0);
         
         // 更新本地存储中的邮箱
         localStorage.setItem('email', email.value);
@@ -203,10 +183,7 @@ const saveProfile = async (): Promise<void> => {
         verificationCode.value = '';
       } catch (emailError: any) {
         console.error('修改邮箱失败:', emailError);
-        ElMessage({
-          message: emailError.response?.data?.message || '修改邮箱失败，请稍后重试',
-          type: 'error'
-        });
+        props.alertBox?.show(emailError.response?.data?.message || '修改邮箱失败，请稍后重试', 2);
         return; // 终止后续操作
       }
     }
@@ -216,14 +193,14 @@ const saveProfile = async (): Promise<void> => {
     
     // 如果用户名变更，修改用户名
     if (isUsernameChanged) {
+      // 显示加载指示器
+      const loadingInstance = ElLoading.service({
+        lock: true,
+        text: '修改用户名中...',
+        background: 'rgba(0, 0, 0, 0.7)'
+      });
+      
       try {
-        // 显示加载指示器
-        const loadingInstance = ElLoading.service({
-          lock: true,
-          text: '修改用户名中...',
-          background: 'rgba(0, 0, 0, 0.7)'
-        });
-        
         // 发送修改用户名请求
         const usernameResponse = await axios.post('/api/user-change-username', {
           new_username: username.value,
@@ -236,32 +213,23 @@ const saveProfile = async (): Promise<void> => {
         
         if (!usernameResponse.data || !usernameResponse.data.success) {
           // 用户名修改失败，显示错误信息
-          ElMessage({
-            message: usernameResponse.data?.message || '用户名修改失败',
-            type: 'error'
-          });
+          props.alertBox?.show(usernameResponse.data?.message || '用户名修改失败', 2);
           return; // 终止后续操作
         }
         
         // 用户名修改成功
-        ElMessage({
-          message: usernameResponse.data.message || '用户名修改成功',
-          type: 'success'
-        });
-        
-        // 更新本地存储中的用户名
-        localStorage.setItem('username', username.value);
+        props.alertBox?.show(usernameResponse.data.message || '用户名修改成功', 0);
       } catch (usernameError: any) {
+        // 确保关闭加载指示器
+        loadingInstance.close();
+        
         console.error('修改用户名失败:', usernameError);
-        ElMessage({
-          message: usernameError.response?.data?.message || '修改用户名失败，请稍后重试',
-          type: 'error'
-        });
+        props.alertBox?.show(usernameError.response?.data?.message || '修改用户名失败，请稍后重试', 2);
         return; // 终止后续操作
       }
     }
     
-    // 如果只修改个人简介，不修改用户名和邮箱
+    // 个人简介变更
     if (!isUsernameChanged && email.value === props.userProfile.email && bio.value !== props.userProfile.bio) {
       // 发送请求到后端保存个人简介
       const loadingInstance = ElLoading.service({
@@ -284,19 +252,13 @@ const saveProfile = async (): Promise<void> => {
           throw new Error(response.data?.message || '保存个人简介失败');
         }
         
-        ElMessage({
-          message: response.data.message || '个人简介已更新',
-          type: 'success'
-        });
+        props.alertBox?.show(response.data.message || '个人简介已更新', 0);
       } catch (error: any) {
         // 关闭加载指示器
         loadingInstance.close();
         
         console.error('保存个人简介失败:', error);
-        ElMessage({
-          message: error.message || '保存个人简介失败，请稍后重试',
-          type: 'error'
-        });
+        props.alertBox?.show(error.message || '保存个人简介失败，请稍后重试', 2);
         return;
       }
     }
@@ -313,10 +275,7 @@ const saveProfile = async (): Promise<void> => {
     
   } catch (error: any) {
     console.error('保存用户资料失败:', error);
-    ElMessage({
-      message: error.message || '保存失败，请稍后重试',
-      type: 'error'
-    });
+    props.alertBox?.show(error.message || '保存失败，请稍后重试', 2);
   }
 };
 </script>
