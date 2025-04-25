@@ -183,9 +183,9 @@ const getAlphabetIndex = (index: number) => {
 // 获取题目状态的样式类
 const getStatusClass = (status: string) => {
   switch (status) {
-    case "AC":
+    case "已通过":
       return "status-accepted";
-    case "WA":
+    case "未通过":
       return "status-wrong";
     case "PENDING":
       return "status-pending";
@@ -383,13 +383,17 @@ const goToQuestionDetail = (id: string, race_uid: string) => {
 }
 
 .status-accepted {
-  background-color: rgba(236, 253, 245, 0.8);
+  background-color: rgba(236, 253, 245, 0.9);
   color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  font-weight: 600;
 }
 
 .status-wrong {
   background-color: rgba(254, 242, 242, 0.8);
   color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  font-weight: 600;
 }
 
 .status-pending {
