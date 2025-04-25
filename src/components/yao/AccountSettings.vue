@@ -48,7 +48,7 @@
 
 <script setup lang="ts">
 import { defineProps, defineEmits, ref } from 'vue';
-import { ElMessage, ElLoading } from 'element-plus';
+import { ElLoading } from 'element-plus';
 import axios from 'axios';
 
 interface SecuritySettings {
@@ -64,6 +64,7 @@ interface PrivacySettings {
 const props = defineProps<{
   securitySettings?: SecuritySettings;
   privacySettings?: PrivacySettings;
+  alertBox?: any;
 }>();
 
 const emit = defineEmits<{
@@ -88,18 +89,12 @@ const publicRanking = ref(props.privacySettings?.publicRanking ?? true);
 // 修改密码
 const changePassword = async (): Promise<void> => {
   if (!oldPassword.value || !newPassword.value || !confirmPassword.value) {
-    ElMessage({
-      message: '请填写所有密码字段',
-      type: 'warning'
-    });
+    props.alertBox?.show('请填写所有密码字段', 2);
     return;
   }
   
   if (newPassword.value !== confirmPassword.value) {
-    ElMessage({
-      message: '两次输入的新密码不一致',
-      type: 'error'
-    });
+    props.alertBox?.show('两次输入的新密码不一致', 2);
     return;
   }
   
@@ -125,10 +120,7 @@ const changePassword = async (): Promise<void> => {
     
     // 处理响应
     if (response.data && response.data.success) {
-      ElMessage({
-        message: response.data.message || '密码已成功修改',
-        type: 'success'
-      });
+      props.alertBox?.show(response.data.message || '密码已成功修改', 0);
       
       // 清空表单
       oldPassword.value = '';
@@ -139,10 +131,7 @@ const changePassword = async (): Promise<void> => {
       emit('password-changed');
     } else {
       // 后端返回失败信息
-      ElMessage({
-        message: response.data?.message || '修改密码失败',
-        type: 'error'
-      });
+      props.alertBox?.show(response.data?.message || '修改密码失败', 2);
     }
   } catch (error: any) {
     console.error('修改密码失败:', error);
@@ -157,10 +146,7 @@ const changePassword = async (): Promise<void> => {
       errorMessage = '服务器未响应，请检查网络连接';
     }
     
-    ElMessage({
-      message: errorMessage,
-      type: 'error'
-    });
+    props.alertBox?.show(errorMessage, 2);
   }
 };
 
