@@ -138,6 +138,7 @@ interface ProblemData {
     description: string;
     difficulty: string;
     category: string;
+    topic: string;
     time_limit: number;
     memory_limit: number;
     input_format: string;
@@ -167,11 +168,12 @@ const loading = ref(false);
 
 // 题目数据
 const problemData = reactive<ProblemData>({
-    id: 0,
+    id: '',
     title: '',
     description: '',
     difficulty: '',
     category: '',
+    topic: '入门',
     time_limit: 1000,
     memory_limit: 128,
     input_format: '',
@@ -206,7 +208,7 @@ const fetchProblemDetails = async (problemId: number) => {
         const apiData = response.data;
 
         // 填充题目数据
-        problemData.id = problemId;
+        problemData.id = `${problemId}`;
         problemData.title = apiData.question.title || '未命名题目';
         problemData.description = apiData.question.description || '';
         problemData.time_limit = apiData.question.time_limit || 1000;
@@ -216,10 +218,16 @@ const fetchProblemDetails = async (problemId: number) => {
         problemData.constraints = apiData.question.constraints || [];
         problemData.examples = apiData.question.examples || [];
         problemData.category = apiData.topic || '未分类';
+        problemData.topic = apiData.topic || '入门';
 
-        // 随机生成通过率和提交次数（实际应用中应从API获取）
-        problemData.passRate = Math.floor(Math.random() * 100);
-        problemData.submissionCount = Math.floor(Math.random() * 10000) + 100;
+        // 使用API提供的提交和通过数据
+        problemData.submissionCount = apiData.submit_num || 0;
+        // 计算通过率
+        if (apiData.submit_num && apiData.submit_num > 0) {
+            problemData.passRate = Math.floor((apiData.solve_num / apiData.submit_num) * 100);
+        } else {
+            problemData.passRate = 0;
+        }
 
         // 设置创建时间
         problemData.createTime = new Date().toISOString().split('T')[0];
@@ -277,7 +285,23 @@ const getDifficultyByComplexity = (question: QuestionData): string => {
 // 处理编辑按钮点击事件
 const handleEdit = () => {
     dialogVisible.value = false;
-    emits('editProblem', { ...problemData });
+    // 触发编辑事件，传递当前题目数据 - 确保id字段存在
+    emits('editProblem', {
+        id: problemData.id,
+        uid: problemData.id, // 添加uid字段以匹配manager-problem.vue中handleEditFromDetail的期望
+        title: problemData.title,
+        description: problemData.description,
+        topic: problemData.topic,
+        time_limit: problemData.time_limit,
+        memory_limit: problemData.memory_limit,
+        input_format: problemData.input_format,
+        output_format: problemData.output_format,
+        constraints: problemData.constraints,
+        examples: problemData.examples,
+        passRate: problemData.passRate,
+        submissionCount: problemData.submissionCount,
+        createTime: problemData.createTime
+    });
 };
 
 // 暴露方法给父组件

@@ -254,38 +254,72 @@ const currentExample = reactive<Example>({
 });
 
 // 打开编辑题目对话框
-const openEditDialog = async (problemData: ProblemData) => {
-  console.log('打开编辑题目对话框，接收数据:', JSON.stringify(problemData));
-  
+const openEditDialog = async (problemIdOrData: string | ProblemData) => {
   // 重置表单
   if (problemFormRef.value) {
     problemFormRef.value.resetFields();
   }
   
-  // 确保problemData不为空并且包含必要的字段
-  if (!problemData || !problemData.id) {
-    ElMessage.error('题目数据无效，无法编辑');
-    return;
+  try {
+    // 判断入参是否为ID字符串
+    if (typeof problemIdOrData === 'string') {
+      console.log(`正在通过ID获取题目数据进行编辑，ID: ${problemIdOrData}`);
+      
+      // 通过ID获取题目详细数据
+      const response = await axios({
+        url: `/api/admin-question/${problemIdOrData}`,
+        method: 'get'
+      });
+      
+      const apiData = response.data;
+      
+      // 填充题目数据
+      Object.assign(problem, {
+        id: problemIdOrData,
+        title: apiData.question.title || '',
+        description: apiData.question.description || '',
+        topic: apiData.topic || '入门',
+        time_limit: apiData.question.time_limit || 1000,
+        memory_limit: apiData.question.memory_limit || 128,
+        input_format: apiData.question.input_format || '',
+        output_format: apiData.question.output_format || '',
+        constraints: apiData.question.constraints || [],
+        examples: apiData.question.examples || []
+      });
+      
+      console.log('通过ID获取的题目数据已填充:', JSON.stringify(problem));
+    } else {
+      console.log('打开编辑题目对话框，接收完整数据:', JSON.stringify(problemIdOrData));
+      
+      // 确保problemData不为空并且包含必要的字段
+      if (!problemIdOrData || !problemIdOrData.id) {
+        ElMessage.error('题目数据无效，无法编辑');
+        return;
+      }
+      
+      // 填充题目数据
+      Object.assign(problem, {
+        id: problemIdOrData.id || '',
+        title: problemIdOrData.title || '',
+        description: problemIdOrData.description || '',
+        topic: problemIdOrData.topic || '入门',
+        time_limit: problemIdOrData.time_limit || 1000,
+        memory_limit: problemIdOrData.memory_limit || 128,
+        input_format: problemIdOrData.input_format || '',
+        output_format: problemIdOrData.output_format || '',
+        constraints: Array.isArray(problemIdOrData.constraints) ? [...problemIdOrData.constraints] : [],
+        examples: Array.isArray(problemIdOrData.examples) ? [...problemIdOrData.examples] : []
+      });
+      
+      console.log('题目数据已填充:', JSON.stringify(problem));
+    }
+    
+    // 显示对话框
+    dialogVisible.value = true;
+  } catch (error) {
+    console.error('获取题目数据失败:', error);
+    ElMessage.error('获取题目数据失败，请稍后重试');
   }
-  
-  // 填充题目数据
-  Object.assign(problem, {
-    id: problemData.id || '',
-    title: problemData.title || '',
-    description: problemData.description || '',
-    topic: problemData.topic || '入门',
-    time_limit: problemData.time_limit || 1000,
-    memory_limit: problemData.memory_limit || 128,
-    input_format: problemData.input_format || '',
-    output_format: problemData.output_format || '',
-    constraints: Array.isArray(problemData.constraints) ? [...problemData.constraints] : [],
-    examples: Array.isArray(problemData.examples) ? [...problemData.examples] : []
-  });
-  
-  console.log('题目数据已填充:', JSON.stringify(problem));
-  
-  // 显示对话框
-  dialogVisible.value = true;
 };
 
 // 添加约束条件
@@ -339,7 +373,9 @@ const updateProblem = async () => {
     updating.value = true;
     
     // 提取题目ID号
-    const problemId = problem.id.replace('P', '');
+    const numericId = problem.id;
+    
+    console.log(`正在更新题目，ID: ${numericId}`);
     
     // 准备提交数据
     const submitData = {
@@ -357,12 +393,6 @@ const updateProblem = async () => {
     };
     
     console.log('提交题目更新数据:', JSON.stringify(submitData));
-    
-    // 修正正则表达式，提取ID中的数字部分
-    const matches = problem.id.match(/P1(\d+)/);
-    const numericId = matches ? parseInt(matches[1], 10) : 0;
-    
-    console.log(`正在更新题目，原始ID: ${problem.id}, 实际ID: ${numericId}`);
     
     // 发送更新题目请求
     const response = await axios({
