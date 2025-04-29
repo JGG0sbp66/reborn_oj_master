@@ -142,6 +142,7 @@ interface RaceData {
   user_list: number[];
   status: string;
   description?: string;
+  user_uid_list?: number[]; // 添加这个字段
 }
 
 // 弹窗状态
@@ -229,7 +230,7 @@ const fetchQuestionsInfo = async (problemIds: number[]) => {
   
   try {
     const promises = problemIds.map(id => 
-      axios.get(`/api/${id}`)
+      axios.get(`/api/admin-question/${id}`)
         .then(response => ({
           id,
           title: response.data.question?.title || ''
@@ -316,7 +317,12 @@ const fetchRaceDetails = async (raceId: number) => {
 // 处理编辑按钮点击事件
 const handleEdit = () => {
   dialogVisible.value = false;
-  emits('editRace', {...raceData});
+  const raceDataToEdit = { ...raceData };
+  // 使用 user_uid_list 替换 user_list
+  if (raceDataToEdit.user_uid_list) {
+    raceDataToEdit.user_list = raceDataToEdit.user_uid_list;
+  }
+  emits('editRace', raceDataToEdit);
 };
 
 // 暴露方法给父组件
