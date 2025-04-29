@@ -1263,7 +1263,7 @@ export default {
         // 创建唯一的提交标识
         const submissionId = Date.now();
 
-        const pendingSubmission = {
+          const pendingSubmission = {
           status: `
             <div style="display: inline-flex; align-items: center;">
               <span>评测中</span>
@@ -1288,7 +1288,7 @@ export default {
         };
 
         this.$emit("add-pending-submission", pendingSubmission);
-
+        
         const formData = new FormData();
         formData.append("question_uid", this.id);
         formData.append("question", JSON.stringify(this.questionDetail));
