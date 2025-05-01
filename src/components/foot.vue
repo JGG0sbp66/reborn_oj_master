@@ -48,7 +48,7 @@
                         </div>
                         <div class="contact-item">
                             <span class="contact-icon">🔗</span>
-                            <span>www.ojmastr.com</span>
+                            <span>www.oj-master.fun</span>
                         </div>
                         <div class="social-links">
                             <a href="https://github.com/JGG0sbp66/reborn_oj_master" target="_blank" class="social-link">
