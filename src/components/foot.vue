@@ -19,9 +19,9 @@
                 <div class="footer-section nav-section">
                     <h4 class="footer-heading">常用链接</h4>
                     <div class="footer-nav-links">
-                        <a href="#" class="footer-nav-link">首页</a>
-                        <a href="#" class="footer-nav-link">题库</a>
-                        <a href="#" class="footer-nav-link">竞赛</a>
+                        <router-link to="/nav/home" class="footer-nav-link">首页</router-link>
+                        <router-link to="/nav/question" class="footer-nav-link">题库</router-link>
+                        <router-link to="/nav/competition" class="footer-nav-link">竞赛</router-link>
                         <a href="#" class="footer-nav-link">排行榜</a>
                         <a href="#" class="footer-nav-link">用户中心</a>
                     </div>
