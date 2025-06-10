@@ -5,29 +5,13 @@
       <!-- 轮播图部分 -->
       <div class="banner-container">
         <div class="banner-image">
-          <div
-            v-for="(slide, index) in bannerSlides"
-            :key="index"
-            class="banner-slide"
-            :class="{ active: currentSlide === index }"
-          >
-            <div
-              class="banner-placeholder"
-              :style="{ background: slide.gradient }"
-            >
+          <div v-for="(slide, index) in bannerSlides" :key="index" class="banner-slide"
+            :class="{ active: currentSlide === index }">
+            <div class="banner-placeholder" :style="{ background: slide.gradient }">
               <div class="banner-content">
-                <h3
-                  class="fade-in-up"
-                  :style="{ animationDelay: '0.1s' }"
-                >{{ slide.title }}</h3>
-                <p
-                  class="fade-in-up"
-                  :style="{ animationDelay: '0.3s' }"
-                >{{ slide.subtitle }}</p>
-                <button
-                  class="banner-btn fade-in-up"
-                  :style="{ animationDelay: '0.5s' }"
-                >
+                <h3 class="fade-in-up" :style="{ animationDelay: '0.1s' }">{{ slide.title }}</h3>
+                <p class="fade-in-up" :style="{ animationDelay: '0.3s' }">{{ slide.subtitle }}</p>
+                <button class="banner-btn fade-in-up" :style="{ animationDelay: '0.5s' }">
                   立即探索
                 </button>
               </div>
@@ -35,13 +19,8 @@
           </div>
           <div class="banner-controls">
             <div class="banner-dots">
-              <span
-                v-for="(slide, index) in bannerSlides"
-                :key="index"
-                class="dot"
-                :class="{ active: currentSlide === index }"
-                @click="setSlide(index)"
-              ></span>
+              <span v-for="(slide, index) in bannerSlides" :key="index" class="dot"
+                :class="{ active: currentSlide === index }" @click="setSlide(index)"></span>
             </div>
           </div>
         </div>
@@ -62,24 +41,15 @@
               <h2 class="section-title">最新竞赛</h2>
               <span class="subtitle">竞赛系统</span>
             </div>
-            <router-link
-              to="/nav/competition"
-              class="more-link"
-            >
+            <router-link to="/nav/competition" class="more-link">
               更多比赛 <i class="more-icon">›</i>
             </router-link>
           </div>
 
           <!-- 竞赛列表 -->
           <div class="competition-list">
-            <CompetitionCard
-              v-for="(item, index) in competitions.slice(0, 4)"
-              :key="index"
-              :competition="item"
-              :appear="true"
-              :index="index"
-              :actionLink="`/contest/problems?uid=${item.race_uid}`"
-            />
+            <CompetitionCard v-for="(item, index) in competitions.slice(0, 4)" :key="index" :competition="item"
+              :appear="true" :index="index" :actionLink="`/contest/problems?uid=${item.race_uid}`" />
           </div>
         </div>
 
@@ -87,51 +57,34 @@
         <div class="sidebar">
           <!-- 欢迎部分 -->
           <div class="sidebar-section">
-            <WelcomeStats
-              :statsData="statsData"
-              message="开始你的编程之旅，提升算法能力！"
-            />
+            <WelcomeStats :statsData="statsData" message="开始你的编程之旅，提升算法能力！" />
           </div>
 
           <!-- 推荐题库 -->
           <div class="sidebar-section">
-            <RecommendedSites
-              title="推荐题库"
-              :sites="recommendedSites"
-            />
+            <RecommendedSites title="推荐题库" :sites="recommendedSites" />
           </div>
 
           <!-- 最新题目 -->
           <div class="sidebar-section">
-            <LatestProblems
-              title="最新题目"
-              :problems="latestProblems"
-            />
+            <LatestProblems title="最新题目" :problems="latestProblems" />
           </div>
 
           <!-- 开源项目 -->
           <div class="sidebar-section">
-            <ProjectLinks
-              title="开源项目"
-              :projects="openSourceProjects"
-            />
+            <ProjectLinks title="开源项目" :projects="openSourceProjects" />
           </div>
 
           <!-- 在线服务 -->
           <div class="sidebar-section">
-            <ServiceLinks
-              title="在线服务"
-              :services="onlineServices"
-            />
+            <ServiceLinks title="在线服务" :services="onlineServices" />
           </div>
         </div>
       </div>
     </div>
   </div>
-  <AIAgent
-    title="「黄金判官·葛孚雷」"
-    buttonColor="#3b82f6"
-  />
+
+  <AIAgent title="「黄金判官·葛孚雷」" buttonColor="#3b82f6" />
   <foot class="page-footer" />
 </template>
 
@@ -453,8 +406,10 @@ const yourApiEndpoint = ref("https://your-ai-api.com/chat"); // 替换为你的�
 :global(html),
 :global(body) {
   overflow-x: hidden;
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none;
+  /* Firefox */
+  -ms-overflow-style: none;
+  /* IE and Edge */
 }
 
 :global(html::-webkit-scrollbar),
@@ -479,11 +434,13 @@ const yourApiEndpoint = ref("https://your-ai-api.com/chat"); // 替换为你的�
     opacity: 1;
     transform: scale(1);
   }
+
   50% {
     filter: blur(2px);
     opacity: 0.8;
     transform: scale(1.1);
   }
+
   100% {
     filter: blur(0px);
     opacity: 1;
@@ -496,20 +453,24 @@ const yourApiEndpoint = ref("https://your-ai-api.com/chat"); // 替换为你的�
   flex-direction: column;
   min-height: 100vh;
   background-color: #f7f9fc;
-  overflow-x: hidden; /* 隐藏水平滚动条 */
+  overflow-x: hidden;
+  /* 隐藏水平滚动条 */
 }
 
 .main-content {
   margin-top: 64px;
-  padding: 0px 0 0; /* 移除底部内边距 */
+  padding: 0px 0 0;
+  /* 移除底部内边距 */
   animation: fadeIn 0.5s ease-out;
-  overflow: hidden; /* 隐藏所有溢出 */
+  overflow: hidden;
+  /* 隐藏所有溢出 */
 }
 
 @keyframes fadeIn {
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }
@@ -571,9 +532,11 @@ const yourApiEndpoint = ref("https://your-ai-api.com/chat"); // 替换为你的�
   0% {
     background-position: 0% 50%;
   }
+
   50% {
     background-position: 100% 50%;
   }
+
   100% {
     background-position: 0% 50%;
   }
@@ -586,11 +549,9 @@ const yourApiEndpoint = ref("https://your-ai-api.com/chat"); // 替换为你的�
   left: 0;
   right: 0;
   bottom: 0;
-  background: radial-gradient(
-    circle at center,
-    transparent 0%,
-    rgba(0, 0, 0, 0.2) 100%
-  );
+  background: radial-gradient(circle at center,
+      transparent 0%,
+      rgba(0, 0, 0, 0.2) 100%);
   opacity: 0.7;
   z-index: 0;
 }
@@ -646,11 +607,9 @@ const yourApiEndpoint = ref("https://your-ai-api.com/chat"); // 替换为你的�
   left: 0;
   width: 100%;
   height: 100%;
-  background: linear-gradient(
-    90deg,
-    rgba(66, 185, 131, 0.1),
-    rgba(0, 196, 255, 0.1)
-  );
+  background: linear-gradient(90deg,
+      rgba(66, 185, 131, 0.1),
+      rgba(0, 196, 255, 0.1));
   z-index: -1;
   transform: scaleX(0);
   transform-origin: right;
@@ -1000,6 +959,7 @@ const yourApiEndpoint = ref("https://your-ai-api.com/chat"); // 替换为你的�
     opacity: 0;
     transform: translateY(20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -1080,4 +1040,4 @@ const yourApiEndpoint = ref("https://your-ai-api.com/chat"); // 替换为你的�
   color: #9966cc;
 }
 </style>
-``` 
+```
