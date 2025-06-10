@@ -19,7 +19,7 @@
         </el-form>
       </div>
       
-      <div class="settings-section">
+      <!-- <div class="settings-section">
         <h4 class="settings-subtitle">账户安全</h4>
         <div class="settings-option">
           <div class="option-label">两步验证</div>
@@ -41,7 +41,8 @@
           <div class="option-label">公开我的排名</div>
           <el-switch v-model="publicRanking" @change="handlePrivacyOptionChange" />
         </div>
-      </div>
+      </div> -->
+      
     </div>
   </div>
 </template>
