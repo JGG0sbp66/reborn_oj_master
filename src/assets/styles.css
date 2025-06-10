@@ -28,6 +28,17 @@
   --el-text-color-regular: #606266 !important;
 }
 
+/* 文本选择样式 */
+::selection {
+  background-color: rgba(66, 185, 131, 0.3);
+  color: inherit;
+}
+
+::-moz-selection {
+  background-color: rgba(66, 185, 131, 0.3);
+  color: inherit;
+}
+
 /* 确保表格内容单元格样式一致 */
 .el-table .el-table__cell {
   padding: 8px 0 !important;
@@ -50,4 +61,4 @@
 /* 操作按钮边距 */
 .el-button.el-button--text {
   padding: 6px 8px !important;
-} 
+}
