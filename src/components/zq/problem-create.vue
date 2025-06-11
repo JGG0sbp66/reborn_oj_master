@@ -147,6 +147,46 @@
         </span>
       </template>
     </el-dialog>
+
+    <!-- 测试用例上传弹窗 -->
+    <el-dialog
+      v-model="testcaseDialogVisible"
+      title="上传测试用例"
+      width="400px"
+      :close-on-click-modal="false"
+      :close-on-press-escape="false"
+    >
+      <el-form label-position="top">
+        <el-form-item label="题目ID">
+          <el-input v-model="createdProblemUid" disabled placeholder="题目ID将自动填充"></el-input>
+        </el-form-item>        <el-form-item label="测试用例文件">          <el-upload
+            class="testcase-uploader"
+            :action="`/api/testcase-upload/${createdProblemUid}`"
+            :data="{
+              question_id: createdProblemUid
+            }"
+            :on-success="handleUploadSuccess"
+            :on-error="handleUploadError"
+            :before-upload="beforeUpload"
+            :multiple="false"
+            name="file"
+            accept=".zip"
+          >
+            <el-button type="primary">选择文件</el-button>
+            <template #tip>
+              <div class="el-upload__tip">
+                请上传 zip 格式的测试用例文件
+              </div>
+            </template>
+          </el-upload>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="testcaseDialogVisible = false">关闭</el-button>
+        </span>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -191,6 +231,8 @@ interface ProblemData {
 const dialogVisible = ref(false);
 const problemFormRef = ref<FormInstance | null>(null);
 const creating = ref(false);
+const testcaseDialogVisible = ref(false);
+const createdProblemUid = ref('');
 
 // 新题目数据
 const problem = reactive<ProblemData>({
@@ -357,14 +399,19 @@ const submitProblem = async () => {
       // 记录返回的数据，便于调试
       console.log('题目创建成功，服务器返回:', response.data);
       
-      // 创建成功
+      // 保存创建的题目uid并显示测试用例上传对话框
+      createdProblemUid.value = response.data.uid;
+      
+      // 创建成功提示
       if (props.alertBoxRef) {
         props.alertBoxRef.show(`题目"${problem.title}"创建成功! ID: ${response.data.uid || '未知'}`, 0);
       } else {
         ElMessage.success(`题目"${problem.title}"创建成功!`);
       }
       
+      // 关闭创建对话框，显示测试用例上传对话框
       dialogVisible.value = false;
+      testcaseDialogVisible.value = true;
       
       // 通知父组件刷新数据
       emits('refreshData');
@@ -424,6 +471,70 @@ const submitProblem = async () => {
   } finally {
     creating.value = false;
   }
+};
+
+// 处理文件上传成功
+const handleUploadSuccess = (response: any, file: any) => {
+  console.log('Upload response:', response);
+  if (!response.success) {
+    const errorMessage = response.message || '测试用例处理失败';
+    if (props.alertBoxRef) {
+      props.alertBoxRef.show(errorMessage, 1);
+    } else {
+      ElMessage.error(errorMessage);
+    }
+    return;
+  }
+
+  // 成功情况
+  const successMessage = response.message || '测试用例上传成功';
+  if (props.alertBoxRef) {
+    props.alertBoxRef.show(successMessage, 0);
+  } else {
+    ElMessage.success(successMessage);
+  }
+  testcaseDialogVisible.value = false;
+};
+
+// 处理文件上传失败
+const handleUploadError = (error: any, file: any) => {
+  console.error('Upload error:', error, file);
+  let errorMessage = '测试用例上传失败';
+  
+  if (error.response && error.response.data) {
+    const response = error.response.data;
+    errorMessage = response.message || errorMessage;
+  } else if (typeof error === 'string') {
+    errorMessage = error;
+  }
+  
+  if (props.alertBoxRef) {
+    props.alertBoxRef.show(errorMessage, 1);
+  } else {
+    ElMessage.error(errorMessage);
+  }
+};
+
+// 上传前的文件检查
+const beforeUpload = (file: File) => {
+  // 只允许上传zip格式
+  const isZip = file.type === 'application/zip' || 
+                file.type === 'application/x-zip-compressed' ||
+                file.name.toLowerCase().endsWith('.zip');
+                     
+  if (!isZip) {
+    ElMessage.error('只能上传zip格式的压缩包文件!');
+    return false;
+  }
+  
+  const isLt10M = file.size / 1024 / 1024 < 10;
+  
+  if (!isLt10M) {
+    ElMessage.error('文件大小不能超过 10MB!');
+    return false;
+  }
+  
+  return true;
 };
 
 // 暴露方法给父组件
@@ -544,5 +655,26 @@ defineExpose({
   flex-direction: column;
   gap: 8px;
   flex: 1;
+}
+
+/* 测试用例上传相关样式 */
+.testcase-uploader {
+  width: 100%;
+  padding: 20px;
+  border: 1px dashed #dcdfe6;
+  border-radius: 4px;
+  text-align: center;
+  background-color: #fbfdff;
+}
+
+.testcase-uploader:hover {
+  border-color: #18a058;
+  background-color: #f8f9fa;
+}
+
+.el-upload__tip {
+  font-size: 12px;
+  color: #909399;
+  margin-top: 8px;
 }
 </style>

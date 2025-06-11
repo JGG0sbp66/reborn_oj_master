@@ -13,7 +13,7 @@
             </el-button>
         </div>
     </div>
-
+    
     <AlertBox ref="alertBox" />
     <ProblemCreate ref="problemCreateRef" :alertBoxRef="alertBox" @refreshData="fetchData" />
     <ProblemEdit ref="problemEditRef" :alertBoxRef="alertBox" :defaultExamples="defaultExamples"
@@ -221,21 +221,21 @@
                 <button class="page-number" :class="{ active: currentPage === 1 }" @click="handleCurrentChange(1)">
                     1
                 </button>
-                
+
                 <!-- 如果当前页前面有很多页，显示省略号 -->
                 <span class="page-ellipsis" v-if="currentPage > 4">...</span>
-                
+
                 <!-- 显示当前页附近的页码 -->
                 <button v-for="num in displayedMiddlePages" :key="num" class="page-number"
                     :class="{ active: currentPage === num }" @click="handleCurrentChange(num)">
                     {{ num }}
                 </button>
-                
+
                 <!-- 如果当前页后面有很多页，显示省略号 -->
                 <span class="page-ellipsis" v-if="currentPage < totalPages - 3">...</span>
-                
+
                 <!-- 始终显示最后一页，除非总页数为1 -->
-                <button v-if="totalPages > 1" class="page-number" :class="{ active: currentPage === totalPages }" 
+                <button v-if="totalPages > 1" class="page-number" :class="{ active: currentPage === totalPages }"
                     @click="handleCurrentChange(totalPages)">
                     {{ totalPages }}
                 </button>
@@ -380,7 +380,7 @@ const fetchData = async () => {
     try {
         // 从API获取数据
         const apiData = await get_problem_info();
-        
+
         // 打印原始数据，便于调试
         console.log('API返回的原始数据:', JSON.stringify(apiData, null, 2));
 
@@ -389,13 +389,13 @@ const fetchData = async () => {
             // 使用后端提供的submit_num和solve_num字段
             const submissionCount = item.submit_num || 0;
             const solvedCount = item.solve_num || 0;
-            
+
             // 计算通过率，避免除以0的情况
             const passRate = submissionCount > 0 ? Math.floor((solvedCount / submissionCount) * 100) : 0;
 
             // 从API返回数据中获取UID
             const problemId = item.uid;
-            
+
             // 记录每个题目处理的详细信息
             console.log(`处理题目 ${index}:`, {
                 原始UID: item.uid,
@@ -405,7 +405,7 @@ const fetchData = async () => {
                 解决次数: solvedCount,
                 通过率: passRate
             });
-            
+
             return {
                 id: problemId, // 直接使用原始UID作为ID
                 title: item.question.title,
@@ -503,8 +503,8 @@ const filteredProblems = computed(() => {
         // 搜索过滤
         const matchesSearch = searchQuery.value ?
             problem.title.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-            (typeof problem.id === 'string' ? problem.id.toLowerCase().includes(searchQuery.value.toLowerCase()) : 
-             String(problem.id).includes(searchQuery.value.toLowerCase())) :
+            (typeof problem.id === 'string' ? problem.id.toLowerCase().includes(searchQuery.value.toLowerCase()) :
+                String(problem.id).includes(searchQuery.value.toLowerCase())) :
             true;
 
         // 难度过滤 - 修改这里使用topic而不是difficulty
@@ -613,15 +613,15 @@ const getDifficultyType = (difficulty: string) => {
 
 // 获取标签类型
 const getTagType = (tag: string) => {
-  switch (tag) {
-    case '入门': return 'success';  // 对应 :deep(.el-tag--success)
-    case '普及': return 'warning';  // 对应 :deep(.el-tag--warning)
-    case '提高': return 'info';     // 对应 :deep(.el-tag--info)
-    case '省选': return 'primary';  // 对应 :deep(.el-tag--primary)
-    case 'NOI': return 'danger';    // 对应 :deep(.el-tag--danger)
-    case 'CTSC': return 'ctsc';     // 对应 :deep(.el-tag--ctsc)
-    default: return 'info';
-  }
+    switch (tag) {
+        case '入门': return 'success';  // 对应 :deep(.el-tag--success)
+        case '普及': return 'warning';  // 对应 :deep(.el-tag--warning)
+        case '提高': return 'info';     // 对应 :deep(.el-tag--info)
+        case '省选': return 'primary';  // 对应 :deep(.el-tag--primary)
+        case 'NOI': return 'danger';    // 对应 :deep(.el-tag--danger)
+        case 'CTSC': return 'ctsc';     // 对应 :deep(.el-tag--ctsc)
+        default: return 'info';
+    }
 };
 
 // 获取通过率颜色
@@ -770,16 +770,16 @@ const totalPages = computed(() => {
 const displayedMiddlePages = computed(() => {
     const total = totalPages.value;
     const current = currentPage.value;
-    
+
     // 如果总页数很少，不需要处理
     if (total <= 7) {
         // 排除第一页和最后一页，因为它们会单独显示
         return Array.from({ length: total - 2 }, (_, i) => i + 2).filter(page => page > 0 && page < total);
     }
-    
+
     // 处理中间页码逻辑
     let startPage, endPage;
-    
+
     if (current <= 4) {
         // 靠近开始的页面，显示2~5
         startPage = 2;
@@ -793,11 +793,11 @@ const displayedMiddlePages = computed(() => {
         startPage = current - 1;
         endPage = current + 1;
     }
-    
+
     // 确保在有效范围内
     startPage = Math.max(2, startPage);
     endPage = Math.min(total - 1, endPage);
-    
+
     return Array.from({ length: endPage - startPage + 1 }, (_, i) => startPage + i);
 });
 
@@ -806,7 +806,7 @@ const applyAdvancedSearch = () => {
     // 由于使用了计算属性，我们只需要让页面知道筛选条件变更了
     // 可以通过修改一些筛选条件的引用来触发
     difficultyFilter.value = difficultyFilter.value;
-    
+
     // 可以在这里添加一些提示信息
     console.log('应用高级筛选', {
         searchQuery: searchQuery.value,
@@ -815,10 +815,10 @@ const applyAdvancedSearch = () => {
         submissionCount: submissionCountFilter.value,
         createTimeRange: createTimeRange.value
     });
-    
+
     // 强制刷新筛选的计算属性
     currentPage.value = 1;
-    
+
     // 关闭高级筛选面板
     showAdvancedSearch.value = false;
 };
@@ -843,7 +843,7 @@ const resetAdvancedSearch = () => {
 
     // 立即应用重置的筛选条件并强制刷新
     currentPage.value = 1;
-    
+
     // 可以选择性地关闭高级筛选面板
     // showAdvancedSearch.value = false;
 };
@@ -976,8 +976,10 @@ const resetAdvancedSearch = () => {
     transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     border-radius: 4px;
     cursor: pointer;
-    margin-left: -20px; /* 向左对齐 */
-    width: calc(100% + 24px); /* 确保宽度填满 */
+    margin-left: -20px;
+    /* 向左对齐 */
+    width: calc(100% + 24px);
+    /* 确保宽度填满 */
 }
 
 .difficulty-option:hover {
@@ -990,7 +992,8 @@ const resetAdvancedSearch = () => {
     height: 20px;
     border-radius: 2px;
     transition: all 0.3s ease;
-    flex-shrink: 0; /* 防止压缩 */
+    flex-shrink: 0;
+    /* 防止压缩 */
 }
 
 /* 让选项文本垂直居中 */
@@ -1000,12 +1003,29 @@ const resetAdvancedSearch = () => {
     height: 20px;
 }
 
-.difficulty-indicator.easy { background-color: #fe4c61; }
-.difficulty-indicator.popularize { background-color: #f39c11; }
-.difficulty-indicator.improve { background-color: #ffc116; }
-.difficulty-indicator.provincial { background-color: #52c41a; }
-.difficulty-indicator.noi { background-color: #9d3dcf; }
-.difficulty-indicator.ctsc { background-color: #0e1d69; }
+.difficulty-indicator.easy {
+    background-color: #fe4c61;
+}
+
+.difficulty-indicator.popularize {
+    background-color: #f39c11;
+}
+
+.difficulty-indicator.improve {
+    background-color: #ffc116;
+}
+
+.difficulty-indicator.provincial {
+    background-color: #52c41a;
+}
+
+.difficulty-indicator.noi {
+    background-color: #9d3dcf;
+}
+
+.difficulty-indicator.ctsc {
+    background-color: #0e1d69;
+}
 
 /* 下拉选项悬停效果 */
 :deep(.el-select-dropdown__item:hover) .difficulty-option {
@@ -1662,31 +1682,36 @@ const resetAdvancedSearch = () => {
 
 /* 修改标签颜色以匹配难度指示器 */
 :deep(.el-tag--success) {
-    background-color: rgba(254, 76, 97, 0.1);  /* 入门 */
+    background-color: rgba(254, 76, 97, 0.1);
+    /* 入门 */
     color: #fe4c61;
     border-color: rgba(254, 76, 97, 0.2);
 }
 
 :deep(.el-tag--warning) {
-    background-color: rgba(243, 156, 17, 0.1);  /* 普及 */
+    background-color: rgba(243, 156, 17, 0.1);
+    /* 普及 */
     color: #f39c11;
     border-color: rgba(243, 156, 17, 0.2);
 }
 
 :deep(.el-tag--info) {
-    background-color: rgba(255, 193, 22, 0.1);  /* 提高 */
+    background-color: rgba(255, 193, 22, 0.1);
+    /* 提高 */
     color: #ffc116;
     border-color: rgba(255, 193, 22, 0.2);
 }
 
 :deep(.el-tag--primary) {
-    background-color: rgba(82, 196, 26, 0.1);  /* 省选 */
+    background-color: rgba(82, 196, 26, 0.1);
+    /* 省选 */
     color: #52c41a;
     border-color: rgba(82, 196, 26, 0.2);
 }
 
 :deep(.el-tag--danger) {
-    background-color: rgba(157, 61, 207, 0.1);  /* NOI */
+    background-color: rgba(157, 61, 207, 0.1);
+    /* NOI */
     color: #9d3dcf;
     border-color: rgba(157, 61, 207, 0.2);
 }
