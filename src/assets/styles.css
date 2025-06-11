@@ -28,6 +28,34 @@
   --el-text-color-regular: #606266 !important;
 }
 
+/* 全局文本选择样式 */
+::selection {
+  background-color: rgba(66, 185, 131, 0.2);
+  color: #42b983;
+}
+
+/* Firefox 的特殊选择器 */
+::-moz-selection {
+  background-color: rgba(66, 185, 131, 0.2);
+  color: #42b983;
+}
+
+/* 禁用 Edge 浏览器的文本选择菜单 */
+body {
+  -webkit-touch-callout: none;    /* iOS Safari */
+  -webkit-user-select: text;      /* Safari */
+  -khtml-user-select: text;       /* Konqueror HTML */
+  -moz-user-select: text;         /* Firefox */
+  -ms-user-select: text;          /* Edge 旧版本 */
+  user-select: text;              /* 标准语法 */
+}
+
+/* 禁用上下文菜单 */
+* {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none !important;
+}
+
 /* 确保表格内容单元格样式一致 */
 .el-table .el-table__cell {
   padding: 8px 0 !important;
@@ -50,4 +78,4 @@
 /* 操作按钮边距 */
 .el-button.el-button--text {
   padding: 6px 8px !important;
-} 
+}

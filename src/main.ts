@@ -8,6 +8,12 @@ import './assets/styles.css'
 import store from './utils/store'  // 导入 Vuex store
 import backgroundState from './utils/backgroundState'; // 导入背景状态管理
 
+// 禁用右键菜单
+document.addEventListener('contextmenu', (event) => {
+  event.preventDefault();
+  return false;
+}, { capture: true });
+
 const app = createApp(App)
 app.use(router)  // 使用路由
 app.use(ElementPlus)  // 使用 Element Plus
