@@ -155,18 +155,14 @@
                 <template #default="scope">
                     <div class="problem-title">
                         <span>{{ scope.row.title }}</span>
-                        <div class="problem-meta" v-if="scope.row.description">
+                        <div class="problem-meta">
                             <span class="meta-item">
-                                <el-icon>
-                                    <Timer />
-                                </el-icon>
-                                {{ scope.row.time_limit || 1000 }}ms
+                                <el-icon><Timer /></el-icon>
+                                {{ scope.row.question?.time_limit || 1000 }}ms
                             </span>
                             <span class="meta-item">
-                                <el-icon>
-                                    <Collection />
-                                </el-icon>
-                                {{ scope.row.memory_limit || 128 }}MB
+                                <el-icon><Collection /></el-icon>
+                                {{ scope.row.question?.memory_limit || 128 }}MB
                             </span>
                         </div>
                     </div>
@@ -282,12 +278,21 @@ interface QuestionData {
 }
 
 interface ApiProblem {
-    id: number;
     uid: number;
-    question: QuestionData;
+    question: {
+        title: string;
+        description: string;
+        time_limit: number;
+        memory_limit: number;
+        input_format: string;
+        output_format: string;
+        constraints: string[];
+        examples: Example[];
+    };
     topic: string;
     submit_num: number;
     solve_num: number;
+    updated_at: string;
 }
 
 // AlertBox引用
@@ -367,27 +372,23 @@ watch([searchQuery, difficultyFilter, categoryFilter, passRateRange, submissionC
 const fetchData = async (): Promise<void> => {
     loading.value = true;
     try {
-        // 从新接口获取分页数据
         const apiData = await get_problem_info(currentPage.value, difficultyFilter.value, searchQuery.value);
-
-        // 处理API返回的数据
-        const formattedProblems = apiData.questions.map((item: any) => {
-            const submissionCount = item.submit_num || 0;
-            const solvedCount = item.solve_num || 0;
-            const passRate = submissionCount > 0 ? Math.floor((solvedCount / submissionCount) * 100) : 0;
-
-            return {
-                id: item.uid,
-                title: item.title,
-                topic: item.topic || '未分类',
-                difficulty: item.topic, // 直接使用接口返回的 topic
-                passRate: passRate,
-                submissionCount: submissionCount,
-                solvedCount: solvedCount,
-                createTime: new Date().toISOString().split('T')[0],
-                state: item.state
-            };
-        });
+        
+        // 更新数据映射逻辑
+        const formattedProblems = apiData.questions.map((item: any) => ({
+            id: item.uid,
+            title: item.question?.title || '无标题', // 从question对象中获取title
+            topic: item.topic || '未分类',
+            passRate: item.submit_num > 0 
+                ? Math.floor((item.solve_num / item.submit_num) * 100) 
+                : 0,
+            submissionCount: item.submit_num || 0,
+            solvedCount: item.solve_num || 0,
+            createTime: item.updated_at || new Date().toISOString().split('T')[0],
+            state: item.state || '未知状态',
+            // 保留question对象中的其他字段（可选）
+            question: item.question 
+        }));
 
         problems.value = formattedProblems;
         totalProblems.value = apiData.total_count;
@@ -396,7 +397,6 @@ const fetchData = async (): Promise<void> => {
     } catch (error) {
         console.error('获取题目数据失败:', error);
         alertBox.value?.show('获取题目数据失败，请稍后重试', 1);
-        problems.value = [];
     } finally {
         loading.value = false;
     }
