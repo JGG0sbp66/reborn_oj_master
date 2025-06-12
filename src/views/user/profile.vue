@@ -45,7 +45,7 @@
             </div>
             <div class="stat-item">
               <div class="stat-value" :class="{ 'animate-number': isAnimatingStats }">{{ displayRank }}</div>
-              <div class="stat-label">Rating分</div>
+              <div class="stat-label">当前排名</div>
             </div>
           </div>
         </div>

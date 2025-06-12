@@ -113,6 +113,7 @@
               :loading="problemsLoading"
               placeholder="选择或搜索题目"
               style="width: 100%"
+              @visible-change="handleSelectOpen"
             >
               <el-option 
                 v-for="problem in filteredProblems" 
@@ -125,6 +126,18 @@
                   <span class="problem-title">{{ problem.title }}</span>
                 </div>
               </el-option>
+              
+              <!-- 加载更多提示 -->
+              <div 
+                v-if="currentPage < totalPages && !isLoadingMore" 
+                class="load-more-item"
+                @click.stop="loadMoreQuestions"
+              >
+                <span>点击加载更多题目</span>
+              </div>
+              <div v-if="isLoadingMore" class="loading-more-item">
+                <span>正在加载更多...</span>
+              </div>
             </el-select>
             <div class="tip-text">* 可以输入题目ID或标题进行搜索</div>
           </el-form-item>
@@ -174,6 +187,7 @@
 import { ref, defineExpose, reactive, defineProps, defineEmits } from 'vue';
 import { ElMessage } from 'element-plus';
 import type { FormInstance, FormRules } from 'element-plus';
+import { ArrowDown, Loading } from '@element-plus/icons-vue';
 import axios from 'axios';
 
 // 定义组件的props和emits
@@ -214,6 +228,9 @@ interface UserInfo {
 interface QuestionInfo {
   id: number;
   title: string;
+  topic?: string;
+  submitNum?: number;
+  solveNum?: number;
 }
 
 // API响应数据接口
@@ -264,6 +281,14 @@ const filteredProblems = ref<QuestionInfo[]>([]);
 const problemsLoading = ref(false);
 const allProblems = ref<QuestionInfo[]>([]);
 
+// 添加分页相关状态
+const currentPage = ref(1);
+const totalPages = ref(1);
+const totalQuestions = ref(0);
+const searchQuery = ref('');
+const searchTopic = ref('');
+const isLoadingMore = ref(false);
+
 // 添加用户名映射
 const userMap = ref(new Map<number, string>());
 
@@ -302,46 +327,11 @@ const newUserId = ref('');
 // 搜索题目
 const searchProblems = async (query: string): Promise<void> => {
   problemsLoading.value = true;
+  searchQuery.value = query;
+  currentPage.value = 1; // 重置为第一页
+  
   try {
-    // 如果查询为空，显示所有题目
-    if (!query) {
-      filteredProblems.value = allProblems.value;
-      return;
-    }
-    
-    // 本地搜索已加载的题目
-    filteredProblems.value = allProblems.value.filter((problem: QuestionInfo) => 
-      problem.title.toLowerCase().includes(query.toLowerCase()) || 
-      problem.id.toString().includes(query)
-    );
-    
-    // 如果没有本地匹配结果，可以考虑从API获取更多题目
-    if (filteredProblems.value.length === 0 && allProblems.value.length > 0) {
-      try {
-        const response = await axios.get("/api/problems", {
-          params: { query }
-        });
-        
-        if (response.data && Array.isArray(response.data)) {
-          const newProblems = response.data.map((item: any, index: number) => ({
-            id: item.uid || item.id || index + 1,
-            title: item.title || `题目 ${index + 1}`
-          }));
-          
-          // 合并新的题目并去重
-          const combinedProblems = [...allProblems.value, ...newProblems];
-          allProblems.value = Array.from(new Map(combinedProblems.map(item => [item.id, item])).values());
-          
-          // 重新过滤
-          filteredProblems.value = allProblems.value.filter((problem: QuestionInfo) => 
-            problem.title.toLowerCase().includes(query.toLowerCase()) || 
-            problem.id.toString().includes(query)
-          );
-        }
-      } catch (error: any) {
-        console.error('API搜索题目失败:', error);
-      }
-    }
+    await fetchQuestionsByPage(1, query);
   } catch (error: any) {
     console.error('搜索题目时出错:', error);
     if (props.alertBoxRef) {
@@ -354,38 +344,112 @@ const searchProblems = async (query: string): Promise<void> => {
   }
 };
 
-// 获取题目标题信息
+// 添加分页加载函数
+const fetchQuestionsByPage = async (page: number, query: string = searchQuery.value, topic: string = searchTopic.value): Promise<void> => {
+  isLoadingMore.value = true;
+  
+  try {
+    console.log(`正在获取第${page}页题目，查询条件: ${query}, 标签: ${topic}`);
+    
+    // 使用正确的API接口，这里可能需要根据实际接口调整
+    const response = await axios.post("/api/admin-get-questions", {
+      page,
+      topic,
+      input: query
+    });
+    
+    console.log('API返回数据:', response.data);
+    
+    if (response.data && response.data.success && Array.isArray(response.data.questions)) {
+      // 处理返回的题目数据
+      const questions = response.data.questions.map((item: any) => ({
+        id: item.uid,
+        title: item.question?.title || `题目 ${item.uid}`,
+        topic: item.topic || '',
+        submitNum: item.submit_num || 0,
+        solveNum: item.solve_num || 0
+      }));
+      
+      if (page === 1) {
+        // 如果是第一页，替换现有数据
+        filteredProblems.value = questions;
+      } else {
+        // 否则追加数据
+        filteredProblems.value = [...filteredProblems.value, ...questions];
+      }
+      
+      // 更新分页信息
+      totalPages.value = response.data.total_page || 1;
+      totalQuestions.value = response.data.total_count || 0;
+      currentPage.value = page;
+      
+      console.log(`加载了${questions.length}个题目，当前页${page}，总页数${totalPages.value}`);
+      
+      // 如果是初次加载，也更新allProblems
+      if (allProblems.value.length === 0 && page === 1 && !query && !topic) {
+        allProblems.value = [...questions];
+      }
+    } else {
+      console.warn('API返回数据格式不正确或没有题目数据');
+      if (page === 1) {
+        filteredProblems.value = [];
+      }
+    }
+  } catch (error) {
+    console.error(`获取第${page}页题目失败:`, error);
+    
+    // 如果API不可用，可以尝试使用备用API
+    try {
+      console.log('尝试使用备用API获取题目');
+      const fallbackResponse = await axios.get("/api/admin-question");
+      if (fallbackResponse.data && Array.isArray(fallbackResponse.data)) {
+        const questions = fallbackResponse.data.map((item: any) => ({
+          id: item.uid || 0,
+          title: item.question?.title || `题目 ${item.uid || 0}`
+        }));
+        filteredProblems.value = questions;
+        console.log('使用备用API获取题目成功:', questions.length);
+      }
+    } catch (fallbackError) {
+      console.error('备用API也失败:', fallbackError);
+      if (page === 1) {
+        filteredProblems.value = [];
+      }
+    }
+  } finally {
+    isLoadingMore.value = false;
+  }
+};
+
+// 加载更多题目
+const loadMoreQuestions = async (): Promise<void> => {
+  if (currentPage.value < totalPages.value && !isLoadingMore.value) {
+    console.log(`加载更多题目，当前页 ${currentPage.value}，总页数 ${totalPages.value}`);
+    await fetchQuestionsByPage(currentPage.value + 1);
+  }
+};
+
+// 获取题目标题信息 - 修改为使用分页API
 const fetchQuestionsInfo = async (problemIds: number[] = []): Promise<void> => {
   problemsLoading.value = true;
   
   try {
-    // 如果已有所有题目数据，不再重复获取
-    if (allProblems.value.length > 0) {
-      problemsLoading.value = false;
-      filteredProblems.value = allProblems.value;
-      return;
+    // 先获取第一页数据
+    await fetchQuestionsByPage(1);
+    
+    // 如果有特定的problemIds，确保它们被加载
+    if (problemIds.length > 0) {
+      console.log('需要加载特定题目IDs:', problemIds);
+      const missingIds = problemIds.filter(id => 
+        !filteredProblems.value.some((p: QuestionInfo) => p.id === id)
+      );
+      
+      if (missingIds.length > 0) {
+        console.log('尝试单独加载缺失的题目:', missingIds);
+        // 尝试单独获取这些题目信息
+        await Promise.all(missingIds.map(id => fetchSingleProblemTitle(id)));
+      }
     }
-    
-    // 获取所有可用题目
-    const response = await axios.get("/api/admin-question");
-    const apiData = response.data as ApiProblemItem[];
-    
-    // 处理API返回的数据
-    const results = apiData.map((item: ApiProblemItem, index: number) => ({
-      id: item.uid || index + 1,
-      title: item.question?.title || ''
-    }));
-    
-    // 如果有标题为空的题目，尝试单独获取它们的标题
-    const emptyTitleItems = results.filter(item => !item.title);
-    if (emptyTitleItems.length > 0) {
-      await Promise.all(emptyTitleItems.map(item => fetchSingleProblemTitle(item.id)));
-    }
-    
-    allProblems.value = results;
-    filteredProblems.value = results;
-    problemsInfo.value = results;
-    
   } catch (error: any) {
     console.error('获取题目信息失败:', error);
   } finally {
@@ -396,22 +460,42 @@ const fetchQuestionsInfo = async (problemIds: number[] = []): Promise<void> => {
 // 获取单个题目的标题
 const fetchSingleProblemTitle = async (problemId: number): Promise<void> => {
   try {
-    const response = await axios.get(`/api/${problemId}`);
-    const title = response.data.question?.title || '';
-    if (title) {
-      // 更新到缓存
-      const index = allProblems.value.findIndex(p => p.id === problemId);
-      if (index >= 0) {
-        allProblems.value[index].title = title;
-        const filterIndex = filteredProblems.value.findIndex(p => p.id === problemId);
-        if (filterIndex >= 0) {
-          filteredProblems.value[filterIndex].title = title;
+    console.log(`正在获取题目${problemId}的详细信息`);
+    const response = await axios.get(`/api/get-question/${problemId}`);
+    
+    if (response.data && response.data.question) {
+      const title = response.data.question?.title || '';
+      if (title) {
+        // 创建新的题目对象
+        const newProblem = {
+          id: problemId,
+          title: title,
+          topic: response.data.topic || '',
+          submitNum: response.data.submit_num || 0,
+          solveNum: response.data.solve_num || 0
+        };
+        
+        // 更新到缓存
+        const index = filteredProblems.value.findIndex((p: QuestionInfo) => p.id === problemId);
+        if (index >= 0) {
+          filteredProblems.value[index] = newProblem;
+        } else {
+          // 添加新题目
+          filteredProblems.value.push(newProblem);
         }
-      } else {
-        // 添加新题目
-        allProblems.value.push({ id: problemId, title });
-        filteredProblems.value.push({ id: problemId, title });
+        
+        // 也更新到allProblems中
+        const allIndex = allProblems.value.findIndex((p: QuestionInfo) => p.id === problemId);
+        if (allIndex >= 0) {
+          allProblems.value[allIndex] = newProblem;
+        } else {
+          allProblems.value.push(newProblem);
+        }
+        
+        console.log(`题目${problemId}信息已更新:`, newProblem);
       }
+    } else {
+      console.warn(`获取题目${problemId}的详细信息失败，API返回:`, response.data);
     }
   } catch (error) {
     console.error(`获取题目 ${problemId} 标题失败:`, error);
@@ -429,6 +513,12 @@ const openEditDialog = async (competitionData: CompetitionData): Promise<void> =
     if (competitionFormRef.value) {
       competitionFormRef.value.resetFields();
     }
+    
+    // 重置分页状态
+    currentPage.value = 1;
+    totalPages.value = 1;
+    searchQuery.value = '';
+    searchTopic.value = '';
     
     // 清空之前的数据
     Object.assign(competition, {
@@ -471,16 +561,52 @@ const openEditDialog = async (competitionData: CompetitionData): Promise<void> =
     
     console.log('打开编辑对话框,当前竞赛数据:', JSON.stringify(competition));
     
-    // 获取题目详细信息
+    // 优先单独获取已选题目的详细信息
     if (competition.problems_list && competition.problems_list.length > 0) {
-      await fetchQuestionsInfo(competition.problems_list);
+      console.log('正在预加载已选择的题目信息:', competition.problems_list);
+      // 先单独获取已选题目信息
+      const selectedProblems = await Promise.all(
+        competition.problems_list.map(async (id: number) => {
+          try {
+            const response = await axios.get(`/api/get-question/${id}`);
+            if (response.data && response.data.question) {
+              return {
+                id: id,
+                title: response.data.question?.title || `题目 ${id}`,
+                topic: response.data.topic || '',
+                submitNum: response.data.submit_num || 0,
+                solveNum: response.data.solve_num || 0
+              };
+            }
+            return { id: id, title: `题目 ${id}` };
+          } catch (error) {
+            console.error(`获取题目 ${id} 信息失败:`, error);
+            return { id: id, title: `题目 ${id}` };
+          }
+        })
+      );
+      
+      // 更新到缓存
+      filteredProblems.value = selectedProblems;
+      allProblems.value = [...selectedProblems];
+      console.log('已选题目预加载完成:', selectedProblems);
+      
+      // 然后再获取第一页题目，补充更多题目
+      setTimeout(() => {
+        fetchQuestionsByPage(1).catch(error => {
+          console.error('获取题目列表失败:', error);
+        });
+      }, 500);
+    } else {
+      // 如果没有已选题目，直接获取第一页
+      await fetchQuestionsInfo();
     }
 
     // 获取所有用户的用户名
     userMap.value.clear();
     if (competition.user_list && competition.user_list.length > 0) {
       try {
-        const promises = competition.user_list.map(uid => 
+        const promises = competition.user_list.map((uid: number) => 
           axios.get(`/api/get-username/${uid}`)
         );
         const responses = await Promise.all(promises);
@@ -659,16 +785,49 @@ const fetchRaceDetails = async (uid: number): Promise<void> => {
     
     console.log('处理后的竞赛数据:', JSON.stringify(competition));
     
-    // 获取题目详细信息
+    // 优先加载已选题目信息
     if (competition.problems_list && competition.problems_list.length > 0) {
-      await fetchQuestionsInfo(competition.problems_list);
+      console.log('正在预加载已选择的题目信息:', competition.problems_list);
+      // 先单独获取已选题目信息
+      const selectedProblems = await Promise.all(
+        competition.problems_list.map(async (id: number) => {
+          try {
+            const response = await axios.get(`/api/get-question/${id}`);
+            if (response.data && response.data.question) {
+              return {
+                id: id,
+                title: response.data.question?.title || `题目 ${id}`,
+                topic: response.data.topic || '',
+                submitNum: response.data.submit_num || 0,
+                solveNum: response.data.solve_num || 0
+              };
+            }
+            return { id: id, title: `题目 ${id}` };
+          } catch (error) {
+            console.error(`获取题目 ${id} 信息失败:`, error);
+            return { id: id, title: `题目 ${id}` };
+          }
+        })
+      );
+      
+      // 更新到缓存
+      filteredProblems.value = selectedProblems;
+      allProblems.value = [...selectedProblems];
+      console.log('已选题目预加载完成:', selectedProblems);
+      
+      // 然后再获取第一页题目，补充更多题目
+      setTimeout(() => {
+        fetchQuestionsByPage(1).catch(error => {
+          console.error('获取题目列表失败:', error);
+        });
+      }, 500);
     }
 
     // 获取所有用户的用户名
     userMap.value.clear();
     if (competition.user_list && competition.user_list.length > 0) {
       try {
-        const promises = competition.user_list.map(uid => 
+        const promises = competition.user_list.map((uid: number) => 
           axios.get(`/api/get-username/${uid}`)
         );
         const responses = await Promise.all(promises);
@@ -777,12 +936,23 @@ const addUser = async (): Promise<void> => {
 
 // 移除用户
 const removeUser = (uid: number): void => {
-  competition.user_list = competition.user_list.filter(id => id !== uid);
+  competition.user_list = competition.user_list.filter((id: number) => id !== uid);
 };
 
 // 获取当前竞赛数据
 const getCompetition = (): CompetitionData => {
   return { ...competition };
+};
+
+// 处理下拉菜单打开事件
+const handleSelectOpen = (visible: boolean): void => {
+  if (visible) {
+    console.log('题目选择下拉框已打开，正在加载题目');
+    if (filteredProblems.value.length === 0) {
+      // 如果没有题目数据，获取第一页
+      fetchQuestionsByPage(1);
+    }
+  }
 };
 
 // 暴露方法给父组件
@@ -843,11 +1013,13 @@ defineExpose({
   display: flex;
   justify-content: space-between;
   align-items: center;
+  padding: 2px 0;
 }
 
 .problem-id {
   font-size: 12px;
   color: #999;
+  margin-right: 10px;
 }
 
 .problem-title {
@@ -890,4 +1062,32 @@ defineExpose({
   font-size: 14px;
 }
 
+/* 自定义加载更多样式 */
+.load-more-item, .loading-more-item {
+  text-align: center;
+  padding: 8px;
+  color: var(--el-color-primary);
+  cursor: pointer;
+  font-size: 14px;
+  border-top: 1px solid #ebeef5;
+  margin-top: 8px;
+}
+
+.load-more-item:hover {
+  background-color: #f5f7fa;
+}
+
+.loading-more-item {
+  color: #909399;
+}
+
+/* 修复下拉菜单样式 */
+:deep(.el-select-dropdown__wrap) {
+  max-height: 300px;
+}
+
+:deep(.el-select__popper) {
+  max-height: 350px !important;
+}
 </style>
+

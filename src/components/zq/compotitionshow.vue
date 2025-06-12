@@ -1,9 +1,12 @@
 <template>
   <div class="competition-problems">
-    <div v-if="!isCompetitionStarted" class="not-started-notice">
-      <el-empty :description="competitionStatusText">
+    <div v-if="!isCompetitionStarted || !canAccessProblems" class="not-started-notice">
+      <el-empty :description="accessDeniedMessage">
         <template #image>
-          <el-icon :size="60"><Timer /></el-icon>
+          <el-icon :size="60" :class="{ 'locked': !canAccessProblems }">
+            <Lock v-if="!canAccessProblems"/>
+            <Timer v-else/>
+          </el-icon>
         </template>
       </el-empty>
     </div>
@@ -106,6 +109,7 @@ import {
   DataLine,
   TrendCharts,
   Timer,
+  Lock
 } from "@element-plus/icons-vue";
 import axios from "axios";
 
@@ -124,7 +128,7 @@ const props = defineProps({
   },
 });
 
-// 修改比赛状态判断 - 现在比赛结束后也可以查看题目
+// 判断比赛是否已开始
 const isCompetitionStarted = computed(() => {
   if (!props.raceInfo?.value?.race_info) return false;
   return props.raceInfo.value.race_info.status === 'running' || 
@@ -209,6 +213,49 @@ const goToQuestionDetail = (id: string, race_uid: string) => {
     query: { race_uid },
   });
 };
+
+// 检查用户是否有权限访问题目
+const canAccessProblems = computed(() => {
+  const status = props.raceInfo?.value?.race_info?.status;
+  const userRole = store.state.userInfo?.role;
+  const isAdmin = userRole === 'admin';
+  const isRegistered = props.raceInfo?.value?.race_info?.is_registered === '已报名';
+
+  // 如果是管理员，始终可以访问
+  if (isAdmin) return true;
+
+  // 如果比赛已结束，所有人都可以访问
+  if (status === 'ended') return true;
+
+  // 如果比赛正在进行，只有报名的用户可以访问
+  if (status === 'running') return isRegistered;
+
+  // 其他情况（包括未开始）都不能访问
+  return false;
+});
+
+// 获取访问受限提示信息
+const accessDeniedMessage = computed(() => {
+  const status = props.raceInfo?.value?.race_info?.status;
+  const isRegistered = props.raceInfo?.value?.race_info?.is_registered === '已报名';
+  
+  switch (status) {
+    case 'upcoming':
+      return '比赛尚未开始，题目将在开始后显示';
+      
+    case 'running':
+      // 已报名用户不应该看到这个提示，因为他们可以访问题目
+      if (isRegistered) return '比赛进行中';
+      // 未报名用户显示报名提示
+      return '请先报名参加比赛后查看题目';
+      
+    case 'ended':
+      return '比赛已结束，题目已公开';
+      
+    default:
+      return '加载中...';
+  }
+});
 </script>
 
 <style scoped>
@@ -523,6 +570,17 @@ const goToQuestionDetail = (id: string, race_uid: string) => {
 
 .not-started-notice :deep(.el-empty__image) {
   color: #909399;
+}
+
+.not-started-notice .locked {
+  color: #f56c6c;
+  animation: shake 0.5s ease-in-out;
+}
+
+@keyframes shake {
+  0%, 100% { transform: rotate(0); }
+  25% { transform: rotate(-10deg); }
+  75% { transform: rotate(10deg); }
 }
 
 @media (max-width: 768px) {
