@@ -158,13 +158,6 @@
         class="testcase-upload-dialog"
       >
         <div class="testcase-upload-content">
-          <div class="upload-header">
-            <div class="upload-title">
-              <h3>为新题目添加测试用例</h3>
-              <p>测试用例用于验证提交答案的正确性</p>
-            </div>
-          </div>
-          
           <el-form label-position="top">
             <el-form-item label="题目ID">
               <el-input 
@@ -192,13 +185,9 @@
                 <div class="el-upload__text">
                   将文件拖到此处，或<em>点击上传</em>
                 </div>
-                <template #tip>
-                  <div class="el-upload__tip">
-                    请上传zip格式的测试用例文件
-                  </div>
-                </template>
               </el-upload>
-              
+            </el-form-item>
+            <el-form-item>
               <div class="upload-actions">
                 <el-button 
                   type="primary" 
@@ -214,11 +203,6 @@
             </el-form-item>
           </el-form>
         </div>
-        <template #footer>
-          <span class="dialog-footer">
-            <el-button @click="handleTestcaseCancel">关闭</el-button>
-          </span>
-        </template>
       </el-dialog>
     </div>
   </template>
@@ -617,12 +601,6 @@
     }
   };
   
-  // 处理关闭测试用例对话框
-  const handleTestcaseCancel = () => {
-    testcaseDialogVisible.value = false;
-    hasFileSelected.value = false;
-  };
-  
   // 暴露方法给父组件
   defineExpose({
     openCreateDialog
@@ -785,8 +763,11 @@
   }
   
   .upload-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
     margin-top: 20px;
-    text-align: right;
+    width: 100%;
   }
   
   .upload-button {
@@ -797,6 +778,8 @@
   /* 拖拽上传区域样式优化 */
   .testcase-uploader :deep(.el-upload-dragger) {
     width: 100%;
+    min-width: 350px;
+    max-width: 400px;
     height: 180px;
     display: flex;
     flex-direction: column;
@@ -830,12 +813,6 @@
     font-weight: bold;
   }
   
-  .testcase-uploader :deep(.el-upload__tip) {
-    text-align: center;
-    padding: 10px 0;
-    color: #909399;
-  }
-  
   .testcase-upload-dialog :deep(.el-dialog__header) {
     padding: 16px 20px;
     margin-right: 0;
@@ -858,5 +835,28 @@
     font-size: 12px;
     color: #909399;
     margin-top: 8px;
+  }
+  
+  /* 控制上传文件列表宽度，超出部分省略显示 */
+  .testcase-uploader :deep(.el-upload-list) {
+    max-width: 90%; /* 或者你想要的宽度，比如 400px */
+    min-width: 220px;
+  }
+  
+  .testcase-uploader :deep(.el-upload-list__item) {
+    max-width: 120px;  /* 更短的宽度 */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+  }
+  .testcase-uploader :deep(.el-upload-list__item-name) {
+    max-width: 110px;  /* 文件名区域更短 */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    display: inline-block;
+    vertical-align: middle;
   }
   </style>
