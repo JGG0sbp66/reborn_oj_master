@@ -147,6 +147,53 @@
         </span>
       </template>
     </el-dialog>
+
+    <!-- 上传测试用例对话框 -->
+    <el-dialog
+      v-model="testcaseDialogVisible"
+      title="上传测试用例"
+      width="400px"
+      :close-on-click-modal="false"
+      :close-on-press-escape="false"
+      class="testcase-upload-dialog"
+    >
+      <div class="testcase-upload-content">
+        <el-form label-position="top">
+          <el-form-item label="题目ID">
+            <el-input v-model="createdProblemUid" disabled></el-input>
+          </el-form-item>
+          <el-form-item label="测试用例文件">
+            <el-upload
+              class="testcase-uploader"
+              :action="`/api/admin-question/${createdProblemUid}/testcases`"
+              :auto-upload="false"
+              :limit="1"
+              :on-exceed="handleExceed"
+              :on-success="handleUploadSuccess"
+              :on-error="handleUploadError"
+              ref="uploadRef"
+            >
+              <template #trigger>
+                <el-button type="primary">选择文件</el-button>
+              </template>
+              <el-button 
+                class="ml-3" 
+                type="success" 
+                @click="submitUpload"
+                :disabled="!hasFileSelected"
+              >
+                上传文件
+              </el-button>
+            </el-upload>
+          </el-form-item>
+        </el-form>
+      </div>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="handleTestcaseCancel">关闭</el-button>
+        </span>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -191,6 +238,7 @@ interface ProblemData {
 const dialogVisible = ref(false);
 const problemFormRef = ref<FormInstance | null>(null);
 const creating = ref(false);
+const testcaseDialogVisible = ref(false);
 
 // 新题目数据
 const problem = reactive<ProblemData>({
@@ -426,6 +474,42 @@ const submitProblem = async () => {
   }
 };
 
+// 处理文件选择超出限制
+const handleExceed = (files: File[]) => {
+  ElMessage.warning(`最多只能上传 1 个文件`);
+};
+
+// 处理文件上传成功
+const handleUploadSuccess = (response: any, file: File) => {
+  ElMessage.success(`文件上传成功`);
+  console.log('文件上传成功:', response);
+  
+  // 关闭上传对话框
+  testcaseDialogVisible.value = false;
+  
+  // 通知父组件刷新数据
+  emits('refreshData');
+};
+
+// 处理文件上传失败
+const handleUploadError = (error: any, file: File) => {
+  ElMessage.error(`文件上传失败: ${error.message || '未知错误'}`);
+  console.error('文件上传失败:', error);
+};
+
+// 提交上传
+const submitUpload = () => {
+  const uploadComponent = $refs.uploadRef;
+  if (uploadComponent && uploadComponent.submit) {
+    uploadComponent.submit();
+  }
+};
+
+// 处理关闭测试用例对话框
+const handleTestcaseCancel = () => {
+  testcaseDialogVisible.value = false;
+};
+
 // 暴露方法给父组件
 defineExpose({
   openCreateDialog
@@ -544,5 +628,18 @@ defineExpose({
   flex-direction: column;
   gap: 8px;
   flex: 1;
+}
+
+.testcase-upload-dialog :deep(.el-dialog__body) {
+  padding: 20px;
+}
+
+.testcase-uploader {
+  display: flex;
+  align-items: center;
+}
+
+.ml-3 {
+  margin-left: 12px;
 }
 </style>
