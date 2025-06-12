@@ -28,7 +28,7 @@
                     <el-button @click="handleSearch"
                         style="background-color: #18a058; border-color: #18a058; color: white;">搜索</el-button>
                 </template>
-            </el-input>
+            </el-input>  
             <el-button type="primary" plain @click="showAdvancedSearch = !showAdvancedSearch"
                 style="background-color: rgba(24, 160, 88, 0.05); border-color: #18a05880; color: #18a058;">
                 {{ showAdvancedSearch ? '收起' : '高级筛选' }}
@@ -316,7 +316,7 @@ const searchTimeout = ref(null);
 // 模拟题目数据
 const problems = ref([]);
 const get_problem_info = async (page: number = 1, topic: string = '', input: string = ''): Promise<any> => {
-    const response = await axios.post("/api/questions", {
+    const response = await axios.post("/api/admin-get-questions", {
         page,
         topic,
         input
