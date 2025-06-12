@@ -315,12 +315,13 @@ const searchTimeout = ref(null);
 
 // 模拟题目数据
 const problems = ref([]);
-const get_problem_info = async (): Promise<ApiProblem[]> => {
-    const { data: userData } = await axios({
-        url: "/api/admin-question",
-        method: "get",
+const get_problem_info = async (page: number = 1, topic: string = '', input: string = ''): Promise<any> => {
+    const response = await axios.post("/api/questions", {
+        page,
+        topic,
+        input
     });
-    return userData;
+    return response.data;
 };
 
 // 处理延迟搜索，避免频繁过滤
@@ -328,21 +329,9 @@ const handleSearch = () => {
     if (searchTimeout.value) {
         clearTimeout(searchTimeout.value);
     }
-
     searchTimeout.value = setTimeout(() => {
-        // 在实际应用中，这里可能会发送API请求
-        console.log('搜索条件:', {
-            searchQuery: searchQuery.value,
-            difficulty: difficultyFilter.value,
-            category: categoryFilter.value,
-            passRateRange: passRateRange.value,
-            submissionCount: submissionCountFilter.value,
-            createTimeRange: createTimeRange.value
-        });
-
-        // 如果需要强制刷新计算属性
-        // 这里可以设置一个标志，表示筛选条件已更新
-        currentPage.value = currentPage.value;
+        currentPage.value = 1; // 重置为第一页
+        fetchData();
     }, 300);
 };
 
@@ -375,84 +364,41 @@ watch([searchQuery, difficultyFilter, categoryFilter, passRateRange, submissionC
 });
 
 // 获取题目数据
-const fetchData = async () => {
+const fetchData = async (): Promise<void> => {
     loading.value = true;
     try {
-        // 从API获取数据
-        const apiData = await get_problem_info();
+        // 从新接口获取分页数据
+        const apiData = await get_problem_info(currentPage.value, difficultyFilter.value, searchQuery.value);
 
-        // 打印原始数据，便于调试
-        console.log('API返回的原始数据:', JSON.stringify(apiData, null, 2));
-
-        // 处理API返回的数据，转换为组件需要的格式
-        const formattedProblems = apiData.map((item, index) => {
-            // 使用后端提供的submit_num和solve_num字段
+        // 处理API返回的数据
+        const formattedProblems = apiData.questions.map((item: any) => {
             const submissionCount = item.submit_num || 0;
             const solvedCount = item.solve_num || 0;
-
-            // 计算通过率，避免除以0的情况
             const passRate = submissionCount > 0 ? Math.floor((solvedCount / submissionCount) * 100) : 0;
 
-            // 从API返回数据中获取UID
-            const problemId = item.uid;
-
-            // 记录每个题目处理的详细信息
-            console.log(`处理题目 ${index}:`, {
-                原始UID: item.uid,
-                使用的ID: problemId,
-                题目名称: item.question.title,
-                提交次数: submissionCount,
-                解决次数: solvedCount,
-                通过率: passRate
-            });
-
             return {
-                id: problemId, // 直接使用原始UID作为ID
-                title: item.question.title,
+                id: item.uid,
+                title: item.title,
                 topic: item.topic || '未分类',
-                difficulty: getDifficultyByComplexity(item.question), // 根据题目复杂度推断难度
+                difficulty: item.topic, // 直接使用接口返回的 topic
                 passRate: passRate,
                 submissionCount: submissionCount,
-                solvedCount: solvedCount, // 添加解决次数
-                createTime: new Date().toISOString().split('T')[0], // 使用当前日期
-                question: item.question
+                solvedCount: solvedCount,
+                createTime: new Date().toISOString().split('T')[0],
+                state: item.state
             };
         });
 
-        // 对题目按ID排序（如果ID是数字）
-        formattedProblems.sort((a, b) => {
-            const numA = typeof a.id === 'number' ? a.id : parseInt(a.id);
-            const numB = typeof b.id === 'number' ? b.id : parseInt(b.id);
-            return numA - numB;
-        });
-
-        // 打印处理后的数据
-        console.log('处理后的题目数据:', formattedProblems);
-
         problems.value = formattedProblems;
-
-        // 显示提示信息
-        if (formattedProblems.length > 0) {
-            console.log(`成功加载了 ${formattedProblems.length} 个题目`);
-        } else {
-            console.log('没有找到任何题目');
-        }
-
-        // 重置到第一页并刷新计算属性
-        currentPage.value = 1;
+        totalProblems.value = apiData.total_count;
+        totalPages.value = apiData.total_page;
 
     } catch (error) {
         console.error('获取题目数据失败:', error);
-        // 发生错误时显示提示
         alertBox.value?.show('获取题目数据失败，请稍后重试', 1);
-
-        // 如果API调用失败，使用空数组
         problems.value = [];
     } finally {
-        // 延迟关闭loading，提升用户体验
-        setTimeout(() => {
-            loading.value = false;
-        }, 500);
+        loading.value = false;
     }
 };
 
@@ -498,99 +444,8 @@ const toggleSort = (column: string) => {
 
 // 过滤后的题目数据
 const filteredProblems = computed(() => {
-    // 先应用所有过滤条件
-    const filtered = problems.value.filter((problem: any) => {
-        // 搜索过滤
-        const matchesSearch = searchQuery.value ?
-            problem.title.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-            (typeof problem.id === 'string' ? problem.id.toLowerCase().includes(searchQuery.value.toLowerCase()) :
-                String(problem.id).includes(searchQuery.value.toLowerCase())) :
-            true;
-
-        // 难度过滤 - 修改这里使用topic而不是difficulty
-        const matchesDifficulty = difficultyFilter.value ?
-            problem.topic === difficultyFilter.value :
-            true;
-
-        // 分类过滤
-        const matchesCategory = categoryFilter.value ?
-            problem.topic === categoryFilter.value :
-            true;
-
-        // 通过率范围过滤
-        const matchesPassRate = problem.passRate >= passRateRange.value[0] &&
-            problem.passRate <= passRateRange.value[1];
-
-        // 提交次数过滤
-        let matchesSubmissionCount = true;
-        if (submissionCountFilter.value) {
-            const count = problem.submissionCount;
-            switch (submissionCountFilter.value) {
-                case '<50':
-                    matchesSubmissionCount = count < 50;
-                    break;
-                case '50-100':
-                    matchesSubmissionCount = count >= 50 && count <= 100;
-                    break;
-                case '100-200':
-                    matchesSubmissionCount = count > 100 && count <= 200;
-                    break;
-                case '200-500':
-                    matchesSubmissionCount = count > 200 && count <= 500;
-                    break;
-            }
-        }
-
-        // 创建时间范围过滤
-        let matchesCreateTime = true;
-        if (createTimeRange.value && createTimeRange.value.length === 2) {
-            const createDate = new Date(problem.createTime);
-            const startDate = new Date(createTimeRange.value[0]);
-            const endDate = new Date(createTimeRange.value[1]);
-
-            // 设置结束日期为当天最后一刻，以包含整个选择的日期
-            endDate.setHours(23, 59, 59, 999);
-
-            matchesCreateTime = createDate >= startDate && createDate <= endDate;
-        }
-
-        return matchesSearch && matchesDifficulty && matchesCategory &&
-            matchesPassRate && matchesSubmissionCount && matchesCreateTime;
-    });
-
-    // 更新总题目数量，用于计算分页
-    totalProblems.value = filtered.length;
-
-    // 对过滤后的数据进行排序
-    const sorted = [...filtered].sort((a, b) => {
-        // 特殊处理ID排序
-        if (sortBy.value === 'id') {
-            const numA = typeof a.id === 'number' ? a.id : parseInt(a.id);
-            const numB = typeof b.id === 'number' ? b.id : parseInt(b.id);
-            return sortOrder.value === 'ascending' ? numA - numB : numB - numA;
-        }
-
-        let aValue = a[sortBy.value];
-        let bValue = b[sortBy.value];
-
-        // 特殊处理日期类型
-        if (sortBy.value === 'createTime') {
-            aValue = new Date(aValue).getTime();
-            bValue = new Date(bValue).getTime();
-        }
-
-        // 根据排序方向返回比较结果
-        if (sortOrder.value === 'ascending') {
-            return aValue > bValue ? 1 : -1;
-        } else {
-            return aValue < bValue ? 1 : -1;
-        }
-    });
-
-    // 应用分页，只返回当前页的数据
-    const startIndex = (currentPage.value - 1) * pageSize.value;
-    const endIndex = startIndex + pageSize.value;
-    return sorted.slice(startIndex, endIndex);
+    // 直接返回当前页的数据，无需额外过滤
+    return problems.value;
 });
 
 // 表格行样式
@@ -634,7 +489,7 @@ const getPassRateColor = (rate: number) => {
 // 分页处理
 const handleCurrentChange = (page: number) => {
     currentPage.value = page;
-    // 这里应该重新加载数据
+    fetchData();
 };
 
 // 操作方法
