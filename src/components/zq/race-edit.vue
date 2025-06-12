@@ -461,45 +461,69 @@ const fetchQuestionsInfo = async (problemIds: number[] = []): Promise<void> => {
 const fetchSingleProblemTitle = async (problemId: number): Promise<void> => {
   try {
     console.log(`正在获取题目${problemId}的详细信息`);
-    const response = await axios.get(`/api/get-question/${problemId}`);
+    const response = await axios.post("/api/question-detail", {
+      uid: problemId
+    });
     
-    if (response.data && response.data.question) {
-      const title = response.data.question?.title || '';
-      if (title) {
-        // 创建新的题目对象
-        const newProblem = {
-          id: problemId,
-          title: title,
-          topic: response.data.topic || '',
-          submitNum: response.data.submit_num || 0,
-          solveNum: response.data.solve_num || 0
-        };
-        
-        // 更新到缓存
-        const index = filteredProblems.value.findIndex((p: QuestionInfo) => p.id === problemId);
-        if (index >= 0) {
-          filteredProblems.value[index] = newProblem;
-        } else {
-          // 添加新题目
-          filteredProblems.value.push(newProblem);
-        }
-        
-        // 也更新到allProblems中
-        const allIndex = allProblems.value.findIndex((p: QuestionInfo) => p.id === problemId);
-        if (allIndex >= 0) {
-          allProblems.value[allIndex] = newProblem;
-        } else {
-          allProblems.value.push(newProblem);
-        }
-        
-        console.log(`题目${problemId}信息已更新:`, newProblem);
+    if (response.data && response.data.success && response.data.question_detail) {
+      const title = response.data.question_detail.title || `题目 ${problemId}`;
+      // 创建新的题目对象
+      const newProblem = {
+        id: problemId,
+        title: title,
+        topic: response.data.topic || '',
+        submitNum: response.data.submit_num || 0,
+        solveNum: response.data.solve_num || 0
+      };
+      
+      // 更新到缓存
+      const index = filteredProblems.value.findIndex((p: QuestionInfo) => p.id === problemId);
+      if (index >= 0) {
+        filteredProblems.value[index] = newProblem;
+      } else {
+        // 添加新题目
+        filteredProblems.value.push(newProblem);
       }
+      
+      // 也更新到allProblems中
+      const allIndex = allProblems.value.findIndex((p: QuestionInfo) => p.id === problemId);
+      if (allIndex >= 0) {
+        allProblems.value[allIndex] = newProblem;
+      } else {
+        allProblems.value.push(newProblem);
+      }
+      
+      console.log(`题目${problemId}信息已更新:`, newProblem);
     } else {
       console.warn(`获取题目${problemId}的详细信息失败，API返回:`, response.data);
     }
   } catch (error) {
     console.error(`获取题目 ${problemId} 标题失败:`, error);
   }
+};
+
+// 修改预加载已选题目的逻辑
+const preloadSelectedProblems = async (problemIds: number[]): Promise<QuestionInfo[]> => {
+  return await Promise.all(
+    problemIds.map(async (id: number) => {
+      try {
+        const response = await axios.post("/api/question-detail", { uid: id });
+        if (response.data && response.data.success && response.data.question_detail) {
+          return {
+            id: id,
+            title: response.data.question_detail.title || `题目 ${id}`,
+            topic: response.data.topic || '',
+            submitNum: response.data.submit_num || 0,
+            solveNum: response.data.solve_num || 0
+          };
+        }
+        return { id: id, title: `题目 ${id}` };
+      } catch (error) {
+        console.error(`获取题目 ${id} 信息失败:`, error);
+        return { id: id, title: `题目 ${id}` };
+      }
+    })
+  );
 };
 
 // 打开编辑竞赛对话框
@@ -561,30 +585,11 @@ const openEditDialog = async (competitionData: CompetitionData): Promise<void> =
     
     console.log('打开编辑对话框,当前竞赛数据:', JSON.stringify(competition));
     
-    // 优先单独获取已选题目的详细信息
+    // 修改预加载已选题目的逻辑
     if (competition.problems_list && competition.problems_list.length > 0) {
       console.log('正在预加载已选择的题目信息:', competition.problems_list);
-      // 先单独获取已选题目信息
-      const selectedProblems = await Promise.all(
-        competition.problems_list.map(async (id: number) => {
-          try {
-            const response = await axios.get(`/api/get-question/${id}`);
-            if (response.data && response.data.question) {
-              return {
-                id: id,
-                title: response.data.question?.title || `题目 ${id}`,
-                topic: response.data.topic || '',
-                submitNum: response.data.submit_num || 0,
-                solveNum: response.data.solve_num || 0
-              };
-            }
-            return { id: id, title: `题目 ${id}` };
-          } catch (error) {
-            console.error(`获取题目 ${id} 信息失败:`, error);
-            return { id: id, title: `题目 ${id}` };
-          }
-        })
-      );
+      // 使用新的预加载函数
+      const selectedProblems = await preloadSelectedProblems(competition.problems_list);
       
       // 更新到缓存
       filteredProblems.value = selectedProblems;
