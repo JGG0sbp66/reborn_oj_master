@@ -511,15 +511,12 @@
       }
       props.alertBoxRef?.show(successMessage, 0); // 0表示成功类型
     } else {
-      // 使用自定义提示组件显示业务处理失败信息
-      props.alertBoxRef?.show(`测试用例处理失败: ${response.message}`, 1); // 1表示错误类型
-      
-      // 显示详细错误信息
-      if (response.details && Array.isArray(response.details)) {
-        response.details.forEach(detail => {
-          props.alertBoxRef?.show(detail, 2); // 2表示警告类型
-        });
+      // 处理失败，合并 details 信息
+      let errorMsg = `测试用例处理失败: ${response.message}`;
+      if (response.details && Array.isArray(response.details) && response.details.length > 0) {
+        errorMsg += '，详情：' + response.details.join('；');
       }
+      props.alertBoxRef?.show(errorMsg, 1); // 1表示错误类型
     }
     
     // 清除上传文件列表
@@ -539,36 +536,29 @@
   // 处理文件上传失败
   const handleUploadError = (error, file) => {
     console.error('文件上传失败:', error);
-    
-    // 尝试解析错误响应
+
     let errorMessage = '上传失败，请检查网络连接';
-    
-    if (error.response) {
-      try {
-        const responseData = error.response.data;
-        errorMessage = responseData.message || `上传失败 (${error.response.status})`;
-        
-        // 显示详细错误信息
-        if (responseData.details && Array.isArray(responseData.details)) {
-          responseData.details.forEach(detail => {
-            props.alertBoxRef?.show(detail, 2); // 2表示警告类型
-          });
-        }
-      } catch (e) {
-        errorMessage = `上传失败 (${error.response.status})`;
+
+    if (error.response && error.response.data) {
+      const responseData = error.response.data;
+      // 优先使用后端返回的 message
+      errorMessage = responseData.message || errorMessage;
+      // 如果有 details，合并到提示中
+      if (responseData.details && Array.isArray(responseData.details) && responseData.details.length > 0) {
+        errorMessage += '，详情：' + responseData.details.join('；');
       }
     } else if (error.message) {
       errorMessage = error.message;
     }
-    
+    const errorMessageObject = JSON.parse(errorMessage);
     // 使用自定义提示组件显示错误信息
-    props.alertBoxRef?.show(errorMessage, 1); // 1表示错误类型
-    
+    props.alertBoxRef?.show(errorMessageObject.message+'，详情：'+errorMessageObject.details, 2);
+
     // 清除上传文件列表
     if (uploadRef.value) {
       uploadRef.value.clearFiles();
     }
-    
+
     uploading.value = false;
   };
   
@@ -727,7 +717,9 @@
   
   .testcase-uploader {
     display: flex;
-    align-items: center;
+    /* align-items: center; */
+    flex-direction: column;
+    width: 100%;
   }
   
   .ml-3 {
@@ -779,7 +771,7 @@
   .testcase-uploader :deep(.el-upload-dragger) {
     width: 100%;
     min-width: 350px;
-    max-width: 400px;
+    /* max-width: 400px; */
     height: 180px;
     display: flex;
     flex-direction: column;
@@ -841,6 +833,8 @@
   .testcase-uploader :deep(.el-upload-list) {
     max-width: 90%; /* 或者你想要的宽度，比如 400px */
     min-width: 220px;
+    display: flex;
+    flex-direction: column;
   }
   
   .testcase-uploader :deep(.el-upload-list__item) {
@@ -849,7 +843,6 @@
     text-overflow: ellipsis;
     white-space: nowrap;
     display: flex;
-    align-items: center;
   }
   .testcase-uploader :deep(.el-upload-list__item-name) {
     max-width: 110px;  /* 文件名区域更短 */

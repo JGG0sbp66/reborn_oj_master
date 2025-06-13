@@ -12,8 +12,10 @@
                     <manageractive />
 
                     <div class="tables-container">
-                        <managerprobleminfo />
-                        <managerraceinfo />
+                        <div style="display: flex; flex-direction: column; gap: 24px;">
+                            <managerprobleminfo />
+                            <managerraceinfo />
+                        </div>
                     </div>
                 </div>
             </div>
@@ -128,6 +130,7 @@ verifyAuth();
     display: flex;
     min-height: calc(100vh - 80px);
     margin-top: 80px;
+    background: #f7f9fc;
 }
 
 .manager-content {
