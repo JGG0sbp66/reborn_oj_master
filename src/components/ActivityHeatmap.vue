@@ -87,6 +87,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue';
+import axios from 'axios';
 
 // 定义类型
 interface DayData {
@@ -264,103 +265,117 @@ const hideTooltip = () => {
 };
 
 // 生成日历网格数据
-function generateCalendarGrid(year: number): void {
-  // 预分配数组大小，减少扩容操作
-  const weeks: DayData[][] = new Array(53); // 一年最多53周
-  const positions: number[] = new Array(12); // 12个月
-  
-  // 计算块操作
-  setTimeout(() => {
+async function generateCalendarGrid(year: number): Promise<void> {
+  try {
+    // 调用接口获取热力图数据
+    const response = await axios.get('/api/getHeatmap', {
+      params: { year }
+    });
+    const heatmapData = response.data.data;
+
+    // 将接口数据转换为按日期索引的对象，方便查找
+    const dateToScoreMap: Record<string, number> = {};
+    heatmapData.forEach((item: { date: string; score: number }) => {
+      dateToScoreMap[item.date] = item.score;
+    });
+
+    // 预分配数组大小，减少扩容操作
+    const weeks: DayData[][] = new Array(53); // 一年最多53周
+    const positions: number[] = new Array(12); // 12个月
+
     // 创建一个数组来存储所有周
-  let currentWeek: DayData[] = [];
-  let currentPosition = 0;
-  
-  // 获取该年1月1日是星期几 (0 = 周日, 1 = 周一, ...)
-  const firstDayOfYear = new Date(year, 0, 1).getDay();
-  currentPosition = firstDayOfYear; // 1月1日的位置
+    let currentWeek: DayData[] = [];
+    let currentPosition = 0;
+
+    // 获取该年1月1日是星期几 (0 = 周日, 1 = 周一, ...)
+    const firstDayOfYear = new Date(year, 0, 1).getDay();
+    currentPosition = firstDayOfYear; // 1月1日的位置
     positions[0] = 0; // 1月的起始位置
-  
-  // 添加上一年的日期占位符
+
+    // 添加上一年的日期占位符
     currentWeek = new Array(firstDayOfYear).fill(null).map(() => ({
       date: '',
       count: 0,
       level: 0
     }));
-  
-  // 循环遍历整年的每一天
-  const daysInYear = (year % 4 === 0 && year % 100 !== 0) || (year % 400 === 0) ? 366 : 365;
-  let prevMonth = 0;
+
+    // 循环遍历整年的每一天
+    const daysInYear = (year % 4 === 0 && year % 100 !== 0) || (year % 400 === 0) ? 366 : 365;
+    let prevMonth = 0;
     let weekIndex = 0;
-  
-  // 获取当前日期，用于比较
-  const now = new Date();
-  now.setHours(23, 59, 59, 999);
-  
-  for (let dayOfYear = 1; dayOfYear <= daysInYear; dayOfYear++) {
-    const loopDate = new Date(year, 0, dayOfYear);
-    
-    // 确保我们仍在当前年份内
-    if (loopDate.getFullYear() !== year) continue;
-    
-    // 检查月份变化，记录新月份的起始位置
-    const currentMonth = loopDate.getMonth();
-    if (currentMonth !== prevMonth) {
-      // 格子宽度 + 间距 = 11px + 3px = 14px
+
+    // 获取当前日期，用于比较
+    const now = new Date();
+    now.setHours(23, 59, 59, 999);
+
+    for (let dayOfYear = 1; dayOfYear <= daysInYear; dayOfYear++) {
+      const loopDate = new Date(year, 0, dayOfYear);
+
+      // 确保我们仍在当前年份内
+      if (loopDate.getFullYear() !== year) continue;
+
+      // 检查月份变化，记录新月份的起始位置
+      const currentMonth = loopDate.getMonth();
+      if (currentMonth !== prevMonth) {
+        // 格子宽度 + 间距 = 11px + 3px = 14px
         positions[currentMonth] = Math.floor(currentPosition / 7) * 14;
-      prevMonth = currentMonth;
-    }
-    
-    // 判断是否是未来日期 - 直接使用Date对象比较
-    const isFutureDate = loopDate > now;
-    
-    // 创建日期数据
-    const dateStr = `${year}-${loopDate.getMonth() + 1}-${loopDate.getDate()}`;
-    
-    // 如果是未来日期，则不显示数据
-    let count = 0;
-    let level = 0;
-    
-    if (!isFutureDate) {
-      // 随机生成题目数量 - 在实际应用中，这里应该从API获取真实数据
-      count = Math.floor(Math.random() * 10);
-      level = count === 0 ? 0 : 
-              count < 2 ? 1 : 
-              count < 4 ? 2 : 
-              count < 6 ? 3 : 4;
-    }
-    
-    const dayData: DayData = {
-      date: dateStr,
-      count,
-      level
-    };
-    
-    // 添加到当前周
-    currentWeek.push(dayData);
-    currentPosition++;
-    
-    // 如果是周六或最后一天，完成当前周并开始新的一周
-    if (loopDate.getDay() === 6 || dayOfYear === daysInYear) {
-      // 如果当前周不足7天，添加空白填充
-      while (currentWeek.length < 7) {
-        currentWeek.push({
-          date: '',
-          count: 0,
-          level: 0
-        });
-        currentPosition++;
+        prevMonth = currentMonth;
       }
-      
+
+      // 判断是否是未来日期 - 直接使用Date对象比较
+      const isFutureDate = loopDate > now;
+
+      // 创建日期数据
+      const dateStr = `${year}-${pad(loopDate.getMonth() + 1)}-${pad(loopDate.getDate())}`;
+
+      // 如果是未来日期，则不显示数据
+      let count = 0;
+      let level = 0;
+
+      if (!isFutureDate) {
+        // 从接口数据中获取题目数量，默认为0
+        count = dateToScoreMap[dateStr] || 0;
+        level = count === 0 ? 0 : 
+                count < 2 ? 1 : 
+                count < 4 ? 2 : 
+                count < 6 ? 3 : 4;
+      }
+
+      const dayData: DayData = {
+        date: dateStr,
+        count,
+        level
+      };
+
+      // 添加到当前周
+      currentWeek.push(dayData);
+      currentPosition++;
+
+      // 如果是周六或最后一天，完成当前周并开始新的一周
+      if (loopDate.getDay() === 6 || dayOfYear === daysInYear) {
+        // 如果当前周不足7天，添加空白填充
+        while (currentWeek.length < 7) {
+          currentWeek.push({
+            date: '',
+            count: 0,
+            level: 0
+          });
+          currentPosition++;
+        }
+
         weeks[weekIndex] = [...currentWeek];
         weekIndex++;
-      currentWeek = [];
+        currentWeek = [];
+      }
     }
-  }
-  
+
     // 更新数据，触发一次性重新渲染
     calendarData.value = weeks.filter(Boolean); // 过滤掉未使用的空槽位
-  monthPositions.value = positions;
-  }, 0);
+    monthPositions.value = positions;
+  } catch (error) {
+    console.error('Failed to fetch heatmap data:', error);
+    // 如果接口调用失败，可以回退到假数据或显示错误提示
+  }
 }
 
 // 计算总题目数
@@ -430,36 +445,32 @@ const animateTotal = () => {
 };
 
 // 监听年份变化，重新生成日历数据
-watch(selectedYear, (newYear) => {
-  generateCalendarGrid(newYear);
+watch(selectedYear, async (newYear) => {
+  await generateCalendarGrid(newYear);
+  animateTotal(); // 数据加载完再启动动画
 });
 
 // 组件挂载时执行
-onMounted(() => {
-  // 获取tooltip元素引用
+onMounted(async () => {
   tooltip.value = document.querySelector('.custom-tooltip') as HTMLElement;
-  
-  // 使用requestIdleCallback或setTimeout更高效地初始化
-  const initializeHeatmap = () => {
-    // 渲染优先级较低的组件
-  // 生成初始日历数据
-  generateCalendarGrid(selectedYear.value);
-  
-    // 使用RAF保证在下一帧之前不会渲染(优先处理其他UI渲染)
-    requestAnimationFrame(() => {
-      // 启动数字增长动画，优先级更低
-      setTimeout(animateTotal, 50);
-    });
+
+  // 初始化热力图
+  const initializeHeatmap = async () => {
+    await generateCalendarGrid(selectedYear.value);
+    // 数据加载完再启动动画
+    setTimeout(animateTotal, 50);
   };
-  
-  // 使用requestIdleCallback在浏览器空闲时执行
+
   if ('requestIdleCallback' in window) {
     (window as any).requestIdleCallback(initializeHeatmap, { timeout: 100 });
   } else {
-    // 兼容性方案
     setTimeout(initializeHeatmap, 0);
   }
 });
+
+function pad(num: number): string {
+  return num < 10 ? '0' + num : '' + num;
+}
 </script>
 
 <style scoped>
