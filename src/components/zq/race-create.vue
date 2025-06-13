@@ -116,6 +116,16 @@
                   <span class="problem-title">{{ problem.title }}</span>
                 </div>
               </el-option>
+              <div 
+                v-if="currentPage < totalPages && !isLoadingMore" 
+                class="load-more-item"
+                @click.stop="loadMoreQuestions"
+              >
+                <span>点击加载更多题目</span>
+              </div>
+              <div v-if="isLoadingMore" class="loading-more-item">
+                <span>正在加载更多...</span>
+              </div>
             </el-select>
             <div class="tip-text">* 可以输入题目ID或标题进行搜索</div>
           </el-form-item>
@@ -266,20 +276,55 @@ const tagTypeOptions = [
   {name: 'ACM赛制', type: 'acm'}
 ];
 
-// 搜索题目
-const searchProblems = (query: string): void => {
-  if (query === '') {
-    filteredProblems.value = allProblems.value;
-    return;
+// 分页相关
+const currentPage = ref(1);
+const totalPages = ref(1);
+const totalQuestions = ref(0);
+const searchQuery = ref('');
+const isLoadingMore = ref(false);
+
+// 获取题目
+const fetchQuestionsByPage = async (page: number, query: string = searchQuery.value): Promise<void> => {
+  isLoadingMore.value = true;
+  try {
+    const response = await axios.post("/api/admin-get-questions", {
+      page,
+      input: query
+    });
+    if (response.data && response.data.success && Array.isArray(response.data.questions)) {
+      const questions = response.data.questions.map((item: any) => ({
+        id: item.uid,
+        title: item.question?.title || `题目 ${item.uid}`
+      }));
+      if (page === 1) {
+        filteredProblems.value = questions;
+      } else {
+        filteredProblems.value = [...filteredProblems.value, ...questions];
+      }
+      totalPages.value = response.data.total_page || 1;
+      totalQuestions.value = response.data.total_count || 0;
+      currentPage.value = page;
+    } else {
+      if (page === 1) filteredProblems.value = [];
+    }
+  } catch (error) {
+    console.error('分页获取题目失败:', error);
+    if (page === 1) filteredProblems.value = [];
+  } finally {
+    isLoadingMore.value = false;
   }
-  
-  // 搜索逻辑：匹配ID或标题
-  const searchText = query.toLowerCase();
-  filteredProblems.value = allProblems.value.filter((problem: QuestionInfo) => {
-    const idMatch = problem.id.toString().includes(searchText);
-    const titleMatch = problem.title.toLowerCase().includes(searchText);
-    return idMatch || titleMatch;
-  });
+};
+
+const loadMoreQuestions = async (): Promise<void> => {
+  if (currentPage.value < totalPages.value && !isLoadingMore.value) {
+    await fetchQuestionsByPage(currentPage.value + 1);
+  }
+};
+
+const searchProblems = async (query: string): Promise<void> => {
+  searchQuery.value = query;
+  currentPage.value = 1;
+  await fetchQuestionsByPage(1, query);
 };
 
 // 获取题目标题信息
@@ -432,7 +477,7 @@ const openCreateDialog = async (): Promise<void> => {
   });
   
   // 获取题目数据
-  await fetchQuestionsInfo();
+  await fetchQuestionsByPage(1);
   
   // 显示对话框
   dialogVisible.value = true;
@@ -675,6 +720,23 @@ defineExpose({
 }
 
 .mt-2 {
+  margin-top: 8px;
+}
+
+.load-more-item {
+  cursor: pointer;
+  padding: 8px;
+  text-align: center;
+  background-color: #f0f0f0;
+  border-radius: 4px;
+  margin-top: 8px;
+}
+
+.loading-more-item {
+  padding: 8px;
+  text-align: center;
+  background-color: #f0f0f0;
+  border-radius: 4px;
   margin-top: 8px;
 }
 </style>
