@@ -230,6 +230,11 @@ const saveProfile = async (): Promise<void> => {
     }
     
     // 个人简介变更
+    if (!bio.value.trim()) {
+      props.alertBox?.show('个人简介不能为空', 2);
+      return;
+    }
+    
     if (!isUsernameChanged && email.value === props.userProfile.email && bio.value !== props.userProfile.bio) {
       // 发送请求到后端保存个人简介
       const loadingInstance = ElLoading.service({
@@ -237,26 +242,25 @@ const saveProfile = async (): Promise<void> => {
         text: '保存个人简介...',
         background: 'rgba(0, 0, 0, 0.7)'
       });
-      
+
       try {
-        const response = await axios.post('/api/update-user-info', {
-          bio: bio.value
+        const response = await axios.post('/api/user-change-description', {
+          new_description: bio.value
         }, {
           withCredentials: true
         });
-        
+
         // 关闭加载指示器
         loadingInstance.close();
-        
+
         if (!response.data || !response.data.success) {
-          throw new Error(response.data?.message || '保存个人简介失败');
+          props.alertBox?.show(response.data?.message || '保存个人简介失败', 2);
+          return;
         }
-        
+
         props.alertBox?.show(response.data.message || '个人简介已更新', 0);
       } catch (error: any) {
-        // 关闭加载指示器
         loadingInstance.close();
-        
         console.error('保存个人简介失败:', error);
         props.alertBox?.show(error.message || '保存个人简介失败，请稍后重试', 2);
         return;
