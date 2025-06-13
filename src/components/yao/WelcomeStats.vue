@@ -29,9 +29,10 @@ interface StatItem {
 
 interface StatsResponse {
   success: boolean;
-  注册用户数量: number;
+  // 注册用户数量: number;
   题目数量: number;
   竞赛数量: number;
+  在线用户数: number;
 }
 
 const props = defineProps({
@@ -51,7 +52,7 @@ const props = defineProps({
 
 const statsData = ref<StatItem[]>([
   { value: 0, label: '题目总数' },
-  { value: 0, label: '注册用户' },
+  { value: 0, label: '在线人数' },
   { value: 0, label: '近期比赛' }
 ]);
 
@@ -61,7 +62,7 @@ const fetchStats = async () => {
     if (response.data.success) {
       statsData.value = [
         { value: response.data.题目数量, label: '题目总数' },
-        { value: response.data.注册用户数量, label: '注册用户' },
+        { value: response.data.在线用户数, label: '在线人数' },
         { value: response.data.竞赛数量, label: '近期比赛' }
       ];
     }
