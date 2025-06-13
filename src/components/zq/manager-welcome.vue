@@ -26,6 +26,13 @@
                                         <div class="stat-label">竞赛数量</div>
                                     </div>
                                 </div>
+                                <div class="stat-item">
+                                    <el-icon class="stat-icon"><Connection /></el-icon>
+                                    <div class="stat-content">
+                                        <div class="stat-value animate-number">{{ onlineCount }}</div>
+                                        <div class="stat-label">在线人数</div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         <div class="welcome-decoration">
@@ -39,7 +46,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
-import { User, Document, TrendCharts } from '@element-plus/icons-vue';
+import { User, Document, TrendCharts, Connection } from '@element-plus/icons-vue';
 import axios from 'axios';
 
 const currentDate = computed(() => {
@@ -50,6 +57,7 @@ const currentDate = computed(() => {
 const userCount = ref(0);
 const questionCount = ref(0);
 const competitionCount = ref(0);
+const onlineCount = ref(0);
 
 const animateValue = (start: number, end: number, duration: number, setter: (val: number) => void) => {
     const startTime = performance.now();
@@ -80,6 +88,7 @@ const fetchStats = async () => {
             animateValue(0, response.data.注册用户数量, 1500, (val) => userCount.value = val);
             animateValue(0, response.data.题目数量, 1500, (val) => questionCount.value = val);
             animateValue(0, response.data.竞赛数量, 1500, (val) => competitionCount.value = val);
+            animateValue(0, response.data.在线用户数, 1500, (val) => onlineCount.value = val);
         }
     } catch (error) {
         console.error('获取统计数据失败:', error);
