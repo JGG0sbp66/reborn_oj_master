@@ -502,40 +502,48 @@ const fetchUserProfile = async (): Promise<void> => {
         withCredentials: true
       });
 
-      // 处理新的数据结构
       if (response.data) {
-        // 使用API返回的数据
         const userData = response.data;
 
-        // 更新用户名和邮箱
+        // 用户名
         if (userData.username) {
           username.value = userData.username;
           localStorage.setItem('username', userData.username);
         }
 
+        // 邮箱
         if (userData.email) {
           email.value = userData.email;
         }
 
-        // 使用API返回的统计数据
+        // 个人简介
+        if (userData.description !== undefined) {
+          bio.value = userData.description;
+        }
+
+        // 解题数
         if (userData.questions_num !== undefined) {
           problemSolved.value = userData.questions_num;
         }
 
+        // 参赛数
         if (userData.races_num !== undefined) {
           competitionsJoined.value = userData.races_num;
         }
 
-        // 使用API返回的注册时间
+        // 注册时间
         if (userData.create_time) {
           userJoinDate.value = new Date(userData.create_time);
+        }
+
+        // rating
+        if (userData.rating !== undefined) {
+          rank.value = userData.rating;
         }
 
         // 记录当前头像对应的用户ID
         if (userId) {
           localStorage.setItem('avatar_user_id', userId);
-
-          // 尝试获取头像
           refreshUserAvatar(userId);
         }
 
@@ -568,17 +576,13 @@ const fetchUserProfile = async (): Promise<void> => {
       bio.value = '热爱编程，喜欢解决复杂问题。正在学习算法和数据结构。';
     }
 
-    // 如果没有设置rank，默认为0 (后期可能会通过其他API获取)
     if (rank.value === 0) {
       // 生成一个随机的排名数字
-      const randomRank = Math.floor(Math.random() * 1000) + 1; // 1-1000之间的随机数
-
-      // 可以结合解题数量，使排名看起来更合理
+      const randomRank = Math.floor(Math.random() * 1000) + 1;
       if (problemSolved.value > 0) {
-        // 解题数量越多，排名越靠前
         rank.value = Math.max(1, Math.min(randomRank, Math.floor(500 / (problemSolved.value + 1))));
       } else {
-        rank.value = randomRank; // 直接使用随机排名
+        rank.value = randomRank;
       }
     }
   } catch (error) {
