@@ -325,7 +325,7 @@ div[onclick], div[onclick] *,
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  background: rgba(51, 133, 255, 0.22);
+  background: rgba(66, 185, 131, 0.4);
   pointer-events: none;
   mix-blend-mode: difference;
   z-index: 999999;
