@@ -37,12 +37,14 @@ import axios from 'axios';
 
 // 竞赛条目接口定义
 interface Competition {
-    id: string;
+    id: number | string;
     title: string;
     status: string;
     startTime: string;
     endTime: string;
-    participantCount?: number;
+    logos?: string[];
+    tags?: Array<{ name: string; type: string }>;
+    duration?: string;
 }
 
 // API返回数据接口
@@ -63,21 +65,20 @@ const props = defineProps({
 const emit = defineEmits(['view-more']);
 
 // 最近竞赛数据
-const recentCompetitions = ref<Competition[]>([
-    { id: 'C-256', title: '周末算法挑战赛', status: '进行中', startTime: '2023-12-02 09:00:00', endTime: '2023-12-03 09:00:00' },
-    { id: 'C-257', title: '高校编程大赛预选赛', status: '已结束', startTime: '2023-11-25 13:30:00', endTime: '2023-11-26 13:30:00' },
-    { id: 'C-258', title: '新手入门编程竞赛', status: '报名中', startTime: '2023-12-10 10:00:00', endTime: '2023-12-11 10:00:00' },
-    { id: 'C-259', title: '冬季算法竞赛', status: '未开始', startTime: '2023-12-15 09:30:00', endTime: '2023-12-16 09:30:00' },
-    { id: 'C-260', title: '企业编程挑战赛', status: '已结束', startTime: '2023-11-18 14:00:00', endTime: '2023-11-19 14:00:00' }
-]);
+const recentCompetitions = ref<Competition[]>([]);
+
+const statusMap: Record<string, string> = {
+    ended: '已结束',
+    running: '进行中',
+    upcoming: '报名中'
+};
 
 // 获取状态标签类型
 const getStatusType = (status: string): string => {
     switch (status) {
         case '进行中': return 'success';
-        case '未开始': return 'info';
+        case '报名中': return 'info';
         case '已结束': return 'danger';
-        case '报名中': return 'warning';
         default: return 'info';
     }
 };
@@ -91,49 +92,24 @@ const viewMoreCompetitions = (): void => {
 // 获取最近竞赛数据
 const fetchRecentCompetitions = async (): Promise<void> => {
     try {
-        // 获取所有竞赛
-        const response = await axios.get('/api/races');
-        const allCompetitions = response.data;
-        
-        // 处理数据
-        const processedCompetitions = allCompetitions.map((item: RaceApiData) => {
-            // 开始时间随机
-            const randomDays = Math.floor(Math.random() * 15) - 7; // -7到7天之间
-            const startDate = new Date();
-            startDate.setDate(startDate.getDate() + randomDays);
-            
-            // 结束时间在开始时间基础上加1-3天
-            const endDate = new Date(startDate);
-            endDate.setDate(endDate.getDate() + Math.floor(Math.random() * 3) + 1);
-            
-            // 根据开始时间和当前时间确定状态
-            let status = '未开始';
-            const now = new Date();
-            if (now > endDate) {
-                status = '已结束';
-            } else if (now >= startDate && now <= endDate) {
-                status = '进行中';
-            }
-            
-            return {
-                id: `C${2001 + (item.id || Math.floor(Math.random() * 1000))}`,
-                title: item.title || `竞赛 ${item.id || Math.floor(Math.random() * 100) + 1}`,
-                startTime: startDate.toISOString(),
-                endTime: endDate.toISOString(),
-                status: status,
-                participantCount: Math.floor(Math.random() * 500) + 50 // 随机参与人数
-            } as Competition;
+        const response = await axios.get('/api/race-list');
+        let allRaces = response.data.race_info || [];
+        // 按照 startTime 字段降序排列（时间最新的在前）
+        allRaces = allRaces.sort((a: any, b: any) => {
+            // 字符串转时间戳比较
+            return new Date(b.startTime).getTime() - new Date(a.startTime).getTime();
         });
-        
-        // 按开始时间排序（最近的在前）
-        processedCompetitions.sort((a: Competition, b: Competition) => {
-            return Math.abs(new Date(a.startTime).getTime() - new Date().getTime()) - 
-                   Math.abs(new Date(b.startTime).getTime() - new Date().getTime());
-        });
-        
-        // 取前n个
-        recentCompetitions.value = processedCompetitions.slice(0, props.limit);
-        console.log('获取到最近竞赛:', recentCompetitions.value);
+        // 只取前 limit 个，并做字段映射
+        recentCompetitions.value = allRaces.slice(0, props.limit).map((item: any) => ({
+            id: item.race_uid,
+            title: item.title,
+            status: statusMap[item.status] || item.status,
+            startTime: item.startTime,
+            endTime: item.endTime,
+            logos: item.logos,
+            tags: item.tags,
+            duration: item.duration
+        }));
     } catch (error) {
         console.error('获取最近竞赛失败:', error);
     }
