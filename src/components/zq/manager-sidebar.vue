@@ -143,6 +143,7 @@ const menuItems = reactive([
     children: [
       { title: "题库管理", route: "/user/mproblem", active: false },
       { title: "竞赛管理", route: "/user/mrace", active: false },
+      { title: "用户管理", route: "/user/muser", active: false },
     ],
   },
 ]);

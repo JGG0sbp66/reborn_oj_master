@@ -67,6 +67,11 @@ const routes = [
         name: "mrace",
         component: () => import("@/views/user/mrace.vue"),
         meta: { requiresAuth: true },
+    },{
+        path: "/user/muser",
+        name: "muser",
+        component: () => import("@/views/user/muser.vue"),
+        meta: { requiresAuth: true },
     }
 ];
 

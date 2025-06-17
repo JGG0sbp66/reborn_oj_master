@@ -83,8 +83,8 @@
           </div>
         </div>
 
-        <!-- 管理员后台入口按钮, 只对admin角色可见 -->
-        <router-link v-if="userRole === 'admin'" to="/user/manager" class="admin-button" target="_blank">
+        <!-- 管理员后台入口按钮, 只对admin和superAdmin角色可见 -->
+        <router-link v-if="userRole === 'admin' || userRole === 'superAdmin'" to="/user/manager" class="admin-button" target="_blank">
           <el-icon>
             <Monitor />
           </el-icon>

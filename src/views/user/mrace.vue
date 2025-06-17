@@ -46,10 +46,12 @@ onMounted(() => {
 </script>
 
 <style scoped>
+
 .manager-container {
   display: flex;
   min-height: calc(100vh - 80px);
   margin-top: 80px;
+  overflow: hidden; /* 禁止页面滚动 */
 }
 
 .content-container {
