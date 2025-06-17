@@ -1,18 +1,18 @@
 <template>
-    <managerhead />
-    <div class="manager-container">
-        <managerslider @sidebar-state-change="handleSidebarStateChange" />
-        <div class="content-container" :class="{ 'collapsed-content': isCollapsed }">
-            <managerproblem />
-        </div>
+  <managerhead />
+  <div class="manager-container">
+    <managerslider @sidebar-state-change="handleSidebarStateChange" />
+    <div class="content-container" :class="{ 'collapsed-content': isCollapsed }">
+      <manageruser />
     </div>
+  </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
-import managerhead from '@/components/zq/manager-head.vue';
 import managerslider from '@/components/zq/manager-sidebar.vue';
-import managerproblem from '@/components/zq/manager-problem.vue';
+import managerhead from '@/components/zq/manager-head.vue';
+import manageruser from '@/components/zq/manager-user.vue';
 import { useRouter, useRoute } from 'vue-router';
 import { checkAuth } from '@/utils/auth';
 
@@ -30,15 +30,12 @@ const verifyAuth = async () => {
 };
 verifyAuth();
 // 获取侧边栏折叠状态
-const isCollapsed = ref<boolean>(true);
-
-// 监听managerslider组件的折叠状态
+let isCollapsed = ref(true);
+defineExpose({ isCollapsed });
 const handleSidebarStateChange = (collapsed: boolean) => {
     isCollapsed.value = collapsed;
 };
-
 onMounted(() => {
-    // 初始设置为收缩状态
     isCollapsed.value = true;
 });
 </script>
@@ -48,7 +45,6 @@ onMounted(() => {
     display: flex;
     min-height: calc(100vh - 80px);
     margin-top: 80px;
-    overflow: hidden; /* 禁止页面滚动 */
 }
 
 .content-container {
@@ -63,6 +59,5 @@ onMounted(() => {
 
 .collapsed-content {
     margin-left: 80px; /* 折叠时的宽度 */
-    max-width: calc(100vw - 80px); /* 折叠时调整最大宽度 */
 }
 </style>
