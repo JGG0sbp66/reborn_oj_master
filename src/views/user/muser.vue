@@ -38,6 +38,40 @@ const handleSidebarStateChange = (collapsed: boolean) => {
 onMounted(() => {
     isCollapsed.value = true;
 });
+
+const handleCurrentChange = async (page: number) => {
+  // 只允许合法页码
+  if (typeof page !== 'number' || page < 1 || page > totalPages.value || page === currentPage.value) {
+    return;
+  }
+  currentPage.value = page;
+  // ...后续逻辑不变
+  // 优先从缓存取
+  if (pageDataCache.value[page]) {
+    competitions.value = pageDataCache.value[page];
+    // 预取下一页
+    const nextPage = page + 1;
+    if (!pageDataCache.value[nextPage]) {
+      loading.value = true;
+      try {
+        const nextRes = await fetchUsers(nextPage);
+        const nextUsers = nextRes?.users || nextRes?.data?.users || [];
+        const nextFormatted = formatUserData(nextUsers);
+        nextPageCache.value = nextFormatted;
+        pageDataCache.value[nextPage] = nextFormatted;
+      } catch (e) {
+        nextPageCache.value = [];
+      } finally {
+        loading.value = false;
+      }
+    } else {
+      nextPageCache.value = pageDataCache.value[nextPage];
+    }
+  } else {
+    // 其他页正常请求
+    await fetchData(page === 1); // 如果是第一页，预取第二页
+  }
+};
 </script>
 
 <style scoped>

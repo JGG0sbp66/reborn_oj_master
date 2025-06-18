@@ -111,6 +111,7 @@ import {
   CaretRight,
   House,
 } from "@element-plus/icons-vue";
+import axios from 'axios';
 
 // 获取路由实例
 const router = useRouter();
