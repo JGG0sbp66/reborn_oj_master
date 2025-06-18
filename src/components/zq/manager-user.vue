@@ -140,7 +140,7 @@
                     @selection-change="handleSelectionChange"
                     :border="false"
                     stripe
-                    :cell-style="{ textAlign: 'center', padding: '12px 0' }"
+                    :cell-style="cellStyle"
                     :header-cell-style="{ backgroundColor: '#f8f9fa', color: '#2c3e50', fontWeight: '600'}"
                     :show-overflow-tooltip="false"
                     :max-height="'none'"
@@ -148,7 +148,7 @@
                 >
                     <el-table-column type="selection" width="50" align="center" />
                     <el-table-column prop="uid" label="uid" width="110" align="center" />
-                    <el-table-column prop="username" label="用户名" min-width="100" align="left" header-align="left" />
+                    <el-table-column prop="username" label="用户名" min-width="100" />
                     <el-table-column prop="role" label="注册时间" width="200" align="center" />
                     <el-table-column prop="rating" label="状态" width="200" align="center" />
                     <el-table-column label="操作" width="180" fixed="right" align="center">
@@ -263,7 +263,7 @@ const searchQuery = ref('');
 const statusFilter = ref('');
 const dateRange = ref([]);
 const currentPage = ref(1);
-const pageSize = ref(6);
+const pageSize = ref(8);
 const totalCompetitions = ref(100);
 const showAdvancedSearch = ref(false);
 const participantsRange = ref([0, 200]);
@@ -275,6 +275,38 @@ const competitionModeFilter = ref('');
 
 // 用户数据
 const competitions = ref([]);
+// 预取的下一页数据缓存
+const nextPageCache = ref([]);
+// 分页数据缓存，key为页码，value为用户数据
+const pageDataCache = ref({});
+
+// 总页数
+const totalPages = ref(1);
+
+// 当前显示的页码数组（最多显示5个页码按钮，含当前页）
+const displayedPages = computed(() => {
+  const pages = [];
+  // 总页数小于等于7时全部显示
+  if (totalPages.value <= 7) {
+    for (let i = 1; i <= totalPages.value; i++) {
+      pages.push(i);
+    }
+    return pages;
+  }
+  // 当前页靠近开头
+  if (currentPage.value <= 4) {
+    pages.push(1, 2, 3, 4, 5, '...', totalPages.value);
+    return pages;
+  }
+  // 当前页靠近结尾
+  if (currentPage.value >= totalPages.value - 3) {
+    pages.push(1, '...', totalPages.value - 4, totalPages.value - 3, totalPages.value - 2, totalPages.value - 1, totalPages.value);
+    return pages;
+  }
+  // 当前页在中间，两侧省略
+  pages.push(1, '...', currentPage.value - 1, currentPage.value, currentPage.value + 1, '...', totalPages.value);
+  return pages;
+});
 
 // 创建用户
 const CreateRace = () => {
@@ -284,9 +316,25 @@ const CreateRace = () => {
 };
 
 // 获取用户列表（新接口）
-const get_user_list = async (page = 1) => {
-  const res = await axios.post('/Admin-UserManage/admin-get-user-list', { page });
-  return res.data; // 返回整个响应体
+const fetchUsers = async (page = 1) => {
+  // 保证页码不小于1
+  const safePage = page < 1 ? 1 : page;
+  try {
+    const res = await axios.post('/api/admin-get-user-list', {
+      page: safePage
+      // 其他参数可选
+    });
+    if (res.data.success) {
+      return res.data.data; // 返回数据
+    } else {
+      alertBox.value?.show('获取用户数据失败，请稍后重试', 1);
+      return null;
+    }
+  } catch (e) {
+    console.error('用户数据请求异常', e);
+    alertBox.value?.show('获取用户数据失败，请稍后重试', 1);
+    return null;
+  }
 };
 
 // 格式化用户数据，适配表格
@@ -296,17 +344,40 @@ const formatUserData = (data: any[]): any[] => {
     username: user.username,
     role: user.create_time || '', // 注册时间
     rating: user.is_banned ? '已封禁' : '未封禁', // 状态
-    // 其他字段可按需添加
+    raw: user, // 保留原始数据
   }));
 };
 
-const fetchData = async () => {
+// 获取并设置当前页数据，optionally预取下一页
+const fetchData = async (preloadNext = false) => {
   loading.value = true;
   try {
-    const res = await get_user_list(currentPage.value);
-    const users = res.data?.users || [];
-    competitions.value = formatUserData(users);
-    totalCompetitions.value = res.data?.total_items || 0;
+    // 优先从缓存取
+    if (pageDataCache.value[currentPage.value]) {
+      competitions.value = pageDataCache.value[currentPage.value];
+    } else {
+      // 当前页
+      const res = await fetchUsers(currentPage.value);
+      const users = res?.users || res?.data?.users || [];
+      const formatted = formatUserData(users);
+      competitions.value = formatted;
+      pageDataCache.value[currentPage.value] = formatted;
+      totalCompetitions.value = res?.total_items || res?.data?.total_items || 0;
+      totalPages.value = res?.total_pages || res?.data?.total_pages || 1;
+    }
+    // 预取下一页
+    if (preloadNext) {
+      const nextPage = currentPage.value + 1;
+      if (!pageDataCache.value[nextPage]) {
+        const nextRes = await fetchUsers(nextPage);
+        const nextUsers = nextRes?.users || nextRes?.data?.users || [];
+        const nextFormatted = formatUserData(nextUsers);
+        nextPageCache.value = nextFormatted;
+        pageDataCache.value[nextPage] = nextFormatted;
+      } else {
+        nextPageCache.value = pageDataCache.value[nextPage];
+      }
+    }
   } catch (error) {
     console.error('获取用户数据失败:', error);
     alertBox.value?.show('获取用户数据失败，请稍后重试', 1);
@@ -316,14 +387,12 @@ const fetchData = async () => {
 };
 
 onMounted(async () => {
-  // 获取用户数据
-  await fetchData();
-  
+  // 获取第一页数据并预取第二页
+  await fetchData(true);
   // 告知子组件预加载题目数据
   if (raceCreateRef.value) {
     raceCreateRef.value.loadAvailableProblems();
   }
-  
   if (raceEditRef.value) {
     raceEditRef.value.loadAvailableProblems();
   }
@@ -406,77 +475,20 @@ watch([searchQuery, statusFilter, dateRange, participantsRange, durationFilter, 
 
 // 过滤后的用户数据
 const filteredCompetitions = computed(() => {
-    // 首先应用所有过滤条件
-    const filtered = competitions.value.filter((competition: any) => {
+    // 只做过滤，不做分页切片
+    return competitions.value.filter((user: any) => {
         // 搜索过滤
-        const matchesSearch = searchQuery.value ? 
-            competition.title.toLowerCase().includes(searchQuery.value.toLowerCase()) || 
-            competition.id.toLowerCase().includes(searchQuery.value.toLowerCase()) : 
-            true;
-        
-        // 状态过滤 - 修改这里的逻辑
-        const matchesStatus = statusFilter.value ? 
-            competition.raw?.status === statusFilter.value : 
-            true;
-            
-        // 日期过滤
-        let matchesDate = true;
-        if (dateRange.value && dateRange.value.length === 2) {
-            const startDate = new Date(dateRange.value[0]);
-            const endDate = new Date(dateRange.value[1]);
-            const competitionStart = new Date(competition.startTime);
-            
-            // 设置结束日期为当天最后一刻，以包含整个选择的日期
-            endDate.setHours(23, 59, 59, 999);
-            
-            matchesDate = competitionStart >= startDate && competitionStart <= endDate;
-        }
-        
-        // 参与人数范围过滤
-        const matchesParticipants = competition.participantsCount >= participantsRange.value[0] && 
-                                competition.participantsCount <= participantsRange.value[1];
-        
-        // 用户时长过滤
-        let matchesDuration = true;
-        if (durationFilter.value) {
-            const startTime = new Date(competition.startTime);
-            const endTime = new Date(competition.endTime);
-            const durationInDays = (endTime.getTime() - startTime.getTime()) / (1000 * 60 * 60 * 24);
-            
-            switch (durationFilter.value) {
-                case '<1':
-                    matchesDuration = durationInDays < 1;
-                    break;
-                case '1-3':
-                    matchesDuration = durationInDays >= 1 && durationInDays <= 3;
-                    break;
-                case '>3':
-                    matchesDuration = durationInDays > 3;
-                    break;
-            }
-        }
-        
-        // 用户类型过滤
-        const matchesType = competitionTypeFilter.value ? 
-            competition.raw?.tags?.some((tag: CompetitionTag) => tag.type === competitionTypeFilter.value) : 
-            true;
-        
-        // 赛制类型过滤
-        const matchesMode = competitionModeFilter.value ? 
-            competition.raw?.tags?.some((tag: CompetitionTag) => tag.type === competitionModeFilter.value) : 
-            true;
-        
-        return matchesSearch && matchesStatus && matchesDate && 
-               matchesParticipants && matchesDuration && matchesType && matchesMode;
+        const matchesSearch = searchQuery.value
+            ? user.username.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
+              String(user.uid).includes(searchQuery.value)
+            : true;
+        // 状态过滤
+        const matchesStatus = statusFilter.value
+            ? user.rating === statusFilter.value
+            : true;
+        // 其他过滤条件可根据需要添加
+        return matchesSearch && matchesStatus;
     });
-    
-    // 更新总用户数量，用于计算分页
-    totalCompetitions.value = filtered.length;
-    
-    // 应用分页，只返回当前页的数据
-    const startIndex = (currentPage.value - 1) * pageSize.value;
-    const endIndex = startIndex + pageSize.value;
-    return filtered.slice(startIndex, endIndex);
 });
 
 // 表格行样式
@@ -500,9 +512,33 @@ const getStatusType = (status: string) => {
 };
 
 // 分页处理
-const handleCurrentChange = (page: number) => {
+const handleCurrentChange = async (page: number) => {
     currentPage.value = page;
-    // 这里应该重新加载数据
+    // 优先从缓存取
+    if (pageDataCache.value[page]) {
+      competitions.value = pageDataCache.value[page];
+      // 预取下一页
+      const nextPage = page + 1;
+      if (!pageDataCache.value[nextPage]) {
+        loading.value = true;
+        try {
+          const nextRes = await fetchUsers(nextPage);
+          const nextUsers = nextRes?.users || nextRes?.data?.users || [];
+          const nextFormatted = formatUserData(nextUsers);
+          nextPageCache.value = nextFormatted;
+          pageDataCache.value[nextPage] = nextFormatted;
+        } catch (e) {
+          nextPageCache.value = [];
+        } finally {
+          loading.value = false;
+        }
+      } else {
+        nextPageCache.value = pageDataCache.value[nextPage];
+      }
+    } else {
+      // 其他页正常请求
+      await fetchData(page === 1); // 如果是第一页，预取第二页
+    }
 };
 
 // 封禁用户
@@ -545,6 +581,14 @@ const manageUser = (user: FormattedCompetition) => {
             confirmButtonText: '关闭',
         }
     );
+};
+
+// 表格单元格样式，用户名列左对齐，其余居中
+const cellStyle = ({ column }: any) => {
+  if (column.property === 'username') {
+    return { textAlign: 'left', padding: '12px 0' };
+  }
+  return { textAlign: 'center', padding: '12px 0' };
 };
 </script>
 
