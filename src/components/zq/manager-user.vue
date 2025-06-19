@@ -9,6 +9,10 @@
                         <el-icon class="button-icon"><Plus /></el-icon>
                         <span>创建用户</span>
                     </el-button>
+                    <el-button type="danger" class="ban-button" @click="openBanDialog()">
+                        <el-icon class="button-icon"><CircleCloseFilled /></el-icon>
+                        <span>封禁用户</span>
+                    </el-button>
                     <race-create @refreshData="fetchData" :alertBoxRef="alertBox" ref="raceCreateRef" />
                     <race-edit @refreshData="fetchData" :alertBoxRef="alertBox" ref="raceEditRef" />
                     <race-detail @refreshData="fetchData" @editRace="handleEditFromDetail" :alertBoxRef="alertBox" ref="raceDetailRef" />
@@ -150,17 +154,23 @@
                     <el-table-column prop="uid" label="uid" width="110" align="center" />
                     <el-table-column prop="username" label="用户名" min-width="100" />
                     <el-table-column prop="role" label="注册时间" width="200" align="center" />
-                    <el-table-column prop="rating" label="状态" width="200" align="center" />
+                    <el-table-column label="状态" width="200" align="center">
+                        <template #default="scope">
+                            <span class="user-status" :class="scope.row.rating === '已封禁' ? 'banned' : 'normal'">
+                                {{ scope.row.rating }}
+                            </span>
+                        </template>
+                    </el-table-column>
                     <el-table-column label="操作" width="180" fixed="right" align="center">
                         <template #default="scope">
                             <div class="action-buttons">
                                 <el-button 
-                                    type="danger" 
+                                    :type="scope.row.rating === '已封禁' ? 'success' : 'danger'" 
                                     size="small" 
                                     text
-                                    @click="banUser(scope.row)"
+                                    @click="scope.row.rating === '已封禁' ? unbanUser(scope.row) : banUser(scope.row)"
                                 >
-                                    封禁
+                                    {{ scope.row.rating === '已封禁' ? '解封' : '封禁' }}
                                 </el-button>
                                 <el-button 
                                     type="primary" 
@@ -197,18 +207,74 @@
                     </button>
                 </div>
             </div>
+
+            <!-- 封禁用户弹窗 -->
+            <el-dialog
+                v-model="banDialogVisible"
+                title="封禁用户"
+                width="500px"
+                custom-class="ban-user-dialog"
+                :close-on-click-modal="false"
+            >
+                <el-form 
+                    ref="banFormRef"
+                    :model="banForm"
+                    :rules="banRules"
+                    label-position="top"
+                    class="ban-form"
+                >
+                    <el-form-item label="用户UID" prop="uid" required>
+                        <el-input 
+                            v-model="banForm.uid" 
+                            placeholder="请输入用户UID" 
+                            :disabled="!!selectedUser"
+                        ></el-input>
+                    </el-form-item>
+                    <el-form-item label="封禁原因" prop="ban_reason" required>
+                        <el-input 
+                            v-model="banForm.ban_reason" 
+                            type="textarea" 
+                            rows="3" 
+                            placeholder="请输入封禁原因"
+                        ></el-input>
+                    </el-form-item>
+                    <el-form-item label="封禁类型" class="ban-type-selector">
+                        <el-radio-group v-model="banForm.is_permanent">
+                            <el-radio :label="false">临时封禁</el-radio>
+                            <el-radio :label="true">永久封禁</el-radio>
+                        </el-radio-group>
+                    </el-form-item>
+                    <el-form-item v-if="!banForm.is_permanent" label="封禁结束时间" class="ban-time-selector">
+                        <el-date-picker
+                            v-model="banForm.ban_end_time"
+                            type="datetime"
+                            placeholder="选择封禁结束时间"
+                            format="YYYY-MM-DD HH:mm:ss"
+                            value-format="YYYY-MM-DD HH:mm:ss"
+                            style="width: 100%"
+                        ></el-date-picker>
+                    </el-form-item>
+                </el-form>
+                <template #footer>
+                    <div class="dialog-footer">
+                        <el-button @click="banDialogVisible = false">取消</el-button>
+                        <el-button type="primary" @click="submitBanUser" :loading="banSubmitting">确认封禁</el-button>
+                    </div>
+                </template>
+            </el-dialog>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import type { FormInstance } from 'element-plus';
-import { Plus, Search, ArrowUp, ArrowDown, Timer, Collection, Refresh } from '@element-plus/icons-vue';
+import { Plus, Search, ArrowUp, ArrowDown, Timer, Collection, Refresh, CircleCloseFilled } from '@element-plus/icons-vue';
 import AlertBox from '../JGG/alertbox.vue';
 import axios from 'axios';
 import RaceCreate from './race-create.vue';
 import RaceEdit from './race-edit.vue';
 import RaceDetail from './race-detail.vue';
+import { h, ref as vueRef } from 'vue';
 
 // 定义用户标签类型
 interface CompetitionTag {
@@ -541,46 +607,303 @@ const handleCurrentChange = async (page: number) => {
     }
 };
 
-// 封禁用户
-const banUser = (user: FormattedCompetition) => {
-    ElMessageBox.confirm(
-        `确定要封禁用户 ${user.title} 吗？`,
-        '封禁确认',
-        {
-            confirmButtonText: '确定',
-            cancelButtonText: '取消',
-            type: 'warning',
-        }
-    )
-    .then(async () => {
-        try {
-            loading.value = true;
-            // 假设uid格式为 C-123
-            const uid = parseInt(user.id.replace('C-', ''));
-            await axios.post(`/api/user/ban/${uid}`);
-            alertBox.value.show(`用户 ${user.title} 已被封禁`, 0);
-            await fetchData();
-        } catch (error: any) {
-            alertBox.value.show(`封禁失败: ${error.response?.data?.message || error.message || '服务器错误'}`, 1);
-        } finally {
-            loading.value = false;
-        }
-    })
-    .catch(() => {
-        alertBox.value.show('已取消封禁', 1);
-    });
+// 封禁用户相关
+const banDialogVisible = ref(false);
+const banSubmitting = ref(false);
+const selectedUser = ref(null);
+const banFormRef = ref(null);
+
+// 封禁表单数据
+const banForm = ref({
+    uid: '',
+    ban_reason: '',
+    ban_end_time: '',
+    is_permanent: false
+});
+
+// 表单验证规则
+const banRules = {
+    uid: [
+        { required: true, message: '请输入用户UID', trigger: 'blur' },
+        { type: 'number', message: 'UID必须为数字', trigger: 'blur', transform: (val: string) => Number(val) }
+    ],
+    ban_reason: [
+        { required: true, message: '请输入封禁原因', trigger: 'blur' },
+        { min: 1, max: 200, message: '长度在 1 到 200 个字符', trigger: 'blur' }
+    ]
 };
 
-// 管理用户（弹窗展示用户信息）
-const manageUser = (user: FormattedCompetition) => {
+// 打开封禁弹窗
+const openBanDialog = (user: any = null) => {
+    selectedUser.value = user;
+    banForm.value = {
+        uid: user ? user.uid : '',
+        ban_reason: '',
+        ban_end_time: '',
+        is_permanent: false
+    };
+    banDialogVisible.value = true;
+};
+
+// 提交封禁用户
+const submitBanUser = () => {
+    if (banFormRef.value) {
+        banFormRef.value.validate(async (valid) => {
+            if (valid) {
+                try {
+                    banSubmitting.value = true;
+                    
+                    await axios.post('/api/admin-ban-user', {
+                        uid: Number(banForm.value.uid),
+                        ban_reason: banForm.value.ban_reason,
+                        ban_end_time: banForm.value.is_permanent ? null : banForm.value.ban_end_time
+                    });
+                    
+                    ElMessage.success('用户已被封禁');
+                    alertBox.value?.show(`用户ID ${banForm.value.uid} 已被封禁`, 0);
+                    banDialogVisible.value = false;
+                    
+                    // 清除当前页的缓存，确保获取最新数据
+                    delete pageDataCache.value[currentPage.value];
+                    // 重新获取当前页数据
+                    await fetchData(false);
+                } catch (error: any) {
+                    ElMessage.error(`封禁失败: ${error.response?.data?.message || error.message || '服务器错误'}`);
+                    alertBox.value?.show(`封禁失败: ${error.response?.data?.message || error.message || '服务器错误'}`, 1);
+                } finally {
+                    banSubmitting.value = false;
+                }
+            }
+        });
+    }
+};
+
+// 封禁用户按钮点击事件
+const banUser = (user: any = null) => {
+    openBanDialog(user);
+};
+
+// 解封用户
+const unbanUser = async (user: any) => {
+    try {
+        // 确认解封
+        await ElMessageBox.confirm(
+            `确定要解封用户 ${user.username} (ID: ${user.uid}) 吗？`,
+            '解封确认',
+            {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+                type: 'warning'
+            }
+        );
+        
+        // 显示加载状态
+        loading.value = true;
+        
+        // 调用解封接口
+        await axios.post('/api/admin-unban-user', {
+            uid: user.uid
+        });
+        
+        // 显示成功消息
+        ElMessage.success('用户已被解封');
+        alertBox.value?.show(`用户 ${user.username} 已被解封`, 0);
+        
+        // 清除当前页的缓存，确保获取最新数据
+        delete pageDataCache.value[currentPage.value];
+        // 重新获取当前页数据
+        await fetchData(false);
+    } catch (error: any) {
+        // 如果是用户取消操作，不显示错误
+        if (error === 'cancel' || error?.toString().includes('cancel')) {
+            return;
+        }
+        
+        // 显示错误消息
+        ElMessage.error(`解封失败: ${error.response?.data?.message || error.message || '服务器错误'}`);
+        alertBox.value?.show(`解封失败: ${error.response?.data?.message || error.message || '服务器错误'}`, 1);
+    } finally {
+        // 隐藏加载状态
+        loading.value = false;
+    }
+};
+
+// 管理用户（弹窗展示用户信息，带分页）
+const manageUser = (user: any) => {
+    // 分页相关
+    const pageSize = 8; // 增加每页显示条目数，从5条改为8条
+    const questions = user.raw?.questions || [];
+    const races = user.raw?.race || [];
+    const qPage = vueRef(1);
+    const rPage = vueRef(1);
+    const totalQPages = Math.max(1, Math.ceil(questions.length / pageSize));
+    const totalRPages = Math.max(1, Math.ceil(races.length / pageSize));
+
+    // 生成分页内容
+    const getQuestionsHtml = () => {
+        if (!questions.length) return '<div class="empty-data">暂无题目数据</div>';
+        const start = (qPage.value - 1) * pageSize;
+        const end = start + pageSize;
+        const pageData = questions.slice(start, end);
+        let html = '<div class="problem-list">' + pageData.map((q: any) => {
+            // 根据难度设置标签样式
+            const difficultyClass = q.difficulty === 'easy' ? 'tag-easy' : 
+                                  q.difficulty === 'medium' ? 'tag-medium' : 
+                                  q.difficulty === 'hard' ? 'tag-hard' : 'tag-easy';
+            
+            const difficultyText = q.difficulty === 'easy' ? '入门' : 
+                                q.difficulty === 'medium' ? '普及' : 
+                                q.difficulty === 'hard' ? '提高' : '入门';
+            
+            return `
+                <div class="problem-item">
+                    <div class="problem-title">${q.question_title || `题目${q.question_uid}`}</div>
+                    <div class="problem-meta">
+                        <span class="problem-tag ${difficultyClass}">${difficultyText}</span>
+                        <span class="problem-time">${q.submit_time}</span>
+                    </div>
+                </div>
+            `;
+        }).join('') + '</div>';
+        if (totalQPages > 1) {
+            html += `
+                <div class="dialog-pagination">
+                    <button class="page-btn ${qPage.value===1?'disabled':''}" onclick="window.__qPrevPage&&window.__qPrevPage()">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+                    </button>
+                    <span class="page-info">第 ${qPage.value}/${totalQPages} 页</span>
+                    <button class="page-btn ${qPage.value===totalQPages?'disabled':''}" onclick="window.__qNextPage&&window.__qNextPage()">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+                    </button>
+                </div>
+            `;
+        }
+        return html;
+    };
+    
+    const getRacesHtml = () => {
+        if (!races.length) return '<div class="empty-data">暂无竞赛数据</div>';
+        const start = (rPage.value - 1) * pageSize;
+        const end = start + pageSize;
+        const pageData = races.slice(start, end);
+        let html = '<div class="problem-list">' + pageData.map((r: any) => {
+            return `
+                <div class="problem-item">
+                    <div class="problem-title">${r.race_name || `竞赛${r.race_uid}`}</div>
+                    <div class="problem-meta">
+                        <span class="problem-time">${r.register_time}</span>
+                    </div>
+                </div>
+            `;
+        }).join('') + '</div>';
+        if (totalRPages > 1) {
+            html += `
+                <div class="dialog-pagination">
+                    <button class="page-btn ${rPage.value===1?'disabled':''}" onclick="window.__rPrevPage&&window.__rPrevPage()">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+                    </button>
+                    <span class="page-info">第 ${rPage.value}/${totalRPages} 页</span>
+                    <button class="page-btn ${rPage.value===totalRPages?'disabled':''}" onclick="window.__rNextPage&&window.__rNextPage()">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+                    </button>
+                </div>
+            `;
+        }
+        return html;
+    };
+
+    // 用户简介
+    const description = user.raw?.description || '';
+    const descHtml = description 
+        ? `<div class="user-brief"><span class="info-label">简介：</span>${description}</div>` 
+        : '';
+        
+    // 获取用户身份
+    const userRole = user.raw?.role || 'user';
+    const roleText = userRole === 'admin' ? '管理员' : 
+                    userRole === 'superAdmin' ? '超级管理员' : '普通用户';
+    const roleClass = userRole === 'admin' ? 'admin-role' : 
+                    userRole === 'superAdmin' ? 'super-admin-role' : 'user-role';
+
+    // 用户基本信息
+    const userInfoHtml = `
+        <div class="user-info-header">
+            <div class="user-avatar">
+                ${user.username ? user.username.charAt(0).toUpperCase() : 'U'}
+            </div>
+            <div class="user-info-main">
+                <div class="user-name">${user.username}</div>
+                <div class="user-meta">
+                    <span class="meta-item">ID: <span class="meta-value">${user.uid}</span></span>
+                    <span class="meta-item status-badge ${user.rating === '已封禁' ? 'banned' : ''}">${user.rating}</span>
+                    <span class="meta-item role-badge ${roleClass}">${roleText}</span>
+                </div>
+            </div>
+        </div>
+        ${descHtml}
+    `;
+
+    // 事件挂载到window（Element Plus MessageBox不支持直接绑定vue事件）
+    // @ts-ignore
+    window.__qPrevPage = () => { if(qPage.value>1){ qPage.value--; updateBox(); } };
+    // @ts-ignore
+    window.__qNextPage = () => { if(qPage.value<totalQPages){ qPage.value++; updateBox(); } };
+    // @ts-ignore
+    window.__rPrevPage = () => { if(rPage.value>1){ rPage.value--; updateBox(); } };
+    // @ts-ignore
+    window.__rNextPage = () => { if(rPage.value<totalRPages){ rPage.value++; updateBox(); } };
+
+    // 更新弹窗内容
+    const updateBox = () => {
+        const html = `
+            <div class="user-detail-content">
+                ${userInfoHtml}
+                
+                <div class="user-sections">
+                    <div class="user-section">
+                        <div class="detail-header">
+                            <h3 class="detail-title">解题记录</h3>
+                            <div class="detail-indicator"></div>
+                        </div>
+                        ${getQuestionsHtml()}
+                    </div>
+                    
+                    <div class="user-section">
+                        <div class="detail-header">
+                            <h3 class="detail-title">参与竞赛</h3>
+                            <div class="detail-indicator"></div>
+                        </div>
+                        ${getRacesHtml()}
+                    </div>
+                </div>
+            </div>
+        `;
+        const box = document.querySelector('.el-message-box__message');
+        if (box) box.innerHTML = html;
+    };
+
     ElMessageBox.alert(
-        `ID: ${user.id}<br>用户名: ${user.title}<br>参与数: ${user.participantsCount}<br>状态: ${user.status}`,
+        `<div class="user-detail-content">加载中...</div>`,
         '用户信息',
         {
             dangerouslyUseHTMLString: true,
             confirmButtonText: '关闭',
+            customClass: 'user-detail-dialog',
+            callback: () => {
+                // @ts-ignore
+                delete window.__qPrevPage;
+                // @ts-ignore
+                delete window.__qNextPage;
+                // @ts-ignore
+                delete window.__rPrevPage;
+                // @ts-ignore
+                delete window.__rNextPage;
+            }
         }
     );
+    
+    // 使用setTimeout让弹窗先显示再加载内容
+    setTimeout(updateBox, 100);
 };
 
 // 表格单元格样式，用户名列左对齐，其余居中
@@ -1395,5 +1718,477 @@ const cellStyle = ({ column }: any) => {
 .dropdown-leave-to .advanced-search-content {
     opacity: 0;
     transform: translateY(10px);
+}
+
+.dialog-pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 10px;
+    gap: 12px;
+}
+
+.dialog-pagination .page-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 4px;
+    border: 1px solid #e4e7ed;
+    background-color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    padding: 0;
+    color: #606266;
+}
+
+.dialog-pagination .page-btn:hover:not(.disabled) {
+    border-color: #18a058;
+    color: #18a058;
+}
+
+.dialog-pagination .page-btn.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    color: #c0c4cc;
+}
+
+.dialog-pagination .page-info {
+    font-size: 13px;
+    color: #606266;
+}
+
+.empty-data {
+    text-align: center;
+    color: #909399;
+    padding: 20px;
+    background-color: #f8f9fa;
+    border-radius: 6px;
+    font-size: 14px;
+}
+
+/* 封禁用户弹窗样式 */
+:deep(.ban-user-dialog) {
+    width: 500px;
+    max-width: 95vw;
+}
+
+:deep(.ban-user-dialog .el-message-box__header) {
+    padding: 15px 20px;
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #eaecf0;
+}
+
+:deep(.ban-user-dialog .el-message-box__title) {
+    font-size: 16px;
+    font-weight: 500;
+    color: #333;
+}
+
+:deep(.ban-user-dialog .el-message-box__content) {
+    padding: 20px;
+}
+
+:deep(.ban-user-form) {
+    margin-bottom: 0;
+}
+
+:deep(.ban-form-title) {
+    font-size: 14px;
+    color: #606266;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+:deep(.ban-form .el-form-item__label) {
+    padding-bottom: 8px;
+    font-weight: 500;
+    color: #333;
+}
+
+:deep(.ban-type-selector) {
+    margin-bottom: 15px;
+}
+
+:deep(.ban-time-selector) {
+    margin-bottom: 0;
+}
+
+:deep(.ban-user-dialog .el-button--primary) {
+    background-color: #f56c6c;
+    border-color: #f56c6c;
+}
+
+:deep(.ban-user-dialog .el-button--primary:hover) {
+    background-color: #f78989;
+    border-color: #f78989;
+}
+
+:deep(.ban-user-dialog .el-radio__input.is-checked .el-radio__inner) {
+    background-color: #18a058;
+    border-color: #18a058;
+}
+
+:deep(.ban-user-dialog .el-radio__input.is-checked + .el-radio__label) {
+    color: #18a058;
+}
+
+:deep(.ban-user-dialog .el-radio__inner:hover) {
+    border-color: #18a058;
+}
+
+:deep(.ban-user-dialog .el-textarea__inner:focus),
+:deep(.ban-user-dialog .el-input__wrapper.is-focus) {
+    box-shadow: 0 0 0 1px #18a058 inset !important;
+}
+
+.ban-button {
+    margin-left: 12px;
+    background-color: #f56c6c;
+    border-color: #f56c6c;
+}
+
+.ban-button:hover {
+    background-color: #f78989;
+    border-color: #f78989;
+}
+
+/* 用户状态样式 */
+.user-status {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.user-status.banned {
+    background-color: #fef0f0;
+    color: #f56c6c;
+    border: 1px solid rgba(245, 108, 108, 0.2);
+}
+
+.user-status.normal {
+    background-color: #f0f9f4;
+    color: #18a058;
+    border: 1px solid rgba(24, 160, 88, 0.2);
+}
+
+/* 用户角色标签样式 */
+.role-badge {
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+}
+
+.user-role {
+    background-color: #f2f6fc;
+    color: #909399;
+}
+
+.admin-role {
+    background-color: #e6f7ff;
+    color: #1890ff;
+}
+
+.super-admin-role {
+    background-color: #f6ffed;
+    color: #52c41a;
+}
+</style>
+
+<style>
+/* 用户信息弹窗样式 */
+.user-detail-dialog .el-message-box__container {
+    padding: 0;
+}
+
+.user-detail-dialog .el-message-box__message {
+    padding: 0 !important;
+    margin: 0 !important;
+    max-height: 80vh !important;
+    overflow: visible !important; /* 更改为可见，防止双重滚动 */
+}
+
+.user-detail-dialog .el-message-box__title {
+    font-size: 16px;
+    font-weight: 500;
+    color: #333;
+}
+
+.user-detail-dialog .el-message-box__header {
+    padding: 15px 20px;
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #eaecf0;
+}
+
+.user-detail-dialog .el-message-box__content {
+    padding: 0;
+    overflow: hidden;
+}
+
+.user-detail-dialog .el-message-box__close {
+    color: #909399;
+}
+
+.user-detail-dialog .el-message-box__headerbtn:focus .el-message-box__close, 
+.user-detail-dialog .el-message-box__headerbtn:hover .el-message-box__close {
+    color: #18a058;
+}
+
+.user-detail-dialog .el-button--primary {
+    background-color: #18a058;
+    border-color: #18a058;
+}
+
+.user-detail-dialog .el-button--primary:hover,
+.user-detail-dialog .el-button--primary:focus {
+    background-color: #35b371;
+    border-color: #35b371;
+}
+
+.user-detail-dialog {
+    width: auto;
+    max-width: 600px !important; /* 直接覆盖宽度 */
+    width: 600px !important;
+}
+
+.user-detail-content {
+    padding: 0;
+    min-width: 600px; /* 增加最小宽度，确保内容不被截断 */
+    width: 600px; /* 调整为标准宽度 */
+    max-width: 90vw;
+    max-height: 600px; /* 设置固定高度，确保比例为1:1 */
+    overflow-y: auto; /* 内容超出时显示滚动条 */
+}
+
+.user-info-header {
+    display: flex;
+    align-items: center;
+    padding: 20px;
+    border-bottom: 1px solid #eaecf0;
+}
+
+.user-avatar {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background-color: #18a058;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    font-weight: bold;
+    margin-right: 16px;
+}
+
+.user-info-main {
+    flex: 1;
+}
+
+.user-name {
+    font-size: 18px;
+    font-weight: 500;
+    color: #333;
+    margin-bottom: 6px;
+}
+
+.user-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    color: #606266;
+    font-size: 14px;
+}
+
+.meta-item {
+    display: inline-flex;
+    align-items: center;
+}
+
+.meta-value {
+    font-family: monospace;
+    margin-left: 2px;
+}
+
+.status-badge {
+    padding: 2px 8px;
+    border-radius: 4px;
+    background-color: #f0f9f4;
+    color: #18a058;
+}
+
+.status-badge.banned {
+    background-color: #fef0f0;
+    color: #f56c6c;
+}
+
+.info-label {
+    font-weight: 500;
+    margin-right: 4px;
+}
+
+.user-brief {
+    padding: 12px 20px;
+    color: #606266;
+    line-height: 1.5;
+    border-bottom: 1px solid #eaecf0;
+    font-size: 14px;
+}
+
+.user-data-section {
+    padding: 20px;
+}
+
+.section-title {
+    display: flex;
+    align-items: center;
+    margin-bottom: 12px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #333;
+    padding-left: 2px;
+}
+
+.detail-header {
+    display: flex;
+    align-items: center;
+    margin: 0 0 15px;
+    border-bottom: none;
+    position: relative;
+}
+
+.detail-title {
+    font-size: 16px;
+    font-weight: 500;
+    margin: 0;
+    color: #333;
+}
+
+.detail-indicator {
+    height: 3px;
+    width: 40px;
+    background-color: #18a058;
+    position: absolute;
+    bottom: -6px;
+    left: 0;
+}
+
+.problem-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-height: 300px; /* 增加高度，从250px改为300px */
+    overflow-y: auto;
+    padding-right: 10px;
+}
+
+.problem-item {
+    padding: 10px;
+    background-color: #f8f9fa;
+    border-radius: 6px;
+    transition: all 0.2s;
+    margin-bottom: 0;
+}
+
+.problem-item:hover {
+    background-color: #f0f0f0;
+}
+
+.problem-title {
+    font-weight: 500;
+    color: #333;
+    font-size: 14px;
+    margin-bottom: 4px;
+}
+
+.problem-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-top: 6px;
+}
+
+.problem-tag {
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    margin-right: 15px;
+}
+
+.tag-easy {
+    background-color: #e8f5e9;
+    color: #4caf50;
+}
+
+.tag-medium {
+    background-color: #e3f2fd;
+    color: #2196f3;
+}
+
+.tag-hard {
+    background-color: #fff8e1;
+    color: #ff9800;
+}
+
+.problem-time {
+    color: #909399;
+    font-size: 13px;
+    white-space: nowrap;
+}
+
+/* 添加新布局样式 */
+.user-sections {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 20px;
+}
+
+.user-section {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+/* 自定义滚动条样式 */
+.problem-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.problem-list::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.problem-list::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+}
+
+.problem-list::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+/* 优化滚动条 */
+.user-detail-content::-webkit-scrollbar {
+    width: 6px;
+}
+
+.user-detail-content::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.user-detail-content::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+}
+
+.user-detail-content::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
 }
 </style>
