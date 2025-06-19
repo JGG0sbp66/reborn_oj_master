@@ -56,11 +56,11 @@
             </div>
             <div
               class="selectionE"
-              :class="{ yeah: selectedLanguage === 'C++' }"
-              @click="selectLanguage('C++')"
+              :class="{ yeah: selectedLanguage === 'cpp' }"
+              @click="selectLanguage('cpp')"
             >
-              <div>C++</div>
-              <div v-if="selectedLanguage === 'C++'">
+              <div>cpp</div>
+              <div v-if="selectedLanguage === 'cpp'">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   viewBox="0 0 24 24"
@@ -216,7 +216,7 @@ export default {
   props: ["questionDetail", "id", "race_uid"],
   data() {
     return {
-      selectedLanguage: "C++",
+      selectedLanguage: "cpp",
       showLanguageSelection: false,
       codeLines: [""],
       isEnterKeyDown: false,
@@ -1121,7 +1121,7 @@ export default {
       // 根据语言应用不同的格式化规则
       switch (this.selectedLanguage) {
         case "C":
-        case "C++":
+        case "cpp":
         case "Java":
           // 简单的C风格格式化 - 在实际应用中可以使用更复杂的格式化库
           let formatted = [];
@@ -1290,13 +1290,15 @@ export default {
         this.$emit("add-pending-submission", pendingSubmission);
 
         const formData = new FormData();
-        formData.append("question_uid", this.id);
-        formData.append("question", JSON.stringify(this.questionDetail));
-        formData.append("prompt", this.codeLines.join("\n"));
-        formData.append("race_uid", this.race_uid);
+        formData.append("code", this.codeLines.join("\n"));
+        formData.append("language", this.selectedLanguage.toLowerCase());
+        formData.append("problem_id", this.id);
+        if (this.race_uid) {
+          formData.append("race_id", this.race_uid);
+        }
 
         const { data: response } = await axios({
-          url: "/api/askAi-question",
+          url: "/api/judge/submit",
           method: "post",
           data: formData,
           headers: {
@@ -1304,9 +1306,13 @@ export default {
           },
         });
 
-        const aiResponse = response.message;
+        if (!response.success) {
+          throw new Error(response.message || "提交失败");
+        }
+
+        const result = response.result;
         let statusOption = this.stateOptions.find((option) =>
-          option.status.includes(this.getStatusFromAiResponse(aiResponse))
+          option.status.includes(this.getStatusFromJudgeResult(result.status))
         );
 
         if (!statusOption) {
@@ -1316,12 +1322,12 @@ export default {
         const submission = {
           status: statusOption.status,
           language: this.selectedLanguage,
-          runTime: this.getRunTime(),
-          memoryUsage: this.getMemoryUsage(),
+          runTime: this.formatRunTime(result.details?.[0]?.execution_time || 0),
+          memoryUsage: this.formatMemory(result.details?.[0]?.memory_used || 0),
           submitTime: this.getSubmitTime(),
-          aiFeedback: aiResponse,
+          details: result.details,
           isPending: false,
-          index: submissionId, // 保持相同的唯一标识
+          index: submissionId,
         };
 
         this.$emit("update-submission", {
@@ -1331,60 +1337,87 @@ export default {
 
         this.codeLines = [""];
       } catch (error) {
-        // console.error("提交失败:", error);
-
         if (error.message === "用户未登录") {
           this.$emit("show-alert", {
             type: "error",
             message: "请先登录后再提交代码",
           });
-        }
-
-        if (error.response) {
+        } else {
           this.$emit("show-alert", {
             type: "error",
-            message: error.response.data.message,
+            message: error.response?.data?.message || error.message || "提交失败",
           });
-
-          const submission = {
-            status: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="width: 18px; height: 18px; position: relative; top: 4px; color: #F53F3F;">
-              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" fill="currentColor"/>
-            </svg>
-            <span style="margin-left: 5px; color: #F53F3F;">提交失败</span>`,
-            language: this.selectedLanguage,
-            runTime: "-",
-            memoryUsage: "-",
-            submitTime: this.getSubmitTime(),
-            aiFeedback: "提交失败",
-            isPending: false, // 改为false表示已完成
-            index: -1,
-          };
-
-          this.$emit("update-submission", {
-            index: -1,
-            submission: submission,
-          });
-          this.getStatusFromAiResponse("提交失败");
         }
+
+        const submission = {
+          status: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="width: 18px; height: 18px; position: relative; top: 4px; color: #F53F3F;">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" fill="currentColor"/>
+          </svg>
+          <span style="margin-left: 5px; color: #F53F3F;">提交失败</span>`,
+          language: this.selectedLanguage,
+          runTime: "-",
+          memoryUsage: "-",
+          submitTime: this.getSubmitTime(),
+          details: null,
+          isPending: false,
+          index: -1,
+        };
+
+        this.$emit("update-submission", {
+          index: -1,
+          submission: submission,
+        });
       }
     },
-    // 辅助方法：从AI响应中提取状态
-    getStatusFromAiResponse(response) {
-      response = response.toLowerCase();
-      if (response.includes("答案正确")) return "答案正确";
-      if (response.includes("答案错误")) return "答案错误";
-      if (response.includes("编译错误")) return "编译错误";
-      if (response.includes("内存超限")) return "内存超限";
-      if (response.includes("运行超时")) return "运行超时";
-      if (response.includes("运行错误")) return "运行错误";
-      if (response.includes("提交失败")) return "提交失败";
-      return "编译错误"; // 默认返回编译错误
+
+    // 格式化运行时间
+    formatRunTime(ms) {
+      return `
+        <svg xmlns="http://www.w3.org/2000/svg"
+          xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 1024 1024"
+          style="width: 14px; height: 14px; position: relative; top: 2px;">
+          <path
+            d="M512 64C264.6 64 64 264.6 64 512s200.6 448 448 448s448-200.6 448-448S759.4 64 512 64zm0 820c-205.4 0-372-166.6-372-372s166.6-372 372-372s372 166.6 372 372s-166.6 372-372 372z"
+            fill="currentColor"></path>
+          <path
+            d="M686.7 638.6L544.1 535.5V288c0-4.4-3.6-8-8-8H488c-4.4 0-8 3.6-8 8v275.4c0 2.6 1.2 5 3.3 6.5l165.4 120.6c3.6 2.6 8.6 1.8 11.2-1.7l28.6-39c2.6-3.7 1.8-8.7-1.8-11.2z"
+            fill="currentColor"></path>
+        </svg>
+        <span style="margin-left: 4px; font-size: 14px;">${ms.toFixed(2)}ms</span>
+      `;
+    },
+
+    // 格式化内存使用
+    formatMemory(mb) {
+      return `
+        <svg xmlns="http://www.w3.org/2000/svg"
+          xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 24 24"
+          style="width: 14px; height: 14px; position: relative; top: 2px;">
+          <path
+            d="M15 9H9v6h6V9zm-2 4h-2v-2h2v2zm8-2V9h-2V7c0-1.1-.9-2-2-2h-2V3h-2v2h-2V3H9v2H7c-1.1 0-2 .9-2 2v2H3v2h2v2H3v2h2v2c0 1.1.9 2 2 2h2v2h2v-2h2v2h2v-2h2c1.1 0 2-.9 2-2v-2h2v-2h-2v-2h2zm-4 6H7V7h10v10z"
+            fill="currentColor"></path>
+        </svg>
+        <span style="margin-left: 4px; font-size: 14px;">${mb.toFixed(2)}MB</span>
+      `;
+    },
+
+    // 从判题结果获取状态
+    getStatusFromJudgeResult(status) {
+      const statusMap = {
+        'Accepted': '答案正确',
+        'Wrong Answer': '答案错误',
+        'Compile Error': '编译错误',
+        'Memory Limit Exceeded': '内存超限',
+        'Time Limit Exceeded': '运行超时',
+        'Runtime Error': '运行错误'
+      };
+      return statusMap[status] || '编译错误';
     },
     getLanguageMode() {
       // 将选中的语言映射到 highlight.js 的语言模式
       const langMap = {
         C: "c",
-        "C++": "cpp",
+        cpp: "cpp",
         Java: "java",
         Python: "python",
       };
