@@ -152,7 +152,8 @@
 <script setup lang="ts">
 import { ref, onMounted, computed, watch } from "vue";
 import { useRouter } from "vue-router";
-import axios from "axios";
+import { authApi } from "@/api";
+import type { ApiError } from "@/api";
 import cfCAPTCHA from "@/components/JGG/cfCAPTCHA.vue";
 import alertbox from "@/components/JGG/alertbox.vue";
 import betInput from "./betInput.vue";
@@ -217,13 +218,7 @@ const sendVerificationCode = async () => {
     isSendingCode.value = true;
     countdown.value = 60;
 
-    await axios({
-      url: "/api/send-email-code",
-      method: "post",
-      data: {
-        email: form.value.email,
-      },
-    });
+    await authApi.sendEmailCode(form.value.email);
 
     countdownTimer = setInterval(() => {
       countdown.value--;
@@ -237,11 +232,9 @@ const sendVerificationCode = async () => {
   } catch (error) {
     isSendingCode.value = false;
     countdown.value = 60;
-    if ((error as any).response) {
-      alertboxRef.value?.show(
-        "发送失败: " + (error as any).response.data.message,
-        2
-      );
+    const apiError = error as ApiError;
+    if (apiError?.message) {
+      alertboxRef.value?.show("发送失败: " + apiError.message, 2);
     } else {
       alertboxRef.value?.show("发送验证码失败", 2);
     }
@@ -267,16 +260,12 @@ const handleSubmit = async () => {
       alertboxRef.value?.show("注册失败，输入内容有误", 2);
       return;
     }
-    // 验证账号密码是否正确
-    const { data: userData } = await axios({
-      url: "/api/repassword",
-      method: "post",
-      data: {
-        username: form.value.username,
-        email: form.value.email,
-        email_code: form.value.code,
-        password: form.value.password,
-      },
+    // 提交重置密码请求
+    const userData = await authApi.repassword({
+      username: form.value.username,
+      email: form.value.email,
+      email_code: form.value.code,
+      password: form.value.password,
     });
 
     if (userData.success) {
@@ -286,11 +275,9 @@ const handleSubmit = async () => {
       }, 1000);
     }
   } catch (error) {
-    if ((error as any).response) {
-      alertboxRef.value?.show(
-        "修改密码失败，" + (error as any).response.data.message,
-        2
-      );
+    const apiError = error as ApiError;
+    if (apiError?.message) {
+      alertboxRef.value?.show("修改密码失败，" + apiError.message, 2);
     } else {
       alertboxRef.value?.show(
         "发生未知错误，请联系管理员，错误原因：" + String(error),

@@ -33,7 +33,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import axios from 'axios';
+import { raceApi } from '@/api';
 
 // 竞赛条目接口定义
 interface Competition {
@@ -92,8 +92,8 @@ const viewMoreCompetitions = (): void => {
 // 获取最近竞赛数据
 const fetchRecentCompetitions = async (): Promise<void> => {
     try {
-        const response = await axios.get('/api/race-list');
-        let allRaces = response.data.race_info || [];
+        const data = await raceApi.getRaceList();
+        let allRaces = data.race_info || [];
         // 按照 startTime 字段降序排列（时间最新的在前）
         allRaces = allRaces.sort((a: any, b: any) => {
             // 字符串转时间戳比较

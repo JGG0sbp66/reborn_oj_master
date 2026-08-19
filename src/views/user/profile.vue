@@ -159,7 +159,8 @@ const ActivityHeatmap = defineAsyncComponent(() =>
   import('@/components/ActivityHeatmap.vue')
 );
 import { UserFilled, List, Trophy, Setting, Upload, Monitor } from '@element-plus/icons-vue';
-import axios from 'axios';
+import { userApi, authApi, questionApi, raceApi } from '@/api';
+import type { ApiError } from '@/api';
 import { ElMessage, ElLoading } from 'element-plus';
 import emitter from '@/utils/eventBus';
 
@@ -370,14 +371,11 @@ const generateAvatarSvg = (seed: string): string => {
 // 获取用户头像
 const refreshUserAvatar = async (userId: string): Promise<void> => {
   try {
-    // 向服务器请求用户头像
-    const avatarResponse = await axios.get(`/api/user-avatar/${userId}`, {
-      responseType: 'blob',
-      withCredentials: true
-    });
+    // 向服务器请求用户头像（后端接口为 /avatar-get，原 /user-avatar 不存在）
+    const avatarBlob = await authApi.getUserAvatar(userId);
 
     // 处理响应
-    if (avatarResponse.status === 200 && avatarResponse.data) {
+    if (avatarBlob) {
       // 释放之前的blob URL资源
       if (avatarUrl.value && avatarUrl.value.startsWith('blob:')) {
         try {
@@ -388,7 +386,7 @@ const refreshUserAvatar = async (userId: string): Promise<void> => {
       }
 
       // 创建新的blob URL用于当前会话显示
-      const blob = new Blob([avatarResponse.data], { type: 'image/jpeg' });
+      const blob = new Blob([avatarBlob], { type: 'image/jpeg' });
       const imageUrl = URL.createObjectURL(blob);
       avatarUrl.value = imageUrl;
 
@@ -498,12 +496,14 @@ const fetchUserProfile = async (): Promise<void> => {
 
     // 从新的API获取用户信息
     try {
-      const response = await axios.get('/api/get-user-info', {
-        withCredentials: true
-      });
+      const userData = (await userApi.getUserInfo()) as {
+        username?: string;
+        email?: string;
+        description?: string;
+        [key: string]: unknown;
+      };
 
-      if (response.data) {
-        const userData = response.data;
+      if (userData) {
 
         // 用户名
         if (userData.username) {
@@ -763,9 +763,9 @@ onMounted(() => {
 const fetchSolvedProblems = async () => {
   try {
     isLoadingSolvedProblems.value = true;
-    const response = await axios.get('/api/user-questions');
-    if (response.data && Array.isArray(response.data)) {
-      solvedProblemsData.value = response.data;
+    const data = await questionApi.getUserQuestions();
+    if (data && Array.isArray(data)) {
+      solvedProblemsData.value = data;
     }
   } catch (error) {
     console.error('获取解题记录失败:', error);
@@ -778,9 +778,9 @@ const fetchSolvedProblems = async () => {
 const fetchCompetitionRecords = async () => {
   try {
     isLoadingCompetitions.value = true;
-    const response = await axios.get('/api/user-race');
-    if (response.data && Array.isArray(response.data)) {
-      competitionRecordsData.value = response.data;
+    const data = await raceApi.getUserRaces();
+    if (data && Array.isArray(data)) {
+      competitionRecordsData.value = data;
     }
   } catch (error) {
     console.error('获取参赛记录失败:', error);
@@ -827,10 +827,6 @@ const onFileChange = (event: Event): void => {
         // 本地临时预览
         avatarUrl.value = e.target.result;
 
-        // 创建FormData对象用于上传文件
-        const formData = new FormData();
-        formData.append('file', file);
-
         // 显示上传中提示
         const loadingInstance = ElLoading.service({
           lock: true,
@@ -839,16 +835,11 @@ const onFileChange = (event: Event): void => {
         });
 
         // 将头像上传到服务器
-        axios.post('/api/avatar-upload', formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data'
-          },
-          withCredentials: true
-        })
-          .then(response => {
+        userApi.uploadAvatar(file)
+          .then(data => {
             loadingInstance.close();
 
-            if (response.data && response.data.success) {
+            if (data && data.success) {
               // 创建更新时间戳
               const timestamp = Date.now();
               localStorage.setItem('avatar_timestamp', timestamp.toString());
@@ -869,7 +860,7 @@ const onFileChange = (event: Event): void => {
               alertBox.value?.show('头像更新成功', 0);
             } else {
               // 处理服务器返回的错误信息
-              const errorMsg = response.data?.message || '头像上传失败';
+              const errorMsg = data?.message || '头像上传失败';
               // 替换ElMessage为alertBox
               alertBox.value?.show(errorMsg, 2);
 
@@ -882,14 +873,10 @@ const onFileChange = (event: Event): void => {
             console.error('头像上传失败:', error);
 
             // 更详细的错误信息
-            let errorMessage = '头像上传失败，请稍后重试';
-            if (error.response) {
-              // 服务器响应了，但状态码不是2xx
-              errorMessage += ` (${error.response.status})`;
-              console.log('错误响应数据:', error.response.data);
-            } else if (error.request) {
-              // 请求发送了但没有收到响应
-              errorMessage = '服务器未响应，请检查网络连接';
+            const apiError = error as ApiError;
+            let errorMessage = apiError.message || '头像上传失败，请稍后重试';
+            if (apiError.status !== null) {
+              errorMessage += ` (${apiError.status})`;
             }
 
             // 替换ElMessage为alertBox

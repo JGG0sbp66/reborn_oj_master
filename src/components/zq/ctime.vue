@@ -35,7 +35,6 @@
 <script lang="ts" setup>
 import { ref, onMounted } from 'vue';
 import { Timer, CircleClose } from '@element-plus/icons-vue';
-import axios from 'axios';
 
 const props = defineProps({
     raceInfo: {

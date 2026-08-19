@@ -1,0 +1,7 @@
+#!/bin/sh
+# 兼容 Windows（Git Bash 下只有 npx.cmd）与 macOS/Linux
+if command -v npx >/dev/null 2>&1; then
+  npx lint-staged
+else
+  npx.cmd lint-staged
+fi

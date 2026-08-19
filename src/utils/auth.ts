@@ -1,26 +1,14 @@
 // src/utils/auth.ts
-import axios from 'axios';
-import type { AxiosResponse } from 'axios';
+// 登录态校验（路由守卫专用）。业务代码请直接使用 @/api 的 authApi。
+import { authApi } from '@/api';
+import type { AuthStatus } from '@/api/modules/auth';
 
-axios.defaults.withCredentials = true  // 允许跨域携带Cookie
+export type { AuthStatus };
 
-interface AuthResponse {
-  authenticated: boolean;
-  user?: {
-    uid: string | number;
-    username: string;
-    role: string;
-  };
-}
-
-export const checkAuth = async (): Promise<AuthResponse> => {
+export const checkAuth = async (): Promise<AuthStatus> => {
   try {
-    const res: AxiosResponse<AuthResponse> = await axios.get(
-      '/api/verify-token',
-      { withCredentials: true }
-    );
-    return res.data;
-  } catch (error) {
+    return await authApi.verifyToken();
+  } catch {
     return { authenticated: false };
   }
 };

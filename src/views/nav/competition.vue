@@ -227,7 +227,7 @@ import { ref, reactive, computed, onMounted, onBeforeUnmount, watch } from "vue"
 import showtitle from "@/components/test/showtitle.vue"
 import headerheader from "@/components/headerheader.vue";
 import foot from "@/components/foot.vue";
-import axios from "axios";
+import { raceApi } from "@/api";
 import AIAgent from "@/components/AI-Agent.vue";
 
 // 定义类型
@@ -435,13 +435,7 @@ const competitionData = ref<Competition[]>([]);
 
 const fetchCompetitions = async () => {
   try {
-    const response = await axios({
-      url: '/api/race-list',
-      method: 'get',
-      data: {}
-    });
-    
-    const data = response.data;
+    const data = await raceApi.getRaceList();
     console.log(data);
     
     // 添加以下代码来获取和打印每条数据的status

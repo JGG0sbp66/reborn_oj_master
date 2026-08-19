@@ -87,7 +87,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue';
-import axios from 'axios';
+import { userApi } from '@/api';
 
 // 定义类型
 interface DayData {
@@ -268,10 +268,7 @@ const hideTooltip = () => {
 async function generateCalendarGrid(year: number): Promise<void> {
   try {
     // 调用接口获取热力图数据
-    const response = await axios.get('/api/getHeatmap', {
-      params: { year }
-    });
-    const heatmapData = response.data.data;
+    const heatmapData = (await userApi.getHeatmap(year)).data as { date: string; score: number }[];
 
     // 将接口数据转换为按日期索引的对象，方便查找
     const dateToScoreMap: Record<string, number> = {};

@@ -25,7 +25,7 @@
 
 <script setup lang="ts">
 import { defineProps, ref, computed, onMounted } from 'vue';
-import axios from 'axios';
+import { questionApi } from '@/api';
 
 // 更新接口定义为后端返回的数据格式
 interface ProblemRecord {
@@ -52,9 +52,9 @@ const problems = computed(() => {
 onMounted(async () => {
   if (!props.problems) {
     try {
-      const response = await axios.get('/api/user-questions');
-      if (response.data && Array.isArray(response.data)) {
-        localProblems.value = response.data;
+      const data = await questionApi.getUserQuestions();
+      if (data && Array.isArray(data)) {
+        localProblems.value = data;
       }
     } catch (error) {
       console.error('获取解题记录失败:', error);

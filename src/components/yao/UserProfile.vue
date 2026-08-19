@@ -44,7 +44,8 @@
 <script setup lang="ts">
 import { defineProps, defineEmits, ref, computed, onMounted, watch } from 'vue';
 import { ElLoading } from 'element-plus';
-import axios from 'axios';
+import { userApi, authApi } from '@/api';
+import type { ApiError } from '@/api';
 
 interface UserProfileData {
   username: string;
@@ -102,17 +103,13 @@ const getVerificationCode = async () => {
     });
 
     // 发送获取验证码请求
-    const response = await axios.post('/api/send-email-code', {
-      email: email.value
-    }, {
-      withCredentials: true
-    });
+    const data = await authApi.sendEmailCode(email.value);
 
     // 关闭加载指示器
     loadingInstance.close();
 
-    if (response.data && response.data.success) {
-      props.alertBox?.show(response.data.message || '验证码已发送，请查收邮箱', 0);
+    if (data && data.success) {
+      props.alertBox?.show(data.message || '验证码已发送，请查收邮箱', 0);
 
       // 设置冷却时间（60秒）
       cooldown.value = 60;
@@ -123,11 +120,12 @@ const getVerificationCode = async () => {
         }
       }, 1000);
     } else {
-      throw new Error(response.data?.message || '发送验证码失败');
+      throw new Error(data?.message || '发送验证码失败');
     }
-  } catch (error: any) {
+  } catch (error) {
     console.error('发送验证码失败:', error);
-    props.alertBox?.show(error.response?.data?.message || error.message || '发送验证码失败，请稍后重试', 2);
+    const apiError = error as ApiError;
+    props.alertBox?.show(apiError.message || '发送验证码失败，请稍后重试', 2);
   }
 };
 
@@ -157,33 +155,28 @@ const saveProfile = async (): Promise<void> => {
         });
         
         // 发送修改邮箱请求
-        const emailResponse = await axios.post('/api/user-change-email', {
-          new_email: email.value,
-          new_email_code: verificationCode.value
-        }, {
-          withCredentials: true
-        });
+        const emailData = await userApi.changeEmail(email.value, verificationCode.value);
         
         // 关闭加载指示器
         loadingInstance.close();
         
-        if (!emailResponse.data || !emailResponse.data.success) {
+        if (!emailData || !emailData.success) {
           // 邮箱修改失败，显示错误信息
-          props.alertBox?.show(emailResponse.data?.message || '邮箱修改失败', 2);
+          props.alertBox?.show(emailData?.message || '邮箱修改失败', 2);
           return; // 终止后续操作
         }
         
         // 邮箱修改成功
-        props.alertBox?.show(emailResponse.data.message || '邮箱修改成功', 0);
+        props.alertBox?.show(emailData.message || '邮箱修改成功', 0);
         
         // 更新本地存储中的邮箱
         localStorage.setItem('email', email.value);
         
         // 清空验证码
         verificationCode.value = '';
-      } catch (emailError: any) {
+      } catch (emailError) {
         console.error('修改邮箱失败:', emailError);
-        props.alertBox?.show(emailError.response?.data?.message || '修改邮箱失败，请稍后重试', 2);
+        props.alertBox?.show((emailError as ApiError).message || '修改邮箱失败，请稍后重试', 2);
         return; // 终止后续操作
       }
     }
@@ -202,29 +195,25 @@ const saveProfile = async (): Promise<void> => {
       
       try {
         // 发送修改用户名请求
-        const usernameResponse = await axios.post('/api/user-change-username', {
-          new_username: username.value,
-        }, {
-          withCredentials: true
-        });
+        const usernameData = await userApi.changeUsername(username.value);
         
         // 关闭加载指示器
         loadingInstance.close();
         
-        if (!usernameResponse.data || !usernameResponse.data.success) {
+        if (!usernameData || !usernameData.success) {
           // 用户名修改失败，显示错误信息
-          props.alertBox?.show(usernameResponse.data?.message || '用户名修改失败', 2);
+          props.alertBox?.show(usernameData?.message || '用户名修改失败', 2);
           return; // 终止后续操作
         }
         
         // 用户名修改成功
-        props.alertBox?.show(usernameResponse.data.message || '用户名修改成功', 0);
-      } catch (usernameError: any) {
+        props.alertBox?.show(usernameData.message || '用户名修改成功', 0);
+      } catch (usernameError) {
         // 确保关闭加载指示器
         loadingInstance.close();
         
         console.error('修改用户名失败:', usernameError);
-        props.alertBox?.show(usernameError.response?.data?.message || '修改用户名失败，请稍后重试', 2);
+        props.alertBox?.show((usernameError as ApiError).message || '修改用户名失败，请稍后重试', 2);
         return; // 终止后续操作
       }
     }
@@ -244,25 +233,21 @@ const saveProfile = async (): Promise<void> => {
       });
 
       try {
-        const response = await axios.post('/api/user-change-description', {
-          new_description: bio.value
-        }, {
-          withCredentials: true
-        });
+        const data = await userApi.changeDescription(bio.value);
 
         // 关闭加载指示器
         loadingInstance.close();
 
-        if (!response.data || !response.data.success) {
-          props.alertBox?.show(response.data?.message || '保存个人简介失败', 2);
+        if (!data || !data.success) {
+          props.alertBox?.show(data?.message || '保存个人简介失败', 2);
           return;
         }
 
-        props.alertBox?.show(response.data.message || '个人简介已更新', 0);
-      } catch (error: any) {
+        props.alertBox?.show(data.message || '个人简介已更新', 0);
+      } catch (error) {
         loadingInstance.close();
         console.error('保存个人简介失败:', error);
-        props.alertBox?.show(error.message || '保存个人简介失败，请稍后重试', 2);
+        props.alertBox?.show((error as ApiError).message || '保存个人简介失败，请稍后重试', 2);
         return;
       }
     }

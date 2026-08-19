@@ -62,7 +62,6 @@
 import { ref, computed, onMounted, watch } from 'vue';
 import type { Ref } from 'vue';
 import { Trophy, User, Clock, Monitor, DataAnalysis, Operation, Timer, Connection } from '@element-plus/icons-vue';
-import axios from 'axios';
 
 interface Tag {
     name: string;

@@ -248,7 +248,8 @@ import { ElMessage, ElMessageBox } from 'element-plus';
 import type { FormInstance } from 'element-plus';
 import { Plus, Search, ArrowUp, ArrowDown, Timer, Collection, Refresh } from '@element-plus/icons-vue';
 import AlertBox from '../JGG/alertbox.vue';
-import axios from 'axios';
+import { adminApi } from '@/api';
+import type { ApiError } from '@/api';
 import RaceCreate from './race-create.vue';
 import RaceEdit from './race-edit.vue';
 import RaceDetail from './race-detail.vue';
@@ -327,10 +328,7 @@ const CreateRace = () => {
 };
 
 const get_race_info = async (): Promise<ApiCompetition[]> => {
-  const { data: userData } = await axios({
-    url: "/api/races",
-    method: "get",
-  });
+  const userData = (await adminApi.getAdminRaceList()) as unknown as ApiCompetition[];
   return userData;
 };
 
@@ -652,12 +650,7 @@ const deleteCompetition = (id: string) => {
             console.log('准备删除竞赛，ID:', id, '提取的UID:', uid);
             
             // 发送删除请求到后端，使用正确的DELETE方法和路径
-            const response = await axios({
-                url: `/api/races/${uid}`,
-                method: "delete",
-            });
-            
-            console.log('删除竞赛响应:', response);
+            await adminApi.deleteRace(uid);
             
             // 删除成功，从本地数据中移除该竞赛
             competitions.value = competitions.value.filter((comp: FormattedCompetition) => comp.id !== id);
@@ -667,10 +660,10 @@ const deleteCompetition = (id: string) => {
             
             // 重新加载数据
             await fetchData();
-        } catch (error: any) {
+        } catch (error) {
             console.error('删除竞赛失败:', error);
-            console.error('错误详情:', error.response?.data || error.message || '未知错误');
-            alertBox.value.show(`删除竞赛失败: ${error.response?.data?.message || error.message || '服务器错误'}`, 1);
+            const errMsg = (error as ApiError).message || '服务器错误';
+            alertBox.value.show(`删除竞赛失败: ${errMsg}`, 1);
         } finally {
             loading.value = false;
         }

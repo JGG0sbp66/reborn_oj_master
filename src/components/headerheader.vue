@@ -114,7 +114,7 @@
 import { ref, computed, onMounted, onBeforeUnmount, defineExpose } from "vue";
 import { House, Collection, Trophy, UserFilled, SwitchButton } from "@element-plus/icons-vue";
 import { checkAuth } from '@/utils/auth';
-import axios from 'axios';
+import { authApi } from '@/api';
 import { useRouter } from 'vue-router';
 import emitter from '@/utils/eventBus';
 
@@ -232,13 +232,10 @@ const tryRefreshAvatar = async (userId?: string | number) => {
     const timestamp = localStorage.getItem('avatar_timestamp') || Date.now().toString();
     
     // 检查是否有头像
-    const avatarResponse = await axios.get(`/api/avatar-get/${id}?t=${timestamp}`, {
-      responseType: 'blob',  // 以二进制blob格式接收数据
-      withCredentials: true
-    });
+    const avatarBlob = await authApi.getUserAvatar(id, timestamp);
     
     // 如果成功获取头像
-    if (avatarResponse.status === 200 && avatarResponse.data) {
+    if (avatarBlob) {
       // 释放之前的blob URL资源
       if (avatarUrl.value && avatarUrl.value.startsWith('blob:')) {
         try {
@@ -249,7 +246,7 @@ const tryRefreshAvatar = async (userId?: string | number) => {
       }
       
       // 创建blob URL用于当前会话显示
-      const blob = new Blob([avatarResponse.data], { type: 'image/jpeg' });
+      const blob = new Blob([avatarBlob], { type: 'image/jpeg' });
       const imageUrl = URL.createObjectURL(blob);
       avatarUrl.value = imageUrl;
       
@@ -430,7 +427,7 @@ const logout = async () => {
     }
     
     // 发送退出登录请求
-    await axios.post('/api/logout');
+    await authApi.logout();
     isAuthenticated.value = false;
     showUserMenu.value = false;
     

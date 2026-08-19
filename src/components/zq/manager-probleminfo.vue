@@ -27,7 +27,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
-import axios from 'axios';
+import { adminApi } from '@/api';
 
 // 定义题目接口
 interface Question {
@@ -88,8 +88,7 @@ const getDifficultyByComplexity = (question: any): string => {
 const fetchRecentQuestions = async (): Promise<void> => {
     try {
         // 获取所有题目
-        const response = await axios.get('/api/admin-question');
-        const allQuestions = response.data;
+        const allQuestions = await adminApi.getAdminQuestionListAll();
         
         // 处理数据，添加创建时间和难度
         const processedQuestions = allQuestions.map((item: any, index: number) => {

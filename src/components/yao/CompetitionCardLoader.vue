@@ -28,7 +28,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue';
-import axios from 'axios';
+import { request } from '@/api';
 import CompetitionCard from './CompetitionCard.vue';
 
 // 定义接口
@@ -77,13 +77,11 @@ const fetchCompetitions = async () => {
   error.value = false;
   
   try {
-    const { data } = await axios({
-      url: props.apiUrl,
-      method: 'post',
-      data: {
-        limit: props.limit,
-        ...props.filterOptions
-      }
+    // request 实例 baseURL 已是 /api，这里去掉重复前缀
+    const url = props.apiUrl.replace(/^\/api/, '');
+    const { data } = await request.post(url, {
+      limit: props.limit,
+      ...props.filterOptions
     });
     
     if (data.success) {

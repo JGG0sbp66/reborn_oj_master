@@ -248,7 +248,7 @@
 </template>
   
 <script>
-import axios from "axios";
+import { questionApi } from "@/api";
 
 export default {
   name: "DescribeComponent",
@@ -379,13 +379,7 @@ export default {
         console.log("Fetching question detail for ID:", questionId);
         localStorage.setItem("currentQuestionId", questionId);
 
-        const { data: response } = await axios({
-          url: "/api/question-detail",
-          method: "post",
-          data: {
-            uid: questionId,
-          },
-        });
+        const response = await questionApi.getQuestionDetail(questionId ?? '');
 
         console.log("Fetched question detail:", response);
         this.questionDetail = response.question_detail;

@@ -21,7 +21,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, onMounted } from "vue";
-import axios from "axios";
+import { raceApi } from "@/api";
 import competitionheader from "@/components/zq/competitionheader.vue";
 import sidebarproblem from "@/components/zq/contest-sidebar.vue";
 import competitionshow from "@/components/zq/compotitionshow.vue";
@@ -34,11 +34,7 @@ const uid = ref(route.query.uid);
 console.log("uid", uid); // 打印 uid 以调试
 
 const get_race_info = async () => {
-  const { data: userData } = await axios({
-    url: "/api/race-info",
-    method: "post",
-    data: { uid: uid.value },
-  });
+  const userData = await raceApi.getRaceInfo(uid.value as string);
   return userData;
 };
 

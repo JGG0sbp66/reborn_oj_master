@@ -20,7 +20,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, defineProps, computed } from 'vue';
-import axios from 'axios';
+import { userApi } from '@/api';
 
 interface StatItem {
   value: number;
@@ -58,12 +58,12 @@ const statsData = ref<StatItem[]>([
 
 const fetchStats = async () => {
   try {
-    const response = await axios.get<StatsResponse>('/api/getStats');
-    if (response.data.success) {
+    const data = (await userApi.getStats()) as unknown as StatsResponse;
+    if (data.success) {
       statsData.value = [
-        { value: response.data.题目数量, label: '题目总数' },
-        { value: response.data.在线用户数, label: '在线人数' },
-        { value: response.data.竞赛数量, label: '近期比赛' }
+        { value: data.题目数量, label: '题目总数' },
+        { value: data.在线用户数, label: '在线人数' },
+        { value: data.竞赛数量, label: '近期比赛' }
       ];
     }
   } catch (error) {

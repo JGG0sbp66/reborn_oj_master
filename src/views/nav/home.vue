@@ -101,7 +101,7 @@ import ServiceLinks from "@/components/yao/ServiceLinks.vue";
 import foot from "@/components/foot.vue";
 import AIAgent from "@/components/AI-Agent.vue";
 import { Trophy } from "@element-plus/icons-vue";
-import axios from "axios";
+import { questionApi, raceApi } from "@/api";
 
 // 轮播图数据
 const bannerSlides = [
@@ -192,10 +192,10 @@ const latestProblems = ref([]);
 // 获取最新题目数据
 const fetchLatestProblems = async () => {
   try {
-    const response = await axios.get('/api/home-get-question');
-    if (response.data.success) {
-      // console.log('获取最新题目数据:', response.data.questions);
-      latestProblems.value = response.data.questions.map(question => ({
+    const data = await questionApi.getHomeQuestions();
+    if (data.success) {
+      // console.log('获取最新题目数据:', data.questions);
+      latestProblems.value = data.questions.map(question => ({
         uid: question.uid,
         title: question.title,
         ...difficultyMap[question.topic] || { level: '未知', difficulty: 'entry' } // 默认值处理
@@ -264,14 +264,8 @@ const contestData = ref(null);
 // 从服务器获取竞赛数据
 const fetchCompetitions = async () => {
   try {
-    const response = await axios({
-      url: "/api/race-list",
-      method: "get",
-      data: {},
-    });
-
     // 检查数据结构并提取竞赛信息
-    const data = response.data;
+    const data = await raceApi.getRaceList();
 
     if (data && data.race_info && Array.isArray(data.race_info)) {
       // 将获取到的竞赛数据赋值给competitions
