@@ -2,10 +2,10 @@
   <div class="latest-problems" :class="{ appear }">
     <h3 class="problems-title"><i class="problem-icon"></i> {{ title }}</h3>
     <div class="problem-list">
-      <div 
-        class="problem-row" 
-        v-for="(problem, index) in problems" 
+      <div
+        v-for="(problem, index) in problems"
         :key="index"
+        class="problem-row"
         @mouseenter="handleMouseEnter"
         @mouseleave="handleMouseLeave"
         @click="handleProblemClick(problem.uid)"
@@ -36,16 +36,16 @@ interface Problem {
 defineProps({
   title: {
     type: String,
-    default: '最新题目'
+    default: '最新题目',
   },
   problems: {
     type: Array as () => Problem[],
-    required: true
+    required: true,
   },
   appear: {
     type: Boolean,
-    default: true
-  }
+    default: true,
+  },
 });
 
 // 添加鼠标悬停效果
@@ -62,10 +62,10 @@ const handleMouseLeave = (event: MouseEvent) => {
 const handleProblemClick = (uid: number) => {
   console.log('点击题目:', uid);
   // 先存储ID
-  localStorage.setItem("currentQuestionId", uid.toString());
-  // 直接打开新窗口
-  window.open(`/nav/questions_detail`, '_blank');
-  
+  localStorage.setItem('currentQuestionId', uid.toString());
+  // 直接打开新窗口（id 放在 query 中，刷新也不会丢失）
+  window.open(`/nav/questions_detail?id=${uid}`, '_blank');
+
   // 异步发送请求，不阻塞页面跳转
   questionApi.getQuestionDetail(uid).catch((error) => {
     console.error('获取题目详情失败:', error);
@@ -159,7 +159,7 @@ const handleProblemClick = (uid: number) => {
   background-color: #f9fafc;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
   border: 1px solid transparent;
-  cursor: pointer;  /* 添加指针样式 */
+  cursor: pointer; /* 添加指针样式 */
 }
 
 .problem-row-hover-effect {
@@ -171,8 +171,9 @@ const handleProblemClick = (uid: number) => {
   background: radial-gradient(circle, rgba(66, 185, 131, 0.15), transparent 70%);
   border-radius: 50%;
   transform: translate(-50%, -50%);
-  transition: width 0.6s cubic-bezier(0.165, 0.84, 0.44, 1), 
-              height 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
+  transition:
+    width 0.6s cubic-bezier(0.165, 0.84, 0.44, 1),
+    height 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
   z-index: -1;
 }
 

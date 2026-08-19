@@ -4,12 +4,14 @@
       <div class="title-line">
         <!-- 标题插槽 -->
         <slot name="title">
-          <div class="competition-title" v-if="mergedCompetition">{{ mergedCompetition.title }}</div>
+          <div v-if="competition" class="competition-title">{{ competition.title }}</div>
         </slot>
         <!-- Logo插槽 -->
         <slot name="logos">
-          <div class="competition-logos" v-if="mergedCompetition">
-            <div class="logo-placeholder" v-for="(logo, i) in mergedCompetition.logos" :key="i">{{ logo }}</div>
+          <div v-if="competition" class="competition-logos">
+            <div v-for="(logo, i) in competition.logos" :key="i" class="logo-placeholder">
+              {{ logo }}
+            </div>
           </div>
         </slot>
       </div>
@@ -21,7 +23,7 @@
         <!-- 时间信息插槽 -->
         <slot name="time-info">
           <div class="time-info">
-            <div class="time-row" v-for="(item, index) in timeInfoItems" :key="index">
+            <div v-for="(item, index) in timeInfoItems" :key="index" class="time-row">
               <div class="time-label">{{ item.label }}:</div>
               <div class="time-value">{{ getTimeValue(item.key) }}</div>
             </div>
@@ -29,14 +31,15 @@
         </slot>
         <!-- 标签插槽 -->
         <slot name="tags">
-          <div class="competition-tags" v-if="mergedCompetition">
-            <span 
-              v-for="(tag, i) in mergedCompetition.tags" 
-              :key="i" 
-              class="tag" 
+          <div v-if="competition" class="competition-tags">
+            <span
+              v-for="(tag, i) in competition.tags"
+              :key="i"
+              class="tag"
               :class="getTagClass(tag.type)"
               :style="getTagStyle(tag)"
-            >{{ tag.name }}</span>
+              >{{ tag.name }}</span
+            >
           </div>
         </slot>
         <!-- 左侧区域额外内容插槽 -->
@@ -62,8 +65,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, defineProps, onMounted, computed, watch } from 'vue';
-import { request } from '@/api';
+import { defineProps, computed } from 'vue';
 
 // 定义竞赛对象类型
 interface Tag {
@@ -90,24 +92,11 @@ const props = defineProps<{
   appear?: boolean;
   index?: number;
   headerClass?: string;
-  customTimeInfo?: Array<{label: string, key: string}>;
-  competitionId?: number; // 新增：接收竞赛ID属性
-  useRemoteData?: boolean; // 新增：是否使用远程数据
+  customTimeInfo?: Array<{ label: string; key: string }>;
 }>();
 
 // 提供默认值
 const actionText = props.actionText || "Let's go";
-
-// 存储从服务器获取的竞赛数据
-const competitionData = ref<Competition | null>(null);
-
-// 合并的竞赛数据(本地props或远程获取)
-const mergedCompetition = computed(() => {
-  if (props.useRemoteData && competitionData.value) {
-    return competitionData.value;
-  }
-  return props.competition;
-});
 
 // 修改：将actionLink从默认值变为计算属性
 const actionLink = computed(() => {
@@ -115,7 +104,7 @@ const actionLink = computed(() => {
     return props.actionLink;
   }
   // 如果存在race_uid或uid，则使用它构建链接
-  const uid = mergedCompetition.value?.race_uid || mergedCompetition.value?.uid;
+  const uid = props.competition?.race_uid || props.competition?.uid;
   return uid ? `/contest/problems?uid=${uid}` : '/contest/problems';
 });
 
@@ -123,22 +112,22 @@ const actionLink = computed(() => {
 const defaultTimeInfoItems = [
   { label: '开始时间', key: 'startTime' },
   { label: '结束时间', key: 'endTime' },
-  { label: '比赛时长', key: 'duration' }
+  { label: '比赛时长', key: 'duration' },
 ];
 
 const timeInfoItems = computed(() => props.customTimeInfo || defaultTimeInfoItems);
 
 // 获取时间值的函数
 const getTimeValue = (key: string) => {
-  if (!mergedCompetition.value) return '';
-  return mergedCompetition.value[key] || '';
+  if (!props.competition) return '';
+  return props.competition[key] || '';
 };
 
 // 处理标签类型的函数
 const getTagClass = (type: string) => {
   // 定义所有已知的标签类型
   const validTypes = ['running', 'individual', 'oi', 'regional'];
-  
+
   // 如果是已知类型，返回该类型名称作为类名
   // 如果是未知类型，返回'unknown'类名，会使用默认样式
   return validTypes.includes(type) ? type : 'unknown';
@@ -150,12 +139,12 @@ const getTagStyle = (tag: Tag) => {
   if (['running', 'individual', 'oi', 'regional'].includes(tag.type)) {
     return {};
   }
-  
+
   // 基于标签名称生成哈希值作为颜色基础
   const nameHash = tag.name.split('').reduce((acc, char) => {
     return acc + char.charCodeAt(0);
   }, 0);
-  
+
   // 选择预定义的柔和颜色方案
   const colorSchemes = [
     { bg: '#E8F4F8', text: '#2980b9' }, // 蓝色系
@@ -163,17 +152,17 @@ const getTagStyle = (tag: Tag) => {
     { bg: '#F4E8F8', text: '#8E44AD' }, // 紫色系
     { bg: '#E8F8F4', text: '#27AE60' }, // 绿色系
     { bg: '#F8E8E8', text: '#C0392B' }, // 红色系
-    { bg: '#F4F8E8', text: '#16A085' }  // 青绿色系
+    { bg: '#F4F8E8', text: '#16A085' }, // 青绿色系
   ];
-  
+
   // 使用哈希值选择颜色方案，确保同名标签颜色一致
   const colorIndex = nameHash % colorSchemes.length;
   const colors = colorSchemes[colorIndex];
-  
+
   return {
     backgroundColor: colors.bg,
     color: colors.text,
-    borderColor: colors.text + '33' // 添加透明度33 (20%)
+    borderColor: colors.text + '33', // 添加透明度33 (20%)
   };
 };
 
@@ -181,47 +170,17 @@ const getTagStyle = (tag: Tag) => {
 const animationStyle = computed(() => {
   if (props.index !== undefined) {
     return {
-      transitionDelay: `${Math.min(0.05 * props.index, 0.25)}s`
+      transitionDelay: `${Math.min(0.05 * props.index, 0.25)}s`,
     };
   }
   return {};
 });
 
-// 获取单个竞赛数据的函数
-const fetchCompetitionData = async () => {
-  if (!props.competitionId || !props.useRemoteData) return;
-  
-  try {
-    // TODO: 后端暂无 /competition 接口，待后端补充后迁移到 raceApi
-    const { data } = await request.post('/competition', {
-      id: props.competitionId
-    });
-    competitionData.value = data.competition;
-    console.log('获取到竞赛数据:', data.competition);
-  } catch (error) {
-    console.error('获取竞赛数据失败:', error);
-  }
-};
-
-// 监听竞赛ID变化，重新获取数据
-watch(() => props.competitionId, (newId) => {
-  if (newId && props.useRemoteData) {
-    fetchCompetitionData();
-  }
-});
-
-// 组件挂载时，如果提供了竞赛ID，则获取数据
-onMounted(() => {
-  if (props.competitionId && props.useRemoteData) {
-    fetchCompetitionData();
-  }
-});
-
 // 获取竞赛状态对应的类名
 const getStatusClass = () => {
-  if (!mergedCompetition.value || !mergedCompetition.value.status) return '';
-  
-  switch(mergedCompetition.value.status) {
+  if (!props.competition || !props.competition.status) return '';
+
+  switch (props.competition.status) {
     case 'upcoming':
       return 'status-upcoming';
     case 'running':
@@ -498,15 +457,15 @@ const getStatusClass = () => {
     flex-direction: column;
     gap: 20px;
   }
-  
+
   .action-section {
     align-items: flex-start;
   }
-  
+
   .competition-title {
     font-size: 18px;
   }
-  
+
   .lets-go-btn {
     width: 100%;
     justify-content: center;

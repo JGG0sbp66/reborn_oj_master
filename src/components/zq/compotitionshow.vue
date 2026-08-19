@@ -3,9 +3,9 @@
     <div v-if="!isCompetitionStarted || !canAccessProblems" class="not-started-notice">
       <el-empty :description="accessDeniedMessage">
         <template #image>
-          <el-icon :size="60" :class="{ 'locked': !canAccessProblems }">
-            <Lock v-if="!canAccessProblems"/>
-            <Timer v-else/>
+          <el-icon :size="60" :class="{ locked: !canAccessProblems }">
+            <Lock v-if="!canAccessProblems" />
+            <Timer v-else />
           </el-icon>
         </template>
       </el-empty>
@@ -57,8 +57,12 @@
           </tr>
         </thead>
         <tbody class="problems-body">
-          <tr v-for="(problem, index) in problemsWithAvatars" :key="index" class="problem-row"
-            @click="goToQuestionDetail(problem.uid, props?.uid)">
+          <tr
+            v-for="(problem, index) in problemsWithAvatars"
+            :key="index"
+            class="problem-row"
+            @click="goToQuestionDetail(problem.uid, props?.uid)"
+          >
             <td class="column-status">
               <span class="status-tag" :class="getStatusClass(problem.status)">
                 {{ problem.status || '未提交' }}
@@ -72,9 +76,16 @@
             </td>
             <td class="column-first">
               <div class="first-blood-wrapper">
-                <div class="first-blood" v-if="problem.first_blood_user && problem.first_blood_user.uid">
+                <div
+                  v-if="problem.first_blood_user && problem.first_blood_user.uid"
+                  class="first-blood"
+                >
                   <div class="avatar-container">
-                    <img :src="problem.first_blood_user.avatar || defaultAvatar" class="user-avatar" alt="avatar">
+                    <img
+                      :src="problem.first_blood_user.avatar || defaultAvatar"
+                      class="user-avatar"
+                      alt="avatar"
+                    />
                   </div>
                   <span class="username">{{ problem.first_blood_user.username }}</span>
                 </div>
@@ -88,7 +99,9 @@
               </div>
             </td>
             <td class="column-rate">
-              <div class="rate-info">{{ formatPassRate(problem.solve_num || 0, problem.submit_num || 0) }} %</div>
+              <div class="rate-info">
+                {{ formatPassRate(problem.solve_num || 0, problem.submit_num || 0) }} %
+              </div>
             </td>
           </tr>
         </tbody>
@@ -98,10 +111,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from "vue";
-import { useRouter } from "vue-router";
-import { useStore } from "vuex";
-import { defineProps } from "vue";
+import { ref, onMounted, computed } from 'vue';
+import { useRouter } from 'vue-router';
+import { useStore } from 'vuex';
+import { defineProps } from 'vue';
 import {
   Document,
   Edit,
@@ -109,8 +122,8 @@ import {
   DataLine,
   TrendCharts,
   Timer,
-  Lock
-} from "@element-plus/icons-vue";
+  Lock,
+} from '@element-plus/icons-vue';
 
 const router = useRouter();
 const store = useStore();
@@ -130,14 +143,16 @@ const props = defineProps({
 // 判断比赛是否已开始
 const isCompetitionStarted = computed(() => {
   if (!props.raceInfo?.value?.race_info) return false;
-  return props.raceInfo.value.race_info.status === 'running' || 
-         props.raceInfo.value.race_info.status === 'ended';
+  return (
+    props.raceInfo.value.race_info.status === 'running' ||
+    props.raceInfo.value.race_info.status === 'ended'
+  );
 });
 
 // 添加比赛状态文本
 const competitionStatusText = computed(() => {
   if (!props.raceInfo?.value?.race_info) return '加载中';
-  
+
   const status = props.raceInfo.value.race_info.status;
   switch (status) {
     case 'upcoming':
@@ -154,19 +169,19 @@ const competitionStatusText = computed(() => {
 // 修改题目列表计算属性
 const problemsWithAvatars = computed(() => {
   if (!isCompetitionStarted.value || !props.raceInfo?.value?.race_info?.problems) return [];
-  
-  return props.raceInfo.value.race_info.problems.map(problem => {
+
+  return props.raceInfo.value.race_info.problems.map((problem) => {
     // 如果已经有头像数据，直接返回
     if (problem.first_blood_user?.avatar) return problem;
-    
+
     // 如果没有头像数据，但有一血用户，尝试获取头像
     if (problem.first_blood_user?.uid) {
       return {
         ...problem,
         first_blood_user: {
           ...problem.first_blood_user,
-          avatar: getAvatarUrl(problem.first_blood_user.uid)
-        }
+          avatar: getAvatarUrl(problem.first_blood_user.uid),
+        },
       };
     }
     return problem;
@@ -186,30 +201,29 @@ const getAlphabetIndex = (index: number) => {
 // 获取题目状态的样式类
 const getStatusClass = (status: string) => {
   switch (status) {
-    case "已通过":
-      return "status-accepted";
-    case "未通过":
-      return "status-wrong";
-    case "PENDING":
-      return "status-pending";
+    case '已通过':
+      return 'status-accepted';
+    case '未通过':
+      return 'status-wrong';
+    case 'PENDING':
+      return 'status-pending';
     default:
-      return "status-default";
+      return 'status-default';
   }
 };
 
 // 格式化通过率
 const formatPassRate = (solveNum: number, submitNum: number) => {
-  if (submitNum === 0) return "0.00";
+  if (submitNum === 0) return '0.00';
   return ((solveNum / submitNum) * 100).toFixed(2);
 };
 
 // 跳转到题目详情
 const goToQuestionDetail = (id: string, race_uid: string) => {
-  store.dispatch("setCurrentQuestionId", id);
+  store.dispatch('setCurrentQuestionId', id);
   router.push({
-    name: "questions_detail",
-    params: { id },
-    query: { race_uid },
+    name: 'questions_detail',
+    query: { id, race_uid },
   });
 };
 
@@ -237,20 +251,20 @@ const canAccessProblems = computed(() => {
 const accessDeniedMessage = computed(() => {
   const status = props.raceInfo?.value?.race_info?.status;
   const isRegistered = props.raceInfo?.value?.race_info?.is_registered === '已报名';
-  
+
   switch (status) {
     case 'upcoming':
       return '比赛尚未开始，题目将在开始后显示';
-      
+
     case 'running':
       // 已报名用户不应该看到这个提示，因为他们可以访问题目
       if (isRegistered) return '比赛进行中';
       // 未报名用户显示报名提示
       return '请先报名参加比赛后查看题目';
-      
+
     case 'ended':
       return '比赛已结束，题目已公开';
-      
+
     default:
       return '加载中...';
   }
@@ -285,9 +299,7 @@ const accessDeniedMessage = computed(() => {
 }
 
 .problems-head {
-  background: linear-gradient(to right,
-      rgba(248, 250, 252, 0.8),
-      rgba(241, 245, 249, 0.8));
+  background: linear-gradient(to right, rgba(248, 250, 252, 0.8), rgba(241, 245, 249, 0.8));
   border-bottom: 1px solid #e2e8f0;
   position: sticky;
   top: 0;
@@ -577,13 +589,19 @@ const accessDeniedMessage = computed(() => {
 }
 
 @keyframes shake {
-  0%, 100% { transform: rotate(0); }
-  25% { transform: rotate(-10deg); }
-  75% { transform: rotate(10deg); }
+  0%,
+  100% {
+    transform: rotate(0);
+  }
+  25% {
+    transform: rotate(-10deg);
+  }
+  75% {
+    transform: rotate(10deg);
+  }
 }
 
 @media (max-width: 768px) {
-
   .problems-head th,
   .problem-row td {
     padding: 12px;
