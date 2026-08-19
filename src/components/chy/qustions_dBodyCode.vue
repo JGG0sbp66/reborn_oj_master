@@ -26,10 +26,7 @@
           </svg>
         </div>
 
-        <div
-          class="selection"
-          v-show="showLanguageSelection"
-        >
+        <div v-show="showLanguageSelection" class="selection">
           <div class="selectionB">
             <div
               class="selectionE"
@@ -41,7 +38,7 @@
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   viewBox="0 0 24 24"
-                  style="width: 20px;height: 20px; position: relative; top: 2px;"
+                  style="width: 20px; height: 20px; position: relative; top: 2px"
                 >
                   <path
                     d="M5 12l5 5L20 7"
@@ -64,7 +61,7 @@
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   viewBox="0 0 24 24"
-                  style="width: 20px;height: 20px; position: relative; top: 2px;"
+                  style="width: 20px; height: 20px; position: relative; top: 2px"
                 >
                   <path
                     d="M5 12l5 5L20 7"
@@ -87,7 +84,7 @@
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   viewBox="0 0 24 24"
-                  style="width: 20px;height: 20px; position: relative; top: 2px;"
+                  style="width: 20px; height: 20px; position: relative; top: 2px"
                 >
                   <path
                     d="M5 12l5 5L20 7"
@@ -110,7 +107,7 @@
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   viewBox="0 0 24 24"
-                  style="width: 20px;height: 20px; position: relative; top: 2px;"
+                  style="width: 20px; height: 20px; position: relative; top: 2px"
                 >
                   <path
                     d="M5 12l5 5L20 7"
@@ -126,10 +123,7 @@
           </div>
         </div>
 
-        <button
-          class="format-button"
-          @click="formatCode"
-        >
+        <button class="format-button" @click="formatCode">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             width="16"
@@ -142,42 +136,29 @@
             stroke-linejoin="round"
           >
             <polyline points="16 3 21 3 21 8"></polyline>
-            <line
-              x1="4"
-              y1="20"
-              x2="21"
-              y2="3"
-            ></line>
+            <line x1="4" y1="20" x2="21" y2="3"></line>
             <polyline points="21 16 21 21 16 21"></polyline>
-            <line
-              x1="15"
-              y1="15"
-              x2="21"
-              y2="21"
-            ></line>
-            <line
-              x1="4"
-              y1="4"
-              x2="9"
-              y2="9"
-            ></line>
+            <line x1="15" y1="15" x2="21" y2="21"></line>
+            <line x1="4" y1="4" x2="9" y2="9"></line>
           </svg>
           格式化
         </button>
       </div>
 
-      <button
-        class="submit-button"
-        @click="submitCode"
-      >提交</button>
+      <button class="submit-button" @click="submitCode">提交</button>
     </div>
     <div class="codeBody">
       <div class="Aline">
         <div
-          class="AlineDiv"
           v-for="(line, index) in codeLines"
           :key="index"
-          :class="{ 'selected-line': isAllSelected || (index >= Math.min(startSelectionIndex, endSelectionIndex) && index <= Math.max(startSelectionIndex, endSelectionIndex)) }"
+          class="AlineDiv"
+          :class="{
+            'selected-line':
+              isAllSelected ||
+              (index >= Math.min(startSelectionIndex, endSelectionIndex) &&
+                index <= Math.max(startSelectionIndex, endSelectionIndex)),
+          }"
           @mousedown="handleMouseDown(index)"
           @mouseenter="handleMouseMove(index)"
           @mouseup="handleMouseUp"
@@ -185,40 +166,37 @@
           <span class="lineNumber">{{ index + 1 }}</span>
           <div class="code-input-wrapper">
             <input
-              type="text"
+              :ref="'input_' + index"
               v-model="codeLines[index]"
+              type="text"
               @keydown="handleKeyDown($event, index)"
               @keyup="handleKeyUp($event)"
               @paste="handlePaste($event, index)"
-              :ref="'input_' + index"
               @input="handleInput(index)"
               @focus="currentFocusIndex = index"
             />
-            <pre
-              class="highlighted-code"
-              v-html="highlightedLines[index]"
-            ></pre>
+            <pre class="highlighted-code" v-html="highlightedLines[index]"></pre>
           </div>
         </div>
       </div>
     </div>
   </div>
 </template>
-  
+
 <script>
-import hljs from "highlight.js";
-import "highlight.js/styles/github-dark.css";
-import { judgeApi } from "@/api";
-import { checkAuth } from "@/utils/auth";
+import hljs from 'highlight.js';
+import 'highlight.js/styles/github-dark.css';
+import { judgeApi } from '@/api';
+import { checkAuth } from '@/utils/auth';
 
 export default {
-  name: "CodeComponent",
-  props: ["questionDetail", "id", "race_uid"],
+  name: 'CodeComponent',
+  props: ['questionDetail', 'id', 'race_uid'],
   data() {
     return {
-      selectedLanguage: "cpp",
+      selectedLanguage: 'cpp',
       showLanguageSelection: false,
-      codeLines: [""],
+      codeLines: [''],
       isEnterKeyDown: false,
       isBackspaceKeyDown: false,
       enterKeyInterval: null,
@@ -237,7 +215,7 @@ export default {
                 </path>
               </g>
             </svg><span style="margin-left: 5px; color:#7C7E83;">编译错误</span>`,
-          color: "#7C7E83",
+          color: '#7C7E83',
         },
         {
           status: `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 24 24" style="width: 18px; height: 18px; position: relative; top: 4px; color: #00B42A;">
@@ -245,30 +223,30 @@ export default {
             </path>
             </svg>
             <span style="margin-left: 5px;color: #00B42A;">答案正确</span>`,
-          color: "#00B42A",
+          color: '#00B42A',
         },
         {
           status: `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 512 512"style="width: 18px; height: 18px; position: relative; top: 4px; color: #F53F3F;"><path d="M289.94 256l95-95A24 24 0 0 0 351 127l-95 95l-95-95a24 24 0 0 0-34 34l95 95l-95 95a24 24 0 1 0 34 34l95-95l95 95a24 24 0 0 0 34-34z" fill="currentColor"></path></svg>
             <span style="margin-left: 5px;color: #F53F3F;">答案错误</span>`,
-          color: "#F53F3F",
+          color: '#F53F3F',
         },
         {
           status: `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 24 24" style="width: 18px; height: 18px; position: relative; top: 4px; color: #F4A460;"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 9V8a3 3 0 0 1 6 0v1"></path><path d="M8 9h8a6 6 0 0 1 1 3v3a5 5 0 0 1-10 0v-3a6 6 0 0 1 1-3"></path><path d="M3 13h4"></path><path d="M17 13h4"></path><path d="M12 20v-6"></path><path d="M4 19l3.35-2"></path><path d="M20 19l-3.35-2"></path><path d="M4 7l3.75 2.4"></path><path d="M20 7l-3.75 2.4"></path></g></svg>
             <span style="margin-left: 5px;color: #F4A460;">内存超限</span>`,
-          color: "#F4A460",
+          color: '#F4A460',
         },
         {
           status: `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 1024 1024" style="width: 18px; height: 18px; position: relative; top: 4px; color: #F4A460;"><path d="M512 64C264.6 64 64 264.6 64 512s200.6 448 448 448s448-200.6 448-448S759.4 64 512 64zm0 820c-205.4 0-372-166.6-372-372s166.6-372 372-372s372 166.6 372 372s-166.6 372-372 372z" fill="currentColor"></path><path d="M686.7 638.6L544.1 535.5V288c0-4.4-3.6-8-8-8H488c-4.4 0-8 3.6-8 8v275.4c0 2.6 1.2 5 3.3 6.5l165.4 120.6c3.6 2.6 8.6 1.8 11.2-1.7l28.6-39c2.6-3.7 1.8-8.7-1.8-11.2z" fill="currentColor"></path></svg>
             <span style="margin-left: 5px; color: #F4A460;">运行超时</span>`,
-          color: "#F4A460",
+          color: '#F4A460',
         },
         {
           status: `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 1024 1024" style="width: 18px; height: 18px; position: relative; top: 4px; color: #9932CC;"><path d="M512 64C264.6 64 64 264.6 64 512s200.6 448 448 448s448-200.6 448-448S759.4 64 512 64zm0 820c-205.4 0-372-166.6-372-372s166.6-372 372-372s372 166.6 372 372s-166.6 372-372 372z" fill="currentColor"></path><path d="M464 688a48 48 0 1 0 96 0a48 48 0 1 0-96 0zm24-112h48c4.4 0 8-3.6 8-8V296c0-4.4-3.6-8-8-8H488c-4.4 0-8 3.6-8 8v272c0 4.4 3.6 8 8 8z" fill="currentColor"></path></svg>
             <span style="margin-left: 5px;color: #9932CC;">运行错误</span>`,
-          color: "#9932CC",
+          color: '#9932CC',
         },
       ],
-      highlightedLines: [""], // 存储高亮后的代码行
+      highlightedLines: [''], // 存储高亮后的代码行
       history: [[]], // 存储代码历史记录
       historyIndex: 0, // 当前历史记录索引
       maxHistoryLength: 1000, // 最大历史记录长度
@@ -297,6 +275,39 @@ export default {
       },
     },
   },
+  created() {
+    // 页面加载时立即检查用户认证状态
+    this.checkUserAuth();
+  },
+  mounted() {
+    // 请求剪贴板权限
+    if (navigator.permissions) {
+      navigator.permissions.query({ name: 'clipboard-read' }).then((result) => {
+        if (result.state === 'denied') {
+          console.warn('剪贴板权限被拒绝');
+        }
+      });
+    }
+    this.highlightAllLines();
+    document.addEventListener('keyup', this.handleKeyUp);
+    document.addEventListener('click', this.handleGlobalClick);
+    this.saveHistory(); // 保存初始状态
+    this.$el.addEventListener('compositionstart', () => {
+      this.isComposing = true;
+    });
+    this.$el.addEventListener('compositionend', () => {
+      this.isComposing = false;
+    });
+  },
+  beforeUnmount() {
+    clearInterval(this.enterKeyInterval);
+    clearInterval(this.backspaceKeyInterval);
+    this.enterKeyInterval = null;
+    this.backspaceKeyInterval = null;
+    document.removeEventListener('keyup', this.handleKeyUp);
+    document.removeEventListener('click', this.handleGlobalClick);
+    this.$el.querySelector('.codeBody')?.removeEventListener('click', this.handleCodeAreaClick);
+  },
   methods: {
     toggleLanguageSelection(e) {
       e.stopPropagation(); // 阻止事件冒泡
@@ -316,8 +327,7 @@ export default {
       }
 
       // 确保至少有一个空行
-      const currentCode =
-        this.codeLines.length === 0 ? [""] : [...this.codeLines];
+      const currentCode = this.codeLines.length === 0 ? [''] : [...this.codeLines];
 
       // 只有当当前代码与最新历史记录不同时才保存
       if (!this.isEqual(currentCode, this.history[this.history.length - 1])) {
@@ -350,7 +360,7 @@ export default {
         const prevHistory = this.history[this.historyIndex];
 
         // 确保至少保留一个空行
-        this.codeLines = prevHistory.length === 0 ? [""] : [...prevHistory];
+        this.codeLines = prevHistory.length === 0 ? [''] : [...prevHistory];
 
         this.highlightAllLines();
 
@@ -376,7 +386,7 @@ export default {
         const nextHistory = this.history[this.historyIndex];
 
         // 确保至少保留一个空行
-        this.codeLines = nextHistory.length === 0 ? [""] : [...nextHistory];
+        this.codeLines = nextHistory.length === 0 ? [''] : [...nextHistory];
 
         this.highlightAllLines();
 
@@ -394,18 +404,15 @@ export default {
     checkAndClearSelection() {
       if (this.shouldClearOnNextAction && this.pendingClearAction) {
         // 如果是Ctrl+V组合键，执行清空
-        if (
-          (this.isCtrlKeyDown || this.isMetaKeyDown) &&
-          event.key.toLowerCase() === "v"
-        ) {
-          this.codeLines = [""]; // 清空代码，只保留一个空行
+        if ((this.isCtrlKeyDown || this.isMetaKeyDown) && event.key.toLowerCase() === 'v') {
+          this.codeLines = ['']; // 清空代码，只保留一个空行
           this.highlightAllLines();
           this.isAllSelected = false;
           this.pendingClearAction = false;
 
           // 将焦点设置在第一行
           this.$nextTick(() => {
-            const inputRef = this.$refs["input_0"];
+            const inputRef = this.$refs['input_0'];
             if (inputRef && inputRef[0]) {
               inputRef[0].focus();
             }
@@ -413,19 +420,15 @@ export default {
           return true;
         }
         // 如果是其他非修饰键操作，执行清空
-        else if (
-          !this.isCtrlKeyDown &&
-          !this.isMetaKeyDown &&
-          !this.isShiftKeyDown
-        ) {
-          this.codeLines = [""];
+        else if (!this.isCtrlKeyDown && !this.isMetaKeyDown && !this.isShiftKeyDown) {
+          this.codeLines = [''];
           this.highlightAllLines();
           this.isAllSelected = false;
           this.pendingClearAction = false;
 
           // 将焦点设置在第一行
           this.$nextTick(() => {
-            const inputRef = this.$refs["input_0"];
+            const inputRef = this.$refs['input_0'];
             if (inputRef && inputRef[0]) {
               inputRef[0].focus();
             }
@@ -438,10 +441,8 @@ export default {
     // 全选代码
     selectAllCode() {
       // 先清除可能存在的旧监听器
-      document.removeEventListener("click", this.handleGlobalClick);
-      this.$el
-        .querySelector(".codeBody")
-        .removeEventListener("click", this.handleCodeAreaClick);
+      document.removeEventListener('click', this.handleGlobalClick);
+      this.$el.querySelector('.codeBody').removeEventListener('click', this.handleCodeAreaClick);
 
       // 设置全选状态
       this.isAllSelected = true;
@@ -449,20 +450,18 @@ export default {
       this.pendingClearAction = true;
 
       // 高亮显示所有行
-      this.$el.querySelectorAll(".AlineDiv").forEach((div) => {
-        div.style.backgroundColor = "rgba(3, 102, 214, 0.1)";
+      this.$el.querySelectorAll('.AlineDiv').forEach((div) => {
+        div.style.backgroundColor = 'rgba(3, 102, 214, 0.1)';
       });
 
       // 添加全局点击事件监听器
-      document.addEventListener("click", this.handleGlobalClick);
+      document.addEventListener('click', this.handleGlobalClick);
       // 添加代码区域点击监听器
-      this.$el
-        .querySelector(".codeBody")
-        .addEventListener("click", this.handleCodeAreaClick);
+      this.$el.querySelector('.codeBody').addEventListener('click', this.handleCodeAreaClick);
 
       // 将焦点设置在第一行输入框
       this.$nextTick(() => {
-        const firstInput = this.$refs["input_0"];
+        const firstInput = this.$refs['input_0'];
         if (firstInput && firstInput[0]) {
           firstInput[0].focus();
         }
@@ -471,7 +470,7 @@ export default {
     closeLanguageSelection() {
       setTimeout(() => {
         // 检查鼠标是否在下拉框上
-        const isHovering = this.$el.querySelector(".selection:hover");
+        const isHovering = this.$el.querySelector('.selection:hover');
         if (!isHovering) {
           this.showLanguageSelection = false;
         }
@@ -487,7 +486,7 @@ export default {
       const cursorPosition = inputElement.selectionStart;
       const currentLine = this.codeLines[index];
 
-      if (cursorPosition === currentLine.length || currentLine.trim() === "") {
+      if (cursorPosition === currentLine.length || currentLine.trim() === '') {
         this.insertNewLineAfter(index);
       } else {
         this.splitLineAtCursor(index, cursorPosition);
@@ -532,7 +531,7 @@ export default {
     },
 
     removeLineIfEmpty(index) {
-      if (this.codeLines[index] === "" && index > 0) {
+      if (this.codeLines[index] === '' && index > 0) {
         this.codeLines.splice(index, 1);
         this.$nextTick(() => {
           const prevIndex = index - 1;
@@ -549,7 +548,7 @@ export default {
     },
     handleCodeAreaClick(e) {
       // 检查点击是否在输入框上
-      const isClickOnInput = e.target.tagName === "INPUT";
+      const isClickOnInput = e.target.tagName === 'INPUT';
 
       // 如果点击的不是输入框，就取消全选状态
       if (!isClickOnInput) {
@@ -564,11 +563,11 @@ export default {
       }
       event.preventDefault();
       const clipboardData = event.clipboardData || window.clipboardData;
-      const pastedText = clipboardData.getData("text");
+      const pastedText = clipboardData.getData('text');
 
-      if (pastedText.includes("\n")) {
+      if (pastedText.includes('\n')) {
         // 处理多行粘贴
-        const lines = pastedText.split("\n");
+        const lines = pastedText.split('\n');
         const currentLine = this.codeLines[index];
         const inputElement = this.$refs[`input_${index}`][0];
         const cursorPosition = inputElement.selectionStart;
@@ -645,10 +644,7 @@ export default {
         const targetInput = this.$refs[`input_${targetIndex}`][0];
         if (targetInput) {
           targetInput.focus();
-          targetInput.setSelectionRange(
-            targetCursorPosition,
-            targetCursorPosition
-          );
+          targetInput.setSelectionRange(targetCursorPosition, targetCursorPosition);
         }
       });
     },
@@ -667,16 +663,10 @@ export default {
         this.$nextTick(() => {
           const prevInput = this.$refs[`input_${index - 1}`][0];
           if (prevInput) {
-            prevInput.setSelectionRange(
-              prevInput.value.length,
-              prevInput.value.length
-            );
+            prevInput.setSelectionRange(prevInput.value.length, prevInput.value.length);
           }
         });
-      } else if (
-        newPosition > input.value.length &&
-        index < this.codeLines.length - 1
-      ) {
+      } else if (newPosition > input.value.length && index < this.codeLines.length - 1) {
         // 移动到下一行开头
         this.moveCursorVertically(index, 1);
         this.$nextTick(() => {
@@ -713,30 +703,26 @@ export default {
 
       // 在 handleKeyDown 方法中添加以下 case
       switch (event.key) {
-        case "ArrowUp":
+        case 'ArrowUp':
           event.preventDefault();
           this.moveCursorVertically(index, -1); // 上移
           break;
-        case "ArrowDown":
+        case 'ArrowDown':
           event.preventDefault();
           this.moveCursorVertically(index, 1); // 下移
           break;
-        case "ArrowLeft":
+        case 'ArrowLeft':
           event.preventDefault();
           this.moveCursorHorizontally(index, -1);
           break;
-          break;
-        case "ArrowRight":
+        case 'ArrowRight':
           event.preventDefault();
           this.moveCursorHorizontally(index, 1);
           break;
       }
 
       // 在开头添加：处理括号自动补全
-      if (
-        ["{", "("].includes(event.key) &&
-        !(event.ctrlKey || event.metaKey || event.altKey)
-      ) {
+      if (['{', '('].includes(event.key) && !(event.ctrlKey || event.metaKey || event.altKey)) {
         if (this.handleBracketCompletion(index, event.key)) {
           event.preventDefault(); // 阻止默认行为
           return; // 如果已处理，就不再执行后面的逻辑
@@ -744,65 +730,59 @@ export default {
       }
 
       // 添加 Ctrl+C 处理 - 复制选中内容
-      if (event.key === "c" && (event.ctrlKey || event.metaKey)) {
+      if (event.key === 'c' && (event.ctrlKey || event.metaKey)) {
         event.preventDefault();
 
         // 获取选中的行范围
-        const start = Math.min(
-          this.startSelectionIndex,
-          this.endSelectionIndex
-        );
+        const start = Math.min(this.startSelectionIndex, this.endSelectionIndex);
         const end = Math.max(this.startSelectionIndex, this.endSelectionIndex);
 
-        let textToCopy = "";
+        let textToCopy = '';
 
         if (this.isAllSelected) {
           // 全选状态下复制所有代码
-          textToCopy = this.codeLines.join("\n");
+          textToCopy = this.codeLines.join('\n');
         } else if (start !== -1 && end !== -1 && start !== end) {
           // 复制鼠标选择的区域
-          textToCopy = this.codeLines.slice(start, end + 1).join("\n");
+          textToCopy = this.codeLines.slice(start, end + 1).join('\n');
         } else {
           // 默认复制当前行
           textToCopy = this.codeLines[this.currentFocusIndex];
         }
 
-        if (textToCopy.trim() !== "") {
+        if (textToCopy.trim() !== '') {
           navigator.clipboard
             .writeText(textToCopy)
             .then(() => {
               // 高亮显示被复制的行
               if (this.isAllSelected) {
-                this.$el.querySelectorAll(".AlineDiv").forEach((div) => {
-                  div.style.backgroundColor = "rgba(3, 102, 214, 0.1)";
+                this.$el.querySelectorAll('.AlineDiv').forEach((div) => {
+                  div.style.backgroundColor = 'rgba(3, 102, 214, 0.1)';
                 });
               } else if (start !== -1 && end !== -1) {
                 // 高亮显示鼠标选择的区域
                 for (let i = start; i <= end; i++) {
-                  const lineDiv = this.$el.querySelectorAll(".AlineDiv")[i];
+                  const lineDiv = this.$el.querySelectorAll('.AlineDiv')[i];
                   if (lineDiv) {
-                    lineDiv.style.backgroundColor = "rgba(3, 102, 214, 0.1)";
+                    lineDiv.style.backgroundColor = 'rgba(3, 102, 214, 0.1)';
                     setTimeout(() => {
-                      lineDiv.style.backgroundColor = "";
+                      lineDiv.style.backgroundColor = '';
                     }, 500);
                   }
                 }
               } else {
                 // 高亮显示当前行
-                const lineDiv =
-                  this.$el.querySelectorAll(".AlineDiv")[
-                    this.currentFocusIndex
-                  ];
+                const lineDiv = this.$el.querySelectorAll('.AlineDiv')[this.currentFocusIndex];
                 if (lineDiv) {
-                  lineDiv.style.backgroundColor = "rgba(3, 102, 214, 0.1)";
+                  lineDiv.style.backgroundColor = 'rgba(3, 102, 214, 0.1)';
                   setTimeout(() => {
-                    lineDiv.style.backgroundColor = "";
+                    lineDiv.style.backgroundColor = '';
                   }, 500);
                 }
               }
             })
             .catch((err) => {
-              console.error("复制失败:", err);
+              console.error('复制失败:', err);
             });
         }
         return;
@@ -810,12 +790,12 @@ export default {
 
       // 修改后的Ctrl+V处理逻辑
       // 修改 handleKeyDown 方法中的 Ctrl+V 部分
-      if (event.key === "v" && (event.ctrlKey || event.metaKey)) {
+      if (event.key === 'v' && (event.ctrlKey || event.metaKey)) {
         event.preventDefault();
 
         // 如果是全选状态，先清空代码
         if (this.isAllSelected) {
-          this.codeLines = [""];
+          this.codeLines = [''];
           this.isAllSelected = false;
           this.highlightAllLines();
         }
@@ -829,22 +809,20 @@ export default {
             }
           })
           .catch((err) => {
-            console.error("读取剪贴板失败:", err);
+            console.error('读取剪贴板失败:', err);
             // 回退到原始粘贴方式
-            const pasteEvent = new Event("paste", {
+            const pasteEvent = new Event('paste', {
               clipboardData: new DataTransfer(),
               bubbles: true,
             });
-            pasteEvent.clipboardData.setData("text/plain", "");
-            this.$refs[`input_${this.currentFocusIndex}`][0].dispatchEvent(
-              pasteEvent
-            );
+            pasteEvent.clipboardData.setData('text/plain', '');
+            this.$refs[`input_${this.currentFocusIndex}`][0].dispatchEvent(pasteEvent);
           });
         return;
       }
 
       // 添加 Ctrl+Z 处理 - 撤销
-      if (event.key === "z" && (event.ctrlKey || event.metaKey)) {
+      if (event.key === 'z' && (event.ctrlKey || event.metaKey)) {
         event.preventDefault();
         if (!event.shiftKey) {
           this.undo();
@@ -856,18 +834,18 @@ export default {
       }
 
       // 添加 Ctrl+Y 处理 - 重做
-      if (event.key === "y" && (event.ctrlKey || event.metaKey)) {
+      if (event.key === 'y' && (event.ctrlKey || event.metaKey)) {
         event.preventDefault();
         this.redo();
         return;
       }
       // 添加 Ctrl+A 处理
-      if (event.key === "a" && (event.ctrlKey || event.metaKey)) {
+      if (event.key === 'a' && (event.ctrlKey || event.metaKey)) {
         event.preventDefault();
         this.selectAllCode();
         return;
       }
-      if (event.key === "Enter") {
+      if (event.key === 'Enter') {
         event.preventDefault();
 
         // 记录按键开始时间
@@ -891,7 +869,7 @@ export default {
             }
           }, 300);
         }
-      } else if (event.key === "Backspace") {
+      } else if (event.key === 'Backspace') {
         const inputElement = this.$refs[`input_${index}`][0];
         const cursorPosition = inputElement.selectionStart;
         const selectionEnd = inputElement.selectionEnd;
@@ -934,7 +912,7 @@ export default {
             const currentIndex = this.codeLines.findIndex(
               (line, i) => i === this.currentFocusIndex
             );
-            if (currentIndex > 0 && this.codeLines[currentIndex] === "") {
+            if (currentIndex > 0 && this.codeLines[currentIndex] === '') {
               this.removeLineIfEmpty(currentIndex);
             } else {
               clearInterval(this.backspaceKeyInterval);
@@ -943,7 +921,7 @@ export default {
             }
           }, 100);
         }
-      } else if (event.key === "Tab") {
+      } else if (event.key === 'Tab') {
         event.preventDefault(); // 阻止默认的Tab行为
         const inputElement = this.$refs[`input_${index}`][0];
         const cursorPosition = inputElement.selectionStart;
@@ -952,32 +930,29 @@ export default {
         // 插入两个空格作为缩进
         const newLine =
           currentLine.substring(0, cursorPosition) +
-          "  " + // 两个空格缩进
+          '  ' + // 两个空格缩进
           currentLine.substring(cursorPosition);
 
         this.codeLines[index] = newLine;
 
         this.$nextTick(() => {
-          inputElement.setSelectionRange(
-            cursorPosition + 2,
-            cursorPosition + 2
-          );
+          inputElement.setSelectionRange(cursorPosition + 2, cursorPosition + 2);
         });
       }
     },
     // 添加辅助方法判断是否是修饰键
     isModifierKey(key) {
-      return ["Control", "Shift", "Alt", "Meta", "Ctrl"].includes(key);
+      return ['Control', 'Shift', 'Alt', 'Meta', 'Ctrl'].includes(key);
     },
     // 修改handleKeyUp方法
     handleKeyUp(event) {
       // 更新修饰键状态
-      if (event.key === "Control") this.isCtrlKeyDown = false;
-      if (event.key === "Shift") this.isShiftKeyDown = false;
-      if (event.key === "Meta") this.isMetaKeyDown = false;
+      if (event.key === 'Control') this.isCtrlKeyDown = false;
+      if (event.key === 'Shift') this.isShiftKeyDown = false;
+      if (event.key === 'Meta') this.isMetaKeyDown = false;
 
       // 处理其他键的keyup
-      if (event.key === "Enter") {
+      if (event.key === 'Enter') {
         // 如果按键时间小于300ms，清除延迟定时器
         if (Date.now() - this.enterKeyPressStartTime < 300) {
           clearTimeout(this.enterKeyInterval);
@@ -985,7 +960,7 @@ export default {
         this.isEnterKeyDown = false;
         clearInterval(this.enterKeyInterval);
         this.enterKeyInterval = null;
-      } else if (event.key === "Backspace") {
+      } else if (event.key === 'Backspace') {
         this.isBackspaceKeyDown = false;
         clearInterval(this.backspaceKeyInterval);
         this.backspaceKeyInterval = null;
@@ -993,7 +968,7 @@ export default {
     },
     handleGlobalClick(e) {
       // 检查点击是否在输入框上
-      const isClickOnInput = e.target.tagName === "INPUT";
+      const isClickOnInput = e.target.tagName === 'INPUT';
 
       // 如果点击的不是输入框，就取消选择状态
       if (!isClickOnInput) {
@@ -1001,12 +976,12 @@ export default {
       }
 
       // 移除事件监听器（确保只执行一次）
-      document.removeEventListener("click", this.handleGlobalClick);
+      document.removeEventListener('click', this.handleGlobalClick);
     },
     handlePasteContent(text, index) {
-      if (text.includes("\n")) {
+      if (text.includes('\n')) {
         // 处理多行粘贴
-        const lines = text.split("\n");
+        const lines = text.split('\n');
         const currentLine = this.codeLines[index];
         const inputElement = this.$refs[`input_${index}`][0];
         const cursorPosition = inputElement.selectionStart;
@@ -1041,9 +1016,7 @@ export default {
         const cursorPosition = inputElement.selectionStart;
 
         this.codeLines[index] =
-          currentLine.substring(0, cursorPosition) +
-          text +
-          currentLine.substring(cursorPosition);
+          currentLine.substring(0, cursorPosition) + text + currentLine.substring(cursorPosition);
 
         this.$nextTick(() => {
           inputElement.setSelectionRange(
@@ -1086,8 +1059,8 @@ export default {
     // 更新选择区域
     updateSelection() {
       // 清除之前的选择
-      this.$el.querySelectorAll(".AlineDiv").forEach((div) => {
-        div.classList.remove("selected-line");
+      this.$el.querySelectorAll('.AlineDiv').forEach((div) => {
+        div.classList.remove('selected-line');
       });
 
       const start = Math.min(this.startSelectionIndex, this.endSelectionIndex);
@@ -1095,9 +1068,9 @@ export default {
 
       // 应用选择样式
       for (let i = start; i <= end; i++) {
-        const lineDiv = this.$el.querySelectorAll(".AlineDiv")[i];
+        const lineDiv = this.$el.querySelectorAll('.AlineDiv')[i];
         if (lineDiv) {
-          lineDiv.classList.add("selected-line");
+          lineDiv.classList.add('selected-line');
         }
       }
     },
@@ -1107,85 +1080,87 @@ export default {
       this.pendingClearAction = false; // 新增
       this.startSelectionIndex = -1;
       this.endSelectionIndex = -1;
-      this.$el.querySelectorAll(".AlineDiv").forEach((div) => {
-        div.classList.remove("selected-line");
-        div.style.backgroundColor = ""; // 清除背景颜色
+      this.$el.querySelectorAll('.AlineDiv').forEach((div) => {
+        div.classList.remove('selected-line');
+        div.style.backgroundColor = ''; // 清除背景颜色
       });
     },
 
     // 格式化代码
     formatCode() {
       // 获取当前代码
-      const code = this.codeLines.join("\n");
+      const code = this.codeLines.join('\n');
 
       // 根据语言应用不同的格式化规则
       switch (this.selectedLanguage) {
-        case "C":
-        case "cpp":
-        case "Java":
+        case 'C':
+        case 'cpp':
+        case 'Java': {
           // 简单的C风格格式化 - 在实际应用中可以使用更复杂的格式化库
           let formatted = [];
           let indentLevel = 0;
-          const lines = code.split("\n");
+          const lines = code.split('\n');
 
           lines.forEach((line) => {
             const trimmed = line.trim();
 
             // 减少缩进级别的行
-            if (trimmed.endsWith("}") || trimmed.startsWith("}")) {
+            if (trimmed.endsWith('}') || trimmed.startsWith('}')) {
               indentLevel = Math.max(0, indentLevel - 1);
             }
 
             // 添加缩进
-            formatted.push("  ".repeat(indentLevel) + trimmed);
+            formatted.push('  '.repeat(indentLevel) + trimmed);
 
             // 增加缩进级别的行
-            if (trimmed.endsWith("{") || trimmed.startsWith("{")) {
+            if (trimmed.endsWith('{') || trimmed.startsWith('{')) {
               indentLevel += 1;
             }
           });
 
           this.codeLines = formatted;
           break;
+        }
 
-        case "Python":
+        case 'Python': {
           // Python格式化 - 在实际应用中可以使用更复杂的格式化库
           let pyFormatted = [];
           let pyIndent = 0;
-          const pyLines = code.split("\n");
+          const pyLines = code.split('\n');
 
           pyLines.forEach((line) => {
             const trimmed = line.trim();
 
             // 减少缩进
             if (
-              trimmed.startsWith("elif ") ||
-              trimmed.startsWith("else:") ||
-              trimmed.startsWith("except ") ||
-              trimmed.startsWith("finally:")
+              trimmed.startsWith('elif ') ||
+              trimmed.startsWith('else:') ||
+              trimmed.startsWith('except ') ||
+              trimmed.startsWith('finally:')
             ) {
               pyIndent = Math.max(0, pyIndent - 1);
             }
 
-            pyFormatted.push("    ".repeat(pyIndent) + trimmed);
+            pyFormatted.push('    '.repeat(pyIndent) + trimmed);
 
             // 增加缩进
-            if (trimmed.endsWith(":") && !trimmed.startsWith("#")) {
+            if (trimmed.endsWith(':') && !trimmed.startsWith('#')) {
               pyIndent += 1;
             }
           });
 
           this.codeLines = pyFormatted;
           break;
+        }
 
         default:
           // 默认情况下只去除前后空白行
-          this.codeLines = code.trim().split("\n");
+          this.codeLines = code.trim().split('\n');
       }
 
       // 确保至少有一行
       if (this.codeLines.length === 0) {
-        this.codeLines = [""];
+        this.codeLines = [''];
       }
       this.saveHistory(); // 添加历史保存
     },
@@ -1222,42 +1197,42 @@ export default {
     getSubmitTime() {
       const now = new Date();
       const year = now.getFullYear();
-      const month = String(now.getMonth() + 1).padStart(2, "0");
-      const day = String(now.getDate()).padStart(2, "0");
-      const hours = String(now.getHours()).padStart(2, "0");
-      const minutes = String(now.getMinutes()).padStart(2, "0");
-      const seconds = String(now.getSeconds()).padStart(2, "0");
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const day = String(now.getDate()).padStart(2, '0');
+      const hours = String(now.getHours()).padStart(2, '0');
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      const seconds = String(now.getSeconds()).padStart(2, '0');
       return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
     },
     async checkUserAuth() {
       try {
         const { authenticated } = await checkAuth();
-        console.log("用户认证状态:", authenticated);
-        this.$emit("update-auth", authenticated);
+        console.log('用户认证状态:', authenticated);
+        this.$emit('update-auth', authenticated);
       } catch (error) {
-        console.error("检查认证状态失败:", error);
+        console.error('检查认证状态失败:', error);
         return;
       }
     },
     async submitCode() {
-      const nonEmptyLines = this.codeLines.filter((line) => line.trim() !== "");
+      const nonEmptyLines = this.codeLines.filter((line) => line.trim() !== '');
       if (nonEmptyLines.length === 0) {
-        this.$emit("show-alert", {
-          type: "error",
-          message: "提交的代码不能为空",
+        this.$emit('show-alert', {
+          type: 'error',
+          message: '提交的代码不能为空',
         });
         return;
       }
       try {
         const { authenticated } = await checkAuth();
         if (!authenticated) {
-          throw new Error("用户未登录");
+          throw new Error('用户未登录');
         }
 
         // 显示提交成功的提示
-        this.$emit("show-alert", {
-          type: "success",
-          message: "提交成功",
+        this.$emit('show-alert', {
+          type: 'success',
+          message: '提交成功',
         });
 
         // 创建唯一的提交标识
@@ -1280,27 +1255,27 @@ export default {
             </div>
           `,
           language: this.selectedLanguage,
-          runTime: "-",
-          memoryUsage: "-",
+          runTime: '-',
+          memoryUsage: '-',
           submitTime: this.getSubmitTime(),
           isPending: true,
           index: submissionId,
         };
 
-        this.$emit("add-pending-submission", pendingSubmission);
+        this.$emit('add-pending-submission', pendingSubmission);
 
         const formData = new FormData();
-        formData.append("code", this.codeLines.join("\n"));
-        formData.append("language", this.selectedLanguage.toLowerCase());
-        formData.append("problem_id", this.id);
+        formData.append('code', this.codeLines.join('\n'));
+        formData.append('language', this.selectedLanguage.toLowerCase());
+        formData.append('problem_id', this.id);
         if (this.race_uid) {
-          formData.append("race_id", this.race_uid);
+          formData.append('race_id', this.race_uid);
         }
 
         const response = await judgeApi.submitCode(formData);
 
         if (!response.success) {
-          throw new Error(response.message || "提交失败");
+          throw new Error(response.message || '提交失败');
         }
 
         const result = response.result;
@@ -1323,22 +1298,22 @@ export default {
           index: submissionId,
         };
 
-        this.$emit("update-submission", {
+        this.$emit('update-submission', {
           index: submissionId,
           submission: submission,
         });
 
-        this.codeLines = [""];
+        this.codeLines = [''];
       } catch (error) {
-        if (error.message === "用户未登录") {
-          this.$emit("show-alert", {
-            type: "error",
-            message: "请先登录后再提交代码",
+        if (error.message === '用户未登录') {
+          this.$emit('show-alert', {
+            type: 'error',
+            message: '请先登录后再提交代码',
           });
         } else {
-          this.$emit("show-alert", {
-            type: "error",
-            message: error.response?.data?.message || error.message || "提交失败",
+          this.$emit('show-alert', {
+            type: 'error',
+            message: error.response?.data?.message || error.message || '提交失败',
           });
         }
 
@@ -1348,15 +1323,15 @@ export default {
           </svg>
           <span style="margin-left: 5px; color: #F53F3F;">提交失败</span>`,
           language: this.selectedLanguage,
-          runTime: "-",
-          memoryUsage: "-",
+          runTime: '-',
+          memoryUsage: '-',
           submitTime: this.getSubmitTime(),
           details: null,
           isPending: false,
           index: -1,
         };
 
-        this.$emit("update-submission", {
+        this.$emit('update-submission', {
           index: -1,
           submission: submission,
         });
@@ -1397,24 +1372,24 @@ export default {
     // 从判题结果获取状态
     getStatusFromJudgeResult(status) {
       const statusMap = {
-        'Accepted': '答案正确',
+        Accepted: '答案正确',
         'Wrong Answer': '答案错误',
         'Compile Error': '编译错误',
         'Memory Limit Exceeded': '内存超限',
         'Time Limit Exceeded': '运行超时',
-        'Runtime Error': '运行错误'
+        'Runtime Error': '运行错误',
       };
       return statusMap[status] || '编译错误';
     },
     getLanguageMode() {
       // 将选中的语言映射到 highlight.js 的语言模式
       const langMap = {
-        C: "c",
-        cpp: "cpp",
-        Java: "java",
-        Python: "python",
+        C: 'c',
+        cpp: 'cpp',
+        Java: 'java',
+        Python: 'python',
       };
-      return langMap[this.selectedLanguage] || "plaintext";
+      return langMap[this.selectedLanguage] || 'plaintext';
     },
     highlightLine(line) {
       try {
@@ -1462,17 +1437,13 @@ export default {
       const cursorPos = input.selectionStart;
       const line = this.codeLines[index];
 
-      if (key === "{") {
+      if (key === '{') {
         // 花括号保持原有的换行缩进功能
         const indent = this.getCurrentIndent(line);
         const beforeCursor = line.substring(0, cursorPos);
         const afterCursor = line.substring(cursorPos);
 
-        const newLines = [
-          beforeCursor + "{",
-          indent + "  ",
-          indent + "}" + afterCursor,
-        ];
+        const newLines = [beforeCursor + '{', indent + '  ', indent + '}' + afterCursor];
 
         this.codeLines.splice(index, 1, ...newLines);
 
@@ -1484,10 +1455,9 @@ export default {
           }
         });
         return true;
-      } else if (key === "(") {
+      } else if (key === '(') {
         // 圆括号保持在同一行
-        const newLine =
-          line.substring(0, cursorPos) + "()" + line.substring(cursorPos);
+        const newLine = line.substring(0, cursorPos) + '()' + line.substring(cursorPos);
 
         this.codeLines[index] = newLine;
         this.$nextTick(() => {
@@ -1510,11 +1480,11 @@ export default {
       const afterCursor = line.substring(cursorPos);
 
       // 检查是否在 {} 中间
-      if (beforeCursor.includes("{") && afterCursor.includes("}")) {
+      if (beforeCursor.includes('{') && afterCursor.includes('}')) {
         const indent = this.getCurrentIndent(line); // 获取当前缩进
         const newLines = [
           line.substring(0, cursorPos), // { 之前的部分
-          indent + "  ", // 新行（增加缩进）
+          indent + '  ', // 新行（增加缩进）
           indent + line.substring(cursorPos), // } 之后的部分
         ];
 
@@ -1534,11 +1504,11 @@ export default {
       }
 
       // 检查是否在 () 中间（逻辑同上）
-      if (beforeCursor.includes("(") && afterCursor.includes(")")) {
+      if (beforeCursor.includes('(') && afterCursor.includes(')')) {
         const indent = this.getCurrentIndent(line);
         const newLines = [
           line.substring(0, cursorPos),
-          indent + "  ",
+          indent + '  ',
           indent + line.substring(cursorPos),
         ];
 
@@ -1559,47 +1529,12 @@ export default {
     // 获取当前行的缩进（行首的空格）
     getCurrentIndent(line) {
       const match = line.match(/^\s*/);
-      return match ? match[0] : "";
+      return match ? match[0] : '';
     },
-  },
-  created() {
-    // 页面加载时立即检查用户认证状态
-    this.checkUserAuth();
-  },
-  mounted() {
-    // 请求剪贴板权限
-    if (navigator.permissions) {
-      navigator.permissions.query({ name: "clipboard-read" }).then((result) => {
-        if (result.state === "denied") {
-          console.warn("剪贴板权限被拒绝");
-        }
-      });
-    }
-    this.highlightAllLines();
-    document.addEventListener("keyup", this.handleKeyUp);
-    document.addEventListener("click", this.handleGlobalClick);
-    this.saveHistory(); // 保存初始状态
-    this.$el.addEventListener("compositionstart", () => {
-      this.isComposing = true;
-    });
-    this.$el.addEventListener("compositionend", () => {
-      this.isComposing = false;
-    });
-  },
-  beforeDestroy() {
-    clearInterval(this.enterKeyInterval);
-    clearInterval(this.backspaceKeyInterval);
-    this.enterKeyInterval = null;
-    this.backspaceKeyInterval = null;
-    document.removeEventListener("keyup", this.handleKeyUp);
-    document.removeEventListener("click", this.handleGlobalClick);
-    this.$el
-      .querySelector(".codeBody")
-      ?.removeEventListener("click", this.handleCodeAreaClick);
   },
 };
 </script>
-  
+
 <style scoped>
 * {
   box-sizing: border-box;
@@ -1707,7 +1642,7 @@ export default {
 }
 
 .selection::before {
-  content: "";
+  content: '';
   position: absolute;
   top: -6px;
   left: 20px;
@@ -1774,7 +1709,7 @@ export default {
 
 /* 添加选中行的边框效果 */
 .selected-line::after {
-  content: "";
+  content: '';
   position: absolute;
   top: 0;
   left: 0;
@@ -1878,7 +1813,7 @@ export default {
   caret-color: #0366d6;
   z-index: 2;
   padding: 0 12px;
-  font-family: "Fira Code", "Consolas", monospace;
+  font-family: 'Fira Code', 'Consolas', monospace;
   font-size: 14px;
   line-height: 22px;
   /* 添加光标动画 */
@@ -1904,7 +1839,7 @@ export default {
   height: 100%;
   margin: 0;
   padding: 0 12px;
-  font-family: "Fira Code", "Consolas", monospace;
+  font-family: 'Fira Code', 'Consolas', monospace;
   font-size: 14px;
   line-height: 22px;
   white-space: pre;
