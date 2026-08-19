@@ -34,7 +34,7 @@
 <script setup>
 import { ref, computed } from 'vue';
 import { Timer, Plus, Check, Loading } from '@element-plus/icons-vue';  
-import axios from 'axios';
+import { raceApi } from '@/api';
 import AlertBox from '../JGG/alertbox.vue';
 
 const props = defineProps({
@@ -68,7 +68,7 @@ const handleSignup = async () => {
     
     try {
     loading.value = true;
-    const { data } = await axios.post("/api/race-register", { race_uid: props.uid });
+    const data = await raceApi.registerRace(props.uid);
     
     if (data.success) {
       // 直接更新本地状态

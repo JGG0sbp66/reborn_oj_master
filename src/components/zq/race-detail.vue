@@ -111,7 +111,7 @@
 <script setup lang="ts">
 import { ref, reactive, defineProps, defineEmits, defineExpose } from 'vue';
 import { ElMessage } from 'element-plus';
-import axios from 'axios';
+import { adminApi } from '@/api';
 import { nextTick } from 'vue';
 
 // 定义组件的props和emits
@@ -230,10 +230,10 @@ const fetchQuestionsInfo = async (problemIds: number[]) => {
   
   try {
     const promises = problemIds.map(id => 
-      axios.get(`/api/admin-question/${id}`)
-        .then(response => ({
+      adminApi.getAdminQuestionDetail(id)
+        .then(data => ({
           id,
-          title: response.data.question?.title || ''
+          title: (data.question as Record<string, string> | undefined)?.title || ''
         }))
         .catch(() => ({
           id,
@@ -264,8 +264,8 @@ const getProblemTitle = (problemId: number): string => {
 // 获取单个题目信息
 const fetchSingleProblem = async (problemId: number) => {
   try {
-    const response = await axios.get(`/api/admin-question/${problemId}`);
-    const title = response.data.question?.title || '';
+    const data = await adminApi.getAdminQuestionDetail(problemId);
+    const title = (data.question as Record<string, string> | undefined)?.title || '';
     if (title) {
       // 更新到缓存
       const existingIndex = problemsInfo.value.findIndex(p => p.id === problemId);
@@ -291,13 +291,10 @@ const fetchRaceDetails = async (raceId: number) => {
   loading.value = true;
   
   try {
-    const response = await axios({
-      url: `/api/races/${raceId}`,
-      method: 'get'
-    });
+    const data = await adminApi.getAdminRaceDetail(raceId);
     
     // 使用 Object.assign 一次性更新响应式数据
-    Object.assign(raceData, response.data);
+    Object.assign(raceData, data);
     
     // 并行获取题目信息和用户信息
     await Promise.all([

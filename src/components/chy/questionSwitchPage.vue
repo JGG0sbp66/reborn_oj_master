@@ -66,7 +66,7 @@
 </template>
 
 <script>
-import axios from "axios";
+import { questionApi } from "@/api";
 export default {
   data() {
     return {
@@ -125,15 +125,11 @@ export default {
     async fetchData(page) {
       // 从后端获取数据
       try {
-        const { data: response } = await axios({
-          url: "/api/questions",
-          method: "post",
-          data: {
-            "page": page,
-            "category": this.selectData.category,
-            "topic": this.selectData.topic,
-            "input": this.selectData.input
-          }
+        const response = await questionApi.getQuestions({
+          page: page,
+          category: this.selectData.category,
+          topic: this.selectData.topic,
+          input: this.selectData.input
         });
 
         console.log("Fetched data:", response); // 调试日志

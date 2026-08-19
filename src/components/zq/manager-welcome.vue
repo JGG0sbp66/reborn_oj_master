@@ -47,7 +47,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import { User, Document, TrendCharts, Connection } from '@element-plus/icons-vue';
-import axios from 'axios';
+import { userApi } from '@/api';
 
 const currentDate = computed(() => {
     const date = new Date();
@@ -82,13 +82,13 @@ const animateValue = (start: number, end: number, duration: number, setter: (val
 
 const fetchStats = async () => {
     try {
-        const response = await axios.get('/api/getStats');
-        if (response.data.success) {
+        const data = (await userApi.getStats()) as Record<string, number>;
+        if (data.success) {
             // 使用动画更新数值
-            animateValue(0, response.data.注册用户数量, 1500, (val) => userCount.value = val);
-            animateValue(0, response.data.题目数量, 1500, (val) => questionCount.value = val);
-            animateValue(0, response.data.竞赛数量, 1500, (val) => competitionCount.value = val);
-            animateValue(0, response.data.在线用户数, 1500, (val) => onlineCount.value = val);
+            animateValue(0, data.注册用户数量, 1500, (val) => userCount.value = val);
+            animateValue(0, data.题目数量, 1500, (val) => questionCount.value = val);
+            animateValue(0, data.竞赛数量, 1500, (val) => competitionCount.value = val);
+            animateValue(0, data.在线用户数, 1500, (val) => onlineCount.value = val);
         }
     } catch (error) {
         console.error('获取统计数据失败:', error);

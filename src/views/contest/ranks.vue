@@ -21,7 +21,7 @@ import { ref } from "vue"
 import competitionheader from "@/components/zq/competitionheader.vue";
 import sidebarrank from "@/components/zq/contest-sidebar.vue";
 import rank from "@/components/zq/rank.vue";
-import axios from "axios";
+import { raceApi } from "@/api";
 import { onMounted } from "vue";
 import { useRoute } from "vue-router";
 
@@ -35,11 +35,7 @@ const uid = route.query.uid;
 
 const get_race_info = async () => {
     try {
-        const { data } = await axios({
-            url: "/api/race-info",
-            method: "post",
-            data: { uid: uid },
-        });
+        const data = await raceApi.getRaceInfo(uid);
         console.log('比赛信息:', data);
         return data.race_info; // 直接返回race_info对象
     } catch (error) {
@@ -58,11 +54,7 @@ const get_race_info = async () => {
 
 const get_race_rank = async () => {
     try {
-        const { data } = await axios({
-            url: "/api/race-rank",
-            method: "post",
-            data: { uid: uid },
-        });
+        const data = await raceApi.getRaceRank(uid);
         console.log('排名数据:', data);
         return data;
     } catch (error) {

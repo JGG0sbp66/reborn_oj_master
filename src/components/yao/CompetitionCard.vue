@@ -63,7 +63,7 @@
 
 <script setup lang="ts">
 import { ref, defineProps, onMounted, computed, watch } from 'vue';
-import axios from 'axios';
+import { request } from '@/api';
 
 // 定义竞赛对象类型
 interface Tag {
@@ -192,12 +192,9 @@ const fetchCompetitionData = async () => {
   if (!props.competitionId || !props.useRemoteData) return;
   
   try {
-    const { data } = await axios({
-      url: '/api/competition',
-      method: 'post',
-      data: { 
-        id: props.competitionId 
-      }
+    // TODO: 后端暂无 /competition 接口，待后端补充后迁移到 raceApi
+    const { data } = await request.post('/competition', {
+      id: props.competitionId
     });
     competitionData.value = data.competition;
     console.log('获取到竞赛数据:', data.competition);

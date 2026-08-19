@@ -250,7 +250,8 @@ import { ref, computed, onMounted, watch } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { Plus, Search, ArrowUp, ArrowDown, Refresh, Timer, Collection } from '@element-plus/icons-vue';
 import AlertBox from '../JGG/alertbox.vue';
-import axios from 'axios';
+import { adminApi } from '@/api';
+import type { ApiError } from '@/api';
 import ProblemCreate from './problem-create.vue';
 import ProblemEdit from './problem-edit.vue';
 import ProblemDetail from './problem-detail.vue';
@@ -321,12 +322,7 @@ const searchTimeout = ref(null);
 // 模拟题目数据
 const problems = ref([]);
 const get_problem_info = async (page: number = 1, topic: string = '', input: string = ''): Promise<any> => {
-    const response = await axios.post("/api/admin-get-questions", {
-        page,
-        topic,
-        input
-    });
-    return response.data;
+    return adminApi.getAdminQuestions({ page, topic, input });
 };
 
 // 处理延迟搜索，避免频繁过滤
@@ -581,16 +577,7 @@ const deleteProblem = (id: string) => {
                 console.log(`正在删除题目，ID: ${id}`);
 
                 // 使用ID调用接口
-                const response = await axios({
-                    url: `/api/admin-question/${numericId}`,
-                    method: 'DELETE',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                });
-
-                // 成功删除
-                console.log('删除响应:', response);
+                await adminApi.deleteQuestion(numericId);
 
                 // 从本地数据中移除已删除的题目
                 problems.value = problems.value.filter((p: any) => p.id !== id);
@@ -608,7 +595,7 @@ const deleteProblem = (id: string) => {
                 fetchData();
             } catch (error: any) {
                 console.error('删除题目失败:', error);
-                alertBox.value.show(`删除题目失败: ${error.response?.data?.message || error.message || '未知错误'}`, 2);
+                alertBox.value.show(`删除题目失败: ${(error as ApiError).message || '未知错误'}`, 2);
             }
         })
         .catch(() => {

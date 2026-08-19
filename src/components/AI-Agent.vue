@@ -123,7 +123,7 @@
 </template>
 
 <script>
-import axios from "axios";
+import { request } from "@/api";
 import defaultaiAvatar from "@/assets/icons/ai-avatar.png"; // 默认AI头像路径
 import MarkdownIt from "markdown-it";
 
@@ -206,8 +206,8 @@ export default {
         this.messages[thinkingIndex].text = "思考中...";
         this.$nextTick(() => this.scrollToBottom());
 
-        const response = await axios.post(
-          this.apiEndpoint,
+        const response = await request.post(
+          this.apiEndpoint.replace(/^\/api/, ''),
           { prompt: message },
           {
             headers: { "Content-Type": "application/json" },

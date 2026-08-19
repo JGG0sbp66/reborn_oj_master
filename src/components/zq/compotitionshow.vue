@@ -111,7 +111,6 @@ import {
   Timer,
   Lock
 } from "@element-plus/icons-vue";
-import axios from "axios";
 
 const router = useRouter();
 const store = useStore();

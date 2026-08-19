@@ -33,7 +33,7 @@
 
 <script setup lang="ts">
 import { defineProps, ref, computed, onMounted } from 'vue';
-import axios from 'axios';
+import { raceApi } from '@/api';
 
 // 定义接口数据结构，与API返回格式匹配
 interface ProblemStat {
@@ -78,9 +78,9 @@ const competitions = computed(() => {
 onMounted(async () => {
   if (!props.competitions) {
     try {
-      const response = await axios.get('/api/user-race');
-      if (response.data && Array.isArray(response.data)) {
-        localCompetitions.value = response.data;
+      const data = await raceApi.getUserRaces();
+      if (data && Array.isArray(data)) {
+        localCompetitions.value = data;
       }
     } catch (error) {
       console.error('获取参赛记录失败:', error);

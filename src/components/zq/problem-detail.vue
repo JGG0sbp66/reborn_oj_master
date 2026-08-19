@@ -112,7 +112,8 @@
 <script setup lang="ts">
 import { ref, reactive, defineProps, defineEmits, defineExpose } from 'vue';
 import { ElMessage } from 'element-plus';
-import axios from 'axios';
+import { adminApi } from '@/api';
+import type { QuestionDetail } from '@/api';
 
 // 定义组件的props和emits
 const props = defineProps({
@@ -200,12 +201,10 @@ const fetchProblemDetails = async (problemId: number) => {
 
         console.log(`正在获取题目详情,ID: ${numericId}`);
 
-        const response = await axios({
-            url: `/api/admin-question/${numericId}`,
-            method: 'get'
-        });
-
-        const apiData = response.data;
+        const apiData = (await adminApi.getAdminQuestionDetail(numericId)) as {
+            question: Partial<QuestionDetail>;
+            topic?: string;
+        };
 
         // 填充题目数据
         problemData.id = `${problemId}`;

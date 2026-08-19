@@ -37,7 +37,6 @@ import {
     User, Document, TrendCharts,
     Monitor, Connection, Timer
 } from '@element-plus/icons-vue';
-import axios from 'axios';
 
 // 获取侧边栏折叠状态
 const isCollapsed = ref<boolean>(true);

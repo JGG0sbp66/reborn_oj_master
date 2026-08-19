@@ -50,7 +50,8 @@
 <script setup lang="ts">
 import { defineProps, defineEmits, ref } from 'vue';
 import { ElLoading } from 'element-plus';
-import axios from 'axios';
+import { userApi } from '@/api';
+import type { ApiError } from '@/api';
 
 interface SecuritySettings {
   twoFactorEnabled: boolean;
@@ -108,20 +109,18 @@ const changePassword = async (): Promise<void> => {
     });
     
     // 发送请求到后端修改密码
-    const response = await axios.post('/api/user-change-password', {
-      old_password: oldPassword.value,
-      new_password: newPassword.value,
-      re_new_password: confirmPassword.value
-    }, {
-      withCredentials: true
-    });
+    const data = await userApi.changePassword(
+      oldPassword.value,
+      newPassword.value,
+      confirmPassword.value
+    );
     
     // 关闭加载提示
     loadingInstance.close();
     
     // 处理响应
-    if (response.data && response.data.success) {
-      props.alertBox?.show(response.data.message || '密码已成功修改', 0);
+    if (data && data.success) {
+      props.alertBox?.show(data.message || '密码已成功修改', 0);
       
       // 清空表单
       oldPassword.value = '';
@@ -132,19 +131,20 @@ const changePassword = async (): Promise<void> => {
       emit('password-changed');
     } else {
       // 后端返回失败信息
-      props.alertBox?.show(response.data?.message || '修改密码失败', 2);
+      props.alertBox?.show(data?.message || '修改密码失败', 2);
     }
-  } catch (error: any) {
+  } catch (error) {
     console.error('修改密码失败:', error);
     
     // 提供更详细的错误信息
+    const apiError = error as ApiError;
     let errorMessage = '修改密码失败，请稍后重试';
-    if (error.response) {
+    if (apiError.status !== null) {
       // 服务器响应了，但状态码不是2xx
-      errorMessage = error.response.data?.message || `修改密码失败 (${error.response.status})`;
-    } else if (error.request) {
+      errorMessage = apiError.message || `修改密码失败 (${apiError.status})`;
+    } else {
       // 请求发送了但没有收到响应
-      errorMessage = '服务器未响应，请检查网络连接';
+      errorMessage = apiError.message || '服务器未响应，请检查网络连接';
     }
     
     props.alertBox?.show(errorMessage, 2);

@@ -208,7 +208,7 @@
 <script>
 import hljs from "highlight.js";
 import "highlight.js/styles/github-dark.css";
-import axios from "axios";
+import { judgeApi } from "@/api";
 import { checkAuth } from "@/utils/auth";
 
 export default {
@@ -1297,14 +1297,7 @@ export default {
           formData.append("race_id", this.race_uid);
         }
 
-        const { data: response } = await axios({
-          url: "/api/judge/submit",
-          method: "post",
-          data: formData,
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        });
+        const response = await judgeApi.submitCode(formData);
 
         if (!response.success) {
           throw new Error(response.message || "提交失败");

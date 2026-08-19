@@ -20,7 +20,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import axios from 'axios';
+import { questionApi } from '@/api';
 import { useRouter } from 'vue-router';
 
 const router = useRouter();
@@ -67,9 +67,7 @@ const handleProblemClick = (uid: number) => {
   window.open(`/nav/questions_detail`, '_blank');
   
   // 异步发送请求，不阻塞页面跳转
-  axios.post('/api/question-detail', {
-    uid: uid
-  }).catch(error => {
+  questionApi.getQuestionDetail(uid).catch((error) => {
     console.error('获取题目详情失败:', error);
   });
 };

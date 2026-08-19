@@ -270,7 +270,8 @@ import { ElMessage, ElMessageBox } from 'element-plus';
 import type { FormInstance } from 'element-plus';
 import { Plus, Search, ArrowUp, ArrowDown, Timer, Collection, Refresh, CircleCloseFilled } from '@element-plus/icons-vue';
 import AlertBox from '../JGG/alertbox.vue';
-import axios from 'axios';
+import { adminApi } from '@/api';
+import type { ApiError } from '@/api';
 import RaceCreate from './race-create.vue';
 import RaceEdit from './race-edit.vue';
 import RaceDetail from './race-detail.vue';
@@ -386,12 +387,9 @@ const fetchUsers = async (page = 1) => {
   // 保证页码不小于1
   const safePage = page < 1 ? 1 : page;
   try {
-    const res = await axios.post('/api/admin-get-user-list', {
-      page: safePage
-      // 其他参数可选
-    });
-    if (res.data.success) {
-      return res.data.data; // 返回数据
+    const data = await adminApi.getUserList({ page: safePage });
+    if (data.success) {
+      return data.data; // 返回数据
     } else {
       alertBox.value?.show('获取用户数据失败，请稍后重试', 1);
       return null;
@@ -653,11 +651,10 @@ const submitBanUser = () => {
                 try {
                     banSubmitting.value = true;
                     
-                    await axios.post('/api/admin-ban-user', {
-                        uid: Number(banForm.value.uid),
-                        ban_reason: banForm.value.ban_reason,
-                        ban_end_time: banForm.value.is_permanent ? null : banForm.value.ban_end_time
-                    });
+                    await adminApi.banUser(
+                        Number(banForm.value.uid),
+                        banForm.value.is_permanent ? null : banForm.value.ban_end_time
+                    );
                     
                     ElMessage.success('用户已被封禁');
                     alertBox.value?.show(`用户ID ${banForm.value.uid} 已被封禁`, 0);
@@ -667,9 +664,10 @@ const submitBanUser = () => {
                     delete pageDataCache.value[currentPage.value];
                     // 重新获取当前页数据
                     await fetchData(false);
-                } catch (error: any) {
-                    ElMessage.error(`封禁失败: ${error.response?.data?.message || error.message || '服务器错误'}`);
-                    alertBox.value?.show(`封禁失败: ${error.response?.data?.message || error.message || '服务器错误'}`, 1);
+                } catch (error) {
+                    const errMsg = (error as ApiError).message || '服务器错误';
+                    ElMessage.error(`封禁失败: ${errMsg}`);
+                    alertBox.value?.show(`封禁失败: ${errMsg}`, 1);
                 } finally {
                     banSubmitting.value = false;
                 }
@@ -701,9 +699,7 @@ const unbanUser = async (user: any) => {
         loading.value = true;
         
         // 调用解封接口
-        await axios.post('/api/admin-unban-user', {
-            uid: user.uid
-        });
+        await adminApi.unbanUser(user.uid);
         
         // 显示成功消息
         ElMessage.success('用户已被解封');
@@ -713,15 +709,16 @@ const unbanUser = async (user: any) => {
         delete pageDataCache.value[currentPage.value];
         // 重新获取当前页数据
         await fetchData(false);
-    } catch (error: any) {
+    } catch (error) {
         // 如果是用户取消操作，不显示错误
-        if (error === 'cancel' || error?.toString().includes('cancel')) {
+        if (error === 'cancel' || String(error).includes('cancel')) {
             return;
         }
         
         // 显示错误消息
-        ElMessage.error(`解封失败: ${error.response?.data?.message || error.message || '服务器错误'}`);
-        alertBox.value?.show(`解封失败: ${error.response?.data?.message || error.message || '服务器错误'}`, 1);
+        const errMsg = (error as ApiError).message || '服务器错误';
+        ElMessage.error(`解封失败: ${errMsg}`);
+        alertBox.value?.show(`解封失败: ${errMsg}`, 1);
     } finally {
         // 隐藏加载状态
         loading.value = false;

@@ -147,7 +147,8 @@ import { ref, reactive, onMounted, watch } from 'vue';
 import { ElMessage } from 'element-plus';
 import type { FormInstance, FormRules } from 'element-plus';
 import { Plus, Delete } from '@element-plus/icons-vue';
-import axios from 'axios';
+import { adminApi } from '@/api';
+import type { ApiError } from '@/api';
 
 // 定义新建竞赛中示例类型
 interface ExampleItem {
@@ -287,12 +288,9 @@ const isLoadingMore = ref(false);
 const fetchQuestionsByPage = async (page: number, query: string = searchQuery.value): Promise<void> => {
   isLoadingMore.value = true;
   try {
-    const response = await axios.post("/api/admin-get-questions", {
-      page,
-      input: query
-    });
-    if (response.data && response.data.success && Array.isArray(response.data.questions)) {
-      const questions = response.data.questions.map((item: any) => ({
+    const data = await adminApi.getAdminQuestions({ page, input: query });
+    if (data && data.success && Array.isArray(data.questions)) {
+      const questions = data.questions.map((item: any) => ({
         id: item.uid,
         title: item.question?.title || `题目 ${item.uid}`
       }));
@@ -301,8 +299,8 @@ const fetchQuestionsByPage = async (page: number, query: string = searchQuery.va
       } else {
         filteredProblems.value = [...filteredProblems.value, ...questions];
       }
-      totalPages.value = response.data.total_page || 1;
-      totalQuestions.value = response.data.total_count || 0;
+      totalPages.value = (data.total_page as number) || 1;
+      totalQuestions.value = (data.total_count as number) || 0;
       currentPage.value = page;
     } else {
       if (page === 1) filteredProblems.value = [];
@@ -340,8 +338,7 @@ const fetchQuestionsInfo = async (problemIds: number[] = []): Promise<void> => {
     }
     
     // 获取所有可用题目
-    const response = await axios.get("/api/admin-question");
-    const apiData = response.data as ApiProblemItem[];
+    const apiData = (await adminApi.getAdminQuestionListAll()) as ApiProblemItem[];
     
     // 处理API返回的数据
     const results = apiData.map((item: ApiProblemItem) => ({
@@ -372,8 +369,10 @@ const fetchQuestionsInfo = async (problemIds: number[] = []): Promise<void> => {
 // 获取单个题目的标题
 const fetchSingleProblemTitle = async (problemId: number): Promise<void> => {
   try {
-    const response = await axios.get(`/api/${problemId}`);
-    const title = response.data.question?.title || '';
+    // 后端没有 /api/{id} 路由，单题详情走 /admin-question/{id}
+    const data = await adminApi.getAdminQuestionDetail(problemId);
+    const question = data.question as Record<string, string> | undefined;
+    const title = question?.title || '';
     if (title) {
       // 更新到缓存
       const index = allProblems.value.findIndex(p => p.id === problemId);
@@ -525,11 +524,7 @@ const submitCompetition = async (): Promise<void> => {
     console.log('提交竞赛数据:', JSON.stringify(competition));
     
     // 发送创建竞赛请求
-    const response = await axios({
-      url: '/api/races',
-      method: 'post',
-      data: competition
-    });
+    await adminApi.createRace(competition);
     
     // 创建成功
     if (props.alertBoxRef) {
@@ -553,9 +548,9 @@ const submitCompetition = async (): Promise<void> => {
     } else {
       console.error('创建竞赛失败:', error);
       if (props.alertBoxRef) {
-        props.alertBoxRef.show(`创建竞赛失败: ${error.response?.data?.message || error.message || '未知错误'}`, 1);
+        props.alertBoxRef.show(`创建竞赛失败: ${(error as ApiError).message || '未知错误'}`, 1);
       } else {
-        ElMessage.error(`创建竞赛失败: ${error.response?.data?.message || error.message || '未知错误'}`);
+        ElMessage.error(`创建竞赛失败: ${(error as ApiError).message || '未知错误'}`);
       }
     }
   } finally {

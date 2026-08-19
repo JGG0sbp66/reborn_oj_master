@@ -99,7 +99,8 @@
 <script setup lang="ts">
 import { ref, onMounted, computed, watch } from "vue";
 import { useRouter } from "vue-router";
-import axios from "axios";
+import { authApi } from "@/api";
+import type { ApiError } from "@/api";
 import alertbox from "@/components/JGG/alertbox.vue";
 import betInput from "./betInput.vue";
 import { checkAuth } from "@/utils/auth";
@@ -214,14 +215,7 @@ const handleSubmit = async () => {
     localStorage.removeItem('avatar_user_id');
     
     // 验证账号密码是否正确
-    const { data: userData } = await axios({
-      url: "/api/login",
-      method: "post",
-      data: {
-        username: form.value.username,
-        password: form.value.password,
-      },
-    });
+    const userData = await authApi.login(form.value.username, form.value.password);
 
     if (userData.success) {
       alertboxRef.value?.show("登录成功", 0);
@@ -232,22 +226,16 @@ const handleSubmit = async () => {
       // 获取并存储用户信息
       const { authenticated, user } = await checkAuth();
       if (authenticated && user) {
-        localStorage.setItem("username", user.uid);
+        localStorage.setItem("username", String(user.uid));
         localStorage.setItem("userRole", user.role);
         
         // 如果有用户ID，尝试获取新用户的头像
         if (user.uid) {
           try {
-            // 向服务器请求用户头像
-            const avatarResponse = await axios.get(`/api/user-avatar/${user.uid}`, {
-              responseType: 'blob',
-              withCredentials: true
-            });
-            
-            if (avatarResponse.status === 200 && avatarResponse.data) {
-              // 创建blob URL用于显示
-              const blob = new Blob([avatarResponse.data], { type: 'image/jpeg' });
-              
+            // 向服务器请求用户头像（Blob）
+            const avatarBlob = await authApi.getUserAvatar(user.uid);
+
+            if (avatarBlob) {
               // 将blob转换为Base64，用于持久化存储
               const reader = new FileReader();
               reader.onloadend = () => {
@@ -257,10 +245,10 @@ const handleSubmit = async () => {
                   // 更新时间戳
                   localStorage.setItem('avatar_timestamp', Date.now().toString());
                   // 保存当前用户ID与头像的关联
-                  localStorage.setItem('avatar_user_id', user.uid);
+                  localStorage.setItem('avatar_user_id', String(user.uid));
                 }
               };
-              reader.readAsDataURL(blob);
+              reader.readAsDataURL(avatarBlob);
             }
           } catch (avatarError) {
             console.error('获取用户头像失败:', avatarError);
@@ -278,11 +266,9 @@ const handleSubmit = async () => {
       }, 1000);
     }
   } catch (error) {
-    if ((error as any).response) {
-      alertboxRef.value?.show(
-        "登录失败，" + (error as any).response.data.message,
-        2
-      );
+    const apiError = error as ApiError;
+    if (apiError?.message) {
+      alertboxRef.value?.show("登录失败，" + apiError.message, 2);
     } else {
       alertboxRef.value?.show(
         "发生未知错误，请联系管理员，错误原因：" + String(error),

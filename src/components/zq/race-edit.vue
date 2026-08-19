@@ -188,7 +188,8 @@ import { ref, defineExpose, reactive, defineProps, defineEmits } from 'vue';
 import { ElMessage } from 'element-plus';
 import type { FormInstance, FormRules } from 'element-plus';
 import { ArrowDown, Loading } from '@element-plus/icons-vue';
-import axios from 'axios';
+import { adminApi, questionApi, userApi } from '@/api';
+import type { ApiError } from '@/api';
 
 // 定义组件的props和emits
 const props = defineProps({
@@ -352,17 +353,13 @@ const fetchQuestionsByPage = async (page: number, query: string = searchQuery.va
     console.log(`正在获取第${page}页题目，查询条件: ${query}, 标签: ${topic}`);
     
     // 使用正确的API接口，这里可能需要根据实际接口调整
-    const response = await axios.post("/api/admin-get-questions", {
-      page,
-      topic,
-      input: query
-    });
+    const data = await adminApi.getAdminQuestions({ page, topic, input: query });
     
-    console.log('API返回数据:', response.data);
+    console.log('API返回数据:', data);
     
-    if (response.data && response.data.success && Array.isArray(response.data.questions)) {
+    if (data && data.success && Array.isArray(data.questions)) {
       // 处理返回的题目数据
-      const questions = response.data.questions.map((item: any) => ({
+      const questions = data.questions.map((item: any) => ({
         id: item.uid,
         title: item.question?.title || `题目 ${item.uid}`,
         topic: item.topic || '',
@@ -379,8 +376,8 @@ const fetchQuestionsByPage = async (page: number, query: string = searchQuery.va
       }
       
       // 更新分页信息
-      totalPages.value = response.data.total_page || 1;
-      totalQuestions.value = response.data.total_count || 0;
+      totalPages.value = (data.total_page as number) || 1;
+      totalQuestions.value = (data.total_count as number) || 0;
       currentPage.value = page;
       
       console.log(`加载了${questions.length}个题目，当前页${page}，总页数${totalPages.value}`);
@@ -401,9 +398,9 @@ const fetchQuestionsByPage = async (page: number, query: string = searchQuery.va
     // 如果API不可用，可以尝试使用备用API
     try {
       console.log('尝试使用备用API获取题目');
-      const fallbackResponse = await axios.get("/api/admin-question");
-      if (fallbackResponse.data && Array.isArray(fallbackResponse.data)) {
-        const questions = fallbackResponse.data.map((item: any) => ({
+      const fallbackData = await adminApi.getAdminQuestionListAll();
+      if (fallbackData && Array.isArray(fallbackData)) {
+        const questions = fallbackData.map((item: any) => ({
           id: item.uid || 0,
           title: item.question?.title || `题目 ${item.uid || 0}`
         }));
@@ -461,19 +458,17 @@ const fetchQuestionsInfo = async (problemIds: number[] = []): Promise<void> => {
 const fetchSingleProblemTitle = async (problemId: number): Promise<void> => {
   try {
     console.log(`正在获取题目${problemId}的详细信息`);
-    const response = await axios.post("/api/question-detail", {
-      uid: problemId
-    });
+    const data = await questionApi.getQuestionDetail(problemId);
     
-    if (response.data && response.data.success && response.data.question_detail) {
-      const title = response.data.question_detail.title || `题目 ${problemId}`;
+    if (data && data.success && data.question_detail) {
+      const title = data.question_detail.title || `题目 ${problemId}`;
       // 创建新的题目对象
       const newProblem = {
         id: problemId,
         title: title,
-        topic: response.data.topic || '',
-        submitNum: response.data.submit_num || 0,
-        solveNum: response.data.solve_num || 0
+        topic: (data.topic as string) || '',
+        submitNum: (data.submit_num as number) || 0,
+        solveNum: (data.solve_num as number) || 0
       };
       
       // 更新到缓存
@@ -495,7 +490,7 @@ const fetchSingleProblemTitle = async (problemId: number): Promise<void> => {
       
       console.log(`题目${problemId}信息已更新:`, newProblem);
     } else {
-      console.warn(`获取题目${problemId}的详细信息失败，API返回:`, response.data);
+      console.warn(`获取题目${problemId}的详细信息失败，API返回:`, data);
     }
   } catch (error) {
     console.error(`获取题目 ${problemId} 标题失败:`, error);
@@ -507,14 +502,14 @@ const preloadSelectedProblems = async (problemIds: number[]): Promise<QuestionIn
   return await Promise.all(
     problemIds.map(async (id: number) => {
       try {
-        const response = await axios.post("/api/question-detail", { uid: id });
-        if (response.data && response.data.success && response.data.question_detail) {
+        const data = await questionApi.getQuestionDetail(id);
+        if (data && data.success && data.question_detail) {
           return {
             id: id,
-            title: response.data.question_detail.title || `题目 ${id}`,
-            topic: response.data.topic || '',
-            submitNum: response.data.submit_num || 0,
-            solveNum: response.data.solve_num || 0
+            title: data.question_detail.title || `题目 ${id}`,
+            topic: (data.topic as string) || '',
+            submitNum: (data.submit_num as number) || 0,
+            solveNum: (data.solve_num as number) || 0
           };
         }
         return { id: id, title: `题目 ${id}` };
@@ -612,12 +607,12 @@ const openEditDialog = async (competitionData: CompetitionData): Promise<void> =
     if (competition.user_list && competition.user_list.length > 0) {
       try {
         const promises = competition.user_list.map((uid: number) => 
-          axios.get(`/api/get-username/${uid}`)
+          userApi.getUsername(uid)
         );
         const responses = await Promise.all(promises);
-        responses.forEach((response, index) => {
-          if (response.data.success) {
-            userMap.value.set(competition.user_list[index], response.data.message);
+        responses.forEach((data, index) => {
+          if (data.success) {
+            userMap.value.set(competition.user_list[index], data.message as string);
           }
         });
       } catch (error) {
@@ -710,13 +705,7 @@ const updateCompetition = async (): Promise<void> => {
     console.log('准备提交竞赛更新数据:', JSON.stringify(submissionData));
     
     // 发送更新竞赛请求
-    const response = await axios({
-      url: `/api/races/${submissionData.uid}`,
-      method: 'put',
-      data: submissionData
-    });
-    
-    console.log('更新竞赛响应:', response);
+    await adminApi.updateRace(submissionData.uid, submissionData);
     
     // 更新成功
     if (props.alertBoxRef) {
@@ -736,9 +725,9 @@ const updateCompetition = async (): Promise<void> => {
     } else {
       console.error('更新竞赛失败:', error);
       if (props.alertBoxRef) {
-        props.alertBoxRef.show(`更新竞赛失败: ${error.response?.data?.message || error.message || '未知错误'}`, 1);
+        props.alertBoxRef.show(`更新竞赛失败: ${(error as ApiError).message || '未知错误'}`, 1);
       } else {
-        ElMessage.error(`更新竞赛失败: ${error.response?.data?.message || error.message || '未知错误'}`);
+        ElMessage.error(`更新竞赛失败: ${(error as ApiError).message || '未知错误'}`);
       }
     }
   } finally {
@@ -751,12 +740,9 @@ const fetchRaceDetails = async (uid: number): Promise<void> => {
   try {
     console.log(`正在获取竞赛详情，ID: ${uid}`);
     
-    const response = await axios({
-      url: `/api/races/${uid}`,
-      method: 'get'
-    });
+    const data = await adminApi.getAdminRaceDetail(uid);
     
-    console.log('获取到的竞赛详情:', response.data);
+    console.log('获取到的竞赛详情:', data);
     
     // 清空当前竞赛数据
     Object.assign(competition, {
@@ -772,7 +758,7 @@ const fetchRaceDetails = async (uid: number): Promise<void> => {
     });
     
     // 填充竞赛数据
-    const raceData = response.data;
+    const raceData = data;
     
     // 确保数据的完整性
     Object.assign(competition, {
@@ -797,14 +783,15 @@ const fetchRaceDetails = async (uid: number): Promise<void> => {
       const selectedProblems = await Promise.all(
         competition.problems_list.map(async (id: number) => {
           try {
-            const response = await axios.get(`/api/get-question/${id}`);
-            if (response.data && response.data.question) {
+            // 后端没有 /get-question/{id} 路由，单题详情走 /admin-question/{id}
+            const data = await adminApi.getAdminQuestionDetail(id);
+            if (data && data.question) {
               return {
                 id: id,
-                title: response.data.question?.title || `题目 ${id}`,
-                topic: response.data.topic || '',
-                submitNum: response.data.submit_num || 0,
-                solveNum: response.data.solve_num || 0
+                title: (data.question as Record<string, string>).title || `题目 ${id}`,
+                topic: (data.topic as string) || '',
+                submitNum: (data.submit_num as number) || 0,
+                solveNum: (data.solve_num as number) || 0
               };
             }
             return { id: id, title: `题目 ${id}` };
@@ -833,12 +820,12 @@ const fetchRaceDetails = async (uid: number): Promise<void> => {
     if (competition.user_list && competition.user_list.length > 0) {
       try {
         const promises = competition.user_list.map((uid: number) => 
-          axios.get(`/api/get-username/${uid}`)
+          userApi.getUsername(uid)
         );
         const responses = await Promise.all(promises);
-        responses.forEach((response, index) => {
-          if (response.data.success) {
-            userMap.value.set(competition.user_list[index], response.data.message);
+        responses.forEach((data, index) => {
+          if (data.success) {
+            userMap.value.set(competition.user_list[index], data.message as string);
           }
         });
       } catch (error) {
@@ -898,10 +885,10 @@ const addUser = async (): Promise<void> => {
       return;
     }
 
-    const response = await axios.get(`/api/get-username/${uid}`);
+    const data = await userApi.getUsername(uid);
     
-    if (response.data.success) {
-      const username = response.data.message;
+    if (data.success) {
+      const username = data.message as string;
       
       // 检查是否已存在
       if (!competition.user_list.includes(uid)) {
@@ -921,9 +908,9 @@ const addUser = async (): Promise<void> => {
       }
     } else {
       if (props.alertBoxRef) {
-        props.alertBoxRef.show(response.data.message, 2);
+        props.alertBoxRef.show((data.message as string) || '操作失败', 2);
       } else {
-        ElMessage.error(response.data.message, 2);
+        ElMessage.error((data.message as string) || '操作失败');
       }
     }
   } catch (error) {

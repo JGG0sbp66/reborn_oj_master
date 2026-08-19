@@ -212,7 +212,8 @@
   import { ElMessage } from 'element-plus';
   import type { FormInstance, FormRules } from 'element-plus';
   import { Plus, Delete, Upload, InfoFilled } from '@element-plus/icons-vue';
-  import axios from 'axios';
+  import { adminApi } from '@/api';
+  import type { ApiError } from '@/api';
   
   // 定义组件的props和emits
   const props = defineProps({
@@ -410,18 +411,14 @@
       
       try {
         // 发送创建题目请求
-        const response = await axios({
-          url: '/api/admin-question',
-          method: 'post',
-          data: submitData
-        });
+        const data = await adminApi.createQuestion(submitData);
         
         // 记录返回的数据，便于调试
-        console.log('题目创建成功，服务器返回:', response.data);
+        console.log('题目创建成功，服务器返回:', data);
         
         // 创建成功
         if (props.alertBoxRef) {
-          props.alertBoxRef.show(`题目"${problem.title}"创建成功! ID: ${response.data.uid || '未知'}`, 0);
+          props.alertBoxRef.show(`题目"${problem.title}"创建成功! ID: ${data.uid || '未知'}`, 0);
         } else {
           ElMessage.success(`题目"${problem.title}"创建成功!`);
         }
@@ -429,45 +426,35 @@
         dialogVisible.value = false;
         
         // 设置创建的题目ID并打开测试用例上传对话框
-        if (response.data && response.data.uid) {
-          createdProblemUid.value = response.data.uid.toString();
+        if (data && data.uid) {
+          createdProblemUid.value = String(data.uid);
           testcaseDialogVisible.value = true;
         }
         
         // 通知父组件刷新数据
         emits('refreshData');
-      } catch (apiError: any) {
+      } catch (apiError) {
         console.error('API请求失败:', apiError);
+        const err = apiError as ApiError;
         let errorMessage = '未知错误';
         
-        if (apiError.response) {
+        if (err.status !== null) {
           // 服务器响应了错误状态码
-          const status = apiError.response.status;
+          const status = err.status;
           if (status === 400) {
-            errorMessage = '请求数据格式错误 (400)';
-            if (apiError.response.data && apiError.response.data.message) {
-              errorMessage = apiError.response.data.message;
-            }
+            errorMessage = err.message || '请求数据格式错误 (400)';
           } else if (status === 401) {
             errorMessage = '未授权，请先登录 (401)';
           } else if (status === 404) {
             errorMessage = 'API地址未找到 (404)';
           } else if (status === 500) {
-            errorMessage = '服务器内部错误 (500)';
+            errorMessage = err.message ? `服务器内部错误 (500): ${err.message}` : '服务器内部错误 (500)';
           } else {
-            errorMessage = `服务器错误 (${status})`;
+            errorMessage = err.message ? `服务器错误 (${status}): ${err.message}` : `服务器错误 (${status})`;
           }
-          
-          // 如果服务器返回了详细错误信息
-          if (apiError.response.data && apiError.response.data.message) {
-            errorMessage += `: ${apiError.response.data.message}`;
-          }
-        } else if (apiError.request) {
-          // 请求已发送但没有收到响应
-          errorMessage = '服务器没有响应，请检查网络连接';
         } else {
-          // 请求配置出错
-          errorMessage = apiError.message || '请求发送失败';
+          // 请求已发送但没有收到响应
+          errorMessage = err.message || '服务器没有响应，请检查网络连接';
         }
         
         // 显示错误信息

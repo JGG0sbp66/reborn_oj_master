@@ -160,7 +160,9 @@ import { ref, reactive } from 'vue';
 import { ElMessage } from 'element-plus';
 import type { FormInstance, FormRules } from 'element-plus';
 import { Delete } from '@element-plus/icons-vue';
-import axios from 'axios';
+import { adminApi } from '@/api';
+import type { ApiError } from '@/api';
+import type { QuestionDetail } from '@/api';
 
 // 定义组件的props和emits
 const props = defineProps({
@@ -266,12 +268,10 @@ const openEditDialog = async (problemIdOrData: string | ProblemData) => {
       console.log(`正在通过ID获取题目数据进行编辑，ID: ${problemIdOrData}`);
       
       // 通过ID获取题目详细数据
-      const response = await axios({
-        url: `/api/admin-question/${problemIdOrData}`,
-        method: 'get'
-      });
-      
-      const apiData = response.data;
+      const apiData = (await adminApi.getAdminQuestionDetail(Number(problemIdOrData))) as {
+        question: Partial<QuestionDetail>;
+        topic?: string;
+      };
       
       // 填充题目数据
       Object.assign(problem, {
@@ -395,11 +395,7 @@ const updateProblem = async () => {
     console.log('提交题目更新数据:', JSON.stringify(submitData));
     
     // 发送更新题目请求
-    const response = await axios({
-      url: `/api/admin-question/${numericId}`,
-      method: 'put',
-      data: submitData
-    });
+    await adminApi.updateQuestion(Number(numericId), submitData);
     
     // 更新成功
     if (props.alertBoxRef) {
@@ -419,9 +415,9 @@ const updateProblem = async () => {
     } else {
       console.error('更新题目失败:', error);
       if (props.alertBoxRef) {
-        props.alertBoxRef.show(`更新题目失败: ${error.response?.data?.message || error.message || '未知错误'}`, 1);
+        props.alertBoxRef.show(`更新题目失败: ${(error as ApiError).message || '未知错误'}`, 1);
       } else {
-        ElMessage.error(`更新题目失败: ${error.response?.data?.message || error.message || '未知错误'}`);
+        ElMessage.error(`更新题目失败: ${(error as ApiError).message || '未知错误'}`);
       }
     }
   } finally {
