@@ -1,0 +1,62 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  # 代码规范检查
+  # 注意：存量代码尚有基线 lint 错误，故暂时 continue-on-error（只报告不拦截）。
+  # 待基线清零后，请将 continue-on-error 改为 false 使其成为硬门禁。
+  lint:
+    name: ESLint
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm run lint
+
+  # TypeScript 类型检查
+  # 注意：存量类型错误约千级（模板推断噪音为主），暂只报告不拦截。
+  # 待基线清零后，请将 continue-on-error 改为 false。
+  typecheck:
+    name: vue-tsc
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm run type-check
+
+  # 生产构建（硬门禁：构建不过则 CI 失败）
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm run build
