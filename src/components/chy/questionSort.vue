@@ -1,8 +1,5 @@
 <template>
-  <main
-    class="Box"
-    @click.self="closeAllDropdowns"
-  >
+  <main class="Box" @click.self="closeAllDropdowns">
     <div class="headerBox">
       <!-- 状态筛选按钮 -->
       <div class="filter-container">
@@ -15,11 +12,7 @@
           @click="toggleStatusDropdown"
         >
           {{ selectedStatus || '作答状况' }}
-          <svg
-            class="filter-arrow"
-            :class="{ rotated: showStatusDropdown }"
-            viewBox="0 0 24 24"
-          >
+          <svg class="filter-arrow" :class="{ rotated: showStatusDropdown }" viewBox="0 0 24 24">
             <path
               d="M6 15l6-6l6 6"
               fill="none"
@@ -41,11 +34,7 @@
           @click="toggleTagDropdown"
         >
           {{ selectedTag || '标签' }}
-          <svg
-            class="filter-arrow"
-            :class="{ rotated: showTagDropdown }"
-            viewBox="0 0 24 24"
-          >
+          <svg class="filter-arrow" :class="{ rotated: showTagDropdown }" viewBox="0 0 24 24">
             <path
               d="M6 15l6-6l6 6"
               fill="none"
@@ -60,96 +49,58 @@
 
       <!-- 搜索框 -->
       <div class="search-container">
-        <svg
-          class="search-icon"
-          viewBox="0 0 1024 1024"
-        >
+        <svg class="search-icon" viewBox="0 0 1024 1024">
           <path
             d="M909.6 854.5L649.9 594.8C690.2 542.7 712 479 712 412c0-80.2-31.3-155.4-87.9-212.1c-56.6-56.7-132-87.9-212.1-87.9s-155.5 31.3-212.1 87.9C143.2 256.5 112 331.8 112 412c0 80.1 31.3 155.5 87.9 212.1C256.5 680.8 331.8 712 412 712c67 0 130.6-21.8 182.7-62l259.7 259.6a8.2 8.2 0 0 0 11.6 0l43.6-43.5a8.2 8.2 0 0 0 0-11.6zM570.4 570.4C528 612.7 471.8 636 412 636s-116-23.3-158.4-65.6C211.3 528 188 471.8 188 412s23.3-116.1 65.6-158.4C296 211.3 352.2 188 412 188s116.1 23.2 158.4 65.6S636 352.2 636 412s-23.3 116.1-65.6 158.4z"
             fill="currentColor"
           ></path>
         </svg>
         <input
+          v-model="searchQuery"
           class="search-input"
           type="search"
           placeholder="搜索题号、题目..."
-          v-model="searchQuery"
           @input="handleSearch"
-        >
+        />
       </div>
     </div>
 
     <!-- 状态下拉框 -->
-    <div
-      class="dropdown-menu"
-      v-show="showStatusDropdown"
-    >
+    <div v-show="showStatusDropdown" class="dropdown-menu">
       <div class="dropdown-arrow"></div>
-      <div
-        class="dropdown-content"
-        @click="closeAllDropdowns"
-      >
-        <div
-          class="dropdown-item"
-          @click="handleStatusSelect('未尝试')"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            class="status-icon"
-          >
+      <div class="dropdown-content" @click="closeAllDropdowns">
+        <div class="dropdown-item" @click="handleStatusSelect('未尝试')">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="status-icon">
             <path
               d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10s10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8s8 3.59 8 8s-3.59 8-8 8zm-5-9h10v2H7z"
               fill="currentColor"
             ></path>
           </svg>
           <span>未尝试</span>
-          <svg
-            v-if="selectedStatus === '未尝试'"
-            class="checkmark"
-            viewBox="0 0 24 24"
-          >
+          <svg v-if="selectedStatus === '未尝试'" class="checkmark" viewBox="0 0 24 24">
             <path
               fill="#1890ff"
               d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"
             ></path>
           </svg>
         </div>
-        <div
-          class="dropdown-item"
-          @click="handleStatusSelect('已通过')"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            class="status-icon"
-          >
+        <div class="dropdown-item" @click="handleStatusSelect('已通过')">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="status-icon">
             <path
               d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10s10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8s8 3.59 8 8s-3.59 8-8 8zm4.59-12.42L10 14.17l-2.59-2.58L6 13l4 4l8-8z"
               fill="currentColor"
             ></path>
           </svg>
           <span>已通过</span>
-          <svg
-            v-if="selectedStatus === '已通过'"
-            class="checkmark"
-            viewBox="0 0 24 24"
-          >
+          <svg v-if="selectedStatus === '已通过'" class="checkmark" viewBox="0 0 24 24">
             <path
               fill="#52c41a"
               d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"
             ></path>
           </svg>
         </div>
-        <div
-          class="dropdown-item"
-          @click="handleStatusSelect('未通过')"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 512 512"
-            class="status-icon"
-          >
+        <div class="dropdown-item" @click="handleStatusSelect('未通过')">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" class="status-icon">
             <path
               d="M448 256c0-106-86-192-192-192S64 150 64 256s86 192 192 192s192-86 192-192z"
               fill="none"
@@ -175,11 +126,7 @@
             ></path>
           </svg>
           <span>未通过</span>
-          <svg
-            v-if="selectedStatus === '未通过'"
-            class="checkmark"
-            viewBox="0 0 24 24"
-          >
+          <svg v-if="selectedStatus === '未通过'" class="checkmark" viewBox="0 0 24 24">
             <path
               fill="#fe4c61"
               d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"
@@ -190,105 +137,57 @@
     </div>
 
     <!-- 标签下拉框 -->
-    <div
-      class="dropdown-menu tag-dropdown"
-      v-show="showTagDropdown"
-    >
+    <div v-show="showTagDropdown" class="dropdown-menu tag-dropdown">
       <div class="dropdown-arrow"></div>
-      <div
-        class="dropdown-content"
-        @click="closeAllDropdowns"
-      >
-        <div
-          class="dropdown-item tag-item tag-beginner"
-          @click="handleTagSelect('入门')"
-        >
+      <div class="dropdown-content" @click="closeAllDropdowns">
+        <div class="dropdown-item tag-item tag-beginner" @click="handleTagSelect('入门')">
           <span>入门</span>
-          <svg
-            v-if="selectedTag === '入门'"
-            class="checkmark"
-            viewBox="0 0 24 24"
-          >
+          <svg v-if="selectedTag === '入门'" class="checkmark" viewBox="0 0 24 24">
             <path
               fill="#fe4c61"
               d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"
             ></path>
           </svg>
         </div>
-        <div
-          class="dropdown-item tag-item tag-popular"
-          @click="handleTagSelect('普及')"
-        >
+        <div class="dropdown-item tag-item tag-popular" @click="handleTagSelect('普及')">
           <span>普及</span>
-          <svg
-            v-if="selectedTag === '普及'"
-            class="checkmark"
-            viewBox="0 0 24 24"
-          >
+          <svg v-if="selectedTag === '普及'" class="checkmark" viewBox="0 0 24 24">
             <path
               fill="#f39c11"
               d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"
             ></path>
           </svg>
         </div>
-        <div
-          class="dropdown-item tag-item tag-advanced"
-          @click="handleTagSelect('提高')"
-        >
+        <div class="dropdown-item tag-item tag-advanced" @click="handleTagSelect('提高')">
           <span>提高</span>
-          <svg
-            v-if="selectedTag === '提高'"
-            class="checkmark"
-            viewBox="0 0 24 24"
-          >
+          <svg v-if="selectedTag === '提高'" class="checkmark" viewBox="0 0 24 24">
             <path
               fill="#ffc116"
               d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"
             ></path>
           </svg>
         </div>
-        <div
-          class="dropdown-item tag-item tag-provincial"
-          @click="handleTagSelect('省选')"
-        >
+        <div class="dropdown-item tag-item tag-provincial" @click="handleTagSelect('省选')">
           <span>省选</span>
-          <svg
-            v-if="selectedTag === '省选'"
-            class="checkmark"
-            viewBox="0 0 24 24"
-          >
+          <svg v-if="selectedTag === '省选'" class="checkmark" viewBox="0 0 24 24">
             <path
               fill="#52c41a"
               d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"
             ></path>
           </svg>
         </div>
-        <div
-          class="dropdown-item tag-item tag-noi"
-          @click="handleTagSelect('NOI')"
-        >
+        <div class="dropdown-item tag-item tag-noi" @click="handleTagSelect('NOI')">
           <span>NOI</span>
-          <svg
-            v-if="selectedTag === 'NOI'"
-            class="checkmark"
-            viewBox="0 0 24 24"
-          >
+          <svg v-if="selectedTag === 'NOI'" class="checkmark" viewBox="0 0 24 24">
             <path
               fill="#9d3dcf"
               d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"
             ></path>
           </svg>
         </div>
-        <div
-          class="dropdown-item tag-item tag-ctsc"
-          @click="handleTagSelect('CTSC')"
-        >
+        <div class="dropdown-item tag-item tag-ctsc" @click="handleTagSelect('CTSC')">
           <span>CTSC</span>
-          <svg
-            v-if="selectedTag === 'CTSC'"
-            class="checkmark"
-            viewBox="0 0 24 24"
-          >
+          <svg v-if="selectedTag === 'CTSC'" class="checkmark" viewBox="0 0 24 24">
             <path
               fill="#0e1d69"
               d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"
@@ -301,16 +200,20 @@
     <questionContent :questions="questionsData"></questionContent>
     <questionSwitchPage
       ref="switchPage"
+      :select-data="selected"
       @page-change="handlePageChange"
-      :selectData="selected"
     ></questionSwitchPage>
   </main>
 </template>
 
 <script>
-import questionContent from "./questionContent.vue";
-import questionSwitchPage from "./questionSwitchPage.vue";
+import questionContent from './questionContent.vue';
+import questionSwitchPage from './questionSwitchPage.vue';
 export default {
+  components: {
+    questionContent,
+    questionSwitchPage,
+  },
   data() {
     return {
       showStatusDropdown: false,
@@ -319,153 +222,26 @@ export default {
       hoverTag: false,
       questionsData: [],
       selected: {
-        category: "all",
-        topic: "all",
-        input: "",
+        category: 'all',
+        topic: 'all',
+        input: '',
       },
-      selectedStatus: "",
-      selectedTag: "",
-      searchQuery: "",
+      selectedStatus: '',
+      selectedTag: '',
+      searchQuery: '',
     };
-  },
-  components: {
-    questionContent,
-    questionSwitchPage,
-  },
-  mounted() {
-    document.addEventListener("click", this.handleGlobalClick);
-  },
-  beforeDestroy() {
-    document.removeEventListener("click", this.handleGlobalClick);
-  },
-  methods: {
-    handleGlobalClick(event) {
-      const keepOpenElements = [
-        ".selection",
-        ".selection2",
-        ".headerSpan1",
-        ".headerSpan2",
-        ".hS1",
-        ".hS2",
-      ];
-      const isClickInside = keepOpenElements.some((selector) =>
-        event.target.closest(selector)
-      );
-      if (!isClickInside) {
-        this.closeAllDropdowns();
-      }
-    },
-    toggleArrow(element, show) {
-      if (element) {
-        element.style.transform = show ? "rotate(0deg)" : "rotate(180deg)";
-        element.style.transition = "transform 0.5s ease";
-      }
-    },
-    toggleStatusDropdown(event) {
-      event.stopPropagation();
-      // 关闭标签下拉框
-      if (this.showTagDropdown) {
-        this.showTagDropdown = false;
-        const tagArrow = document.querySelector(".hS2");
-        this.toggleArrow(tagArrow, false);
-      }
-      // 切换状态下拉框
-      this.showStatusDropdown = !this.showStatusDropdown;
-      const arrow = document.querySelector(".hS1");
-      this.toggleArrow(arrow, this.showStatusDropdown);
-    },
-    toggleTagDropdown(event) {
-      event.stopPropagation();
-      // 关闭状态下拉框
-      if (this.showStatusDropdown) {
-        this.showStatusDropdown = false;
-        const statusArrow = document.querySelector(".hS1");
-        this.toggleArrow(statusArrow, false);
-      }
-      // 切换标签下拉框
-      this.showTagDropdown = !this.showTagDropdown;
-      const arrow = document.querySelector(".hS2");
-      this.toggleArrow(arrow, this.showTagDropdown);
-    },
-    closeAllDropdowns() {
-      if (this.showStatusDropdown) {
-        this.showStatusDropdown = false;
-        const arrow = document.querySelector(".hS1");
-        this.toggleArrow(arrow, false);
-      }
-      if (this.showTagDropdown) {
-        this.showTagDropdown = false;
-        const arrow = document.querySelector(".hS2");
-        this.toggleArrow(arrow, false);
-      }
-    },
-    handlePageChange(data) {
-      this.questionsData = data;
-    },
-    handleStatusSelect(status) {
-      // 如果点击的是已选中的状态，则取消选择
-      if (this.selectedStatus === status) {
-        this.selectedStatus = "";
-        this.selected = {
-          ...this.selected,
-          category: "",
-        };
-      } else {
-        this.selectedStatus = status;
-        this.selected = {
-          ...this.selected,
-          category: status,
-        };
-      }
-      this.showStatusDropdown = false;
-      const arrow = document.querySelector(".hS1");
-      this.toggleArrow(arrow, false);
-    },
-    handleTagSelect(tag) {
-      // 如果点击的是已选中的标签，则取消选择
-      if (this.selectedTag === tag) {
-        this.selectedTag = "";
-        this.selected = {
-          ...this.selected,
-          topic: "",
-        };
-      } else {
-        this.selectedTag = tag;
-        this.selected = {
-          ...this.selected,
-          topic: tag,
-        };
-      }
-      this.showTagDropdown = false;
-      const arrow = document.querySelector(".hS2");
-      this.toggleArrow(arrow, false);
-    },
-    handleSearch(event) {
-      this.searchText = event.target.value;
-      // 更新selected对象
-      this.selected = {
-        ...this.selected,
-        input: event.target.value,
-      };
-    },
-    handleSearch() {
-      this.selected = {
-        ...this.selected,
-        input: this.searchQuery,
-      };
-    },
   },
   computed: {
     statusButtonStyle() {
       return {
-        backgroundColor: this.hoverStatus ? "#d1e8fc" : "#2E33380D",
-        cursor: "pointer",
+        backgroundColor: this.hoverStatus ? '#d1e8fc' : '#2E33380D',
+        cursor: 'pointer',
       };
     },
     tagButtonStyle() {
       return {
-        backgroundColor: this.hoverTag ? "#d1e8fc" : "#2E33380D",
-        cursor: "pointer",
+        backgroundColor: this.hoverTag ? '#d1e8fc' : '#2E33380D',
+        cursor: 'pointer',
       };
     },
   },
@@ -480,6 +256,119 @@ export default {
         }
       },
       deep: true, // 深度监听
+    },
+  },
+  mounted() {
+    document.addEventListener('click', this.handleGlobalClick);
+  },
+  beforeUnmount() {
+    document.removeEventListener('click', this.handleGlobalClick);
+  },
+  methods: {
+    handleGlobalClick(event) {
+      const keepOpenElements = [
+        '.selection',
+        '.selection2',
+        '.headerSpan1',
+        '.headerSpan2',
+        '.hS1',
+        '.hS2',
+      ];
+      const isClickInside = keepOpenElements.some((selector) => event.target.closest(selector));
+      if (!isClickInside) {
+        this.closeAllDropdowns();
+      }
+    },
+    toggleArrow(element, show) {
+      if (element) {
+        element.style.transform = show ? 'rotate(0deg)' : 'rotate(180deg)';
+        element.style.transition = 'transform 0.5s ease';
+      }
+    },
+    toggleStatusDropdown(event) {
+      event.stopPropagation();
+      // 关闭标签下拉框
+      if (this.showTagDropdown) {
+        this.showTagDropdown = false;
+        const tagArrow = document.querySelector('.hS2');
+        this.toggleArrow(tagArrow, false);
+      }
+      // 切换状态下拉框
+      this.showStatusDropdown = !this.showStatusDropdown;
+      const arrow = document.querySelector('.hS1');
+      this.toggleArrow(arrow, this.showStatusDropdown);
+    },
+    toggleTagDropdown(event) {
+      event.stopPropagation();
+      // 关闭状态下拉框
+      if (this.showStatusDropdown) {
+        this.showStatusDropdown = false;
+        const statusArrow = document.querySelector('.hS1');
+        this.toggleArrow(statusArrow, false);
+      }
+      // 切换标签下拉框
+      this.showTagDropdown = !this.showTagDropdown;
+      const arrow = document.querySelector('.hS2');
+      this.toggleArrow(arrow, this.showTagDropdown);
+    },
+    closeAllDropdowns() {
+      if (this.showStatusDropdown) {
+        this.showStatusDropdown = false;
+        const arrow = document.querySelector('.hS1');
+        this.toggleArrow(arrow, false);
+      }
+      if (this.showTagDropdown) {
+        this.showTagDropdown = false;
+        const arrow = document.querySelector('.hS2');
+        this.toggleArrow(arrow, false);
+      }
+    },
+    handlePageChange(data) {
+      this.questionsData = data;
+    },
+    handleStatusSelect(status) {
+      // 如果点击的是已选中的状态，则取消选择
+      if (this.selectedStatus === status) {
+        this.selectedStatus = '';
+        this.selected = {
+          ...this.selected,
+          category: '',
+        };
+      } else {
+        this.selectedStatus = status;
+        this.selected = {
+          ...this.selected,
+          category: status,
+        };
+      }
+      this.showStatusDropdown = false;
+      const arrow = document.querySelector('.hS1');
+      this.toggleArrow(arrow, false);
+    },
+    handleTagSelect(tag) {
+      // 如果点击的是已选中的标签，则取消选择
+      if (this.selectedTag === tag) {
+        this.selectedTag = '';
+        this.selected = {
+          ...this.selected,
+          topic: '',
+        };
+      } else {
+        this.selectedTag = tag;
+        this.selected = {
+          ...this.selected,
+          topic: tag,
+        };
+      }
+      this.showTagDropdown = false;
+      const arrow = document.querySelector('.hS2');
+      this.toggleArrow(arrow, false);
+    },
+    handleSearch() {
+      this.selected = {
+        ...this.selected,
+        input: this.searchQuery,
+      };
     },
   },
 };
@@ -540,7 +429,7 @@ export default {
 }
 
 .filter-button::before {
-  content: "";
+  content: '';
   position: absolute;
   top: 0;
   left: -100%;
@@ -571,7 +460,7 @@ export default {
 }
 
 .filter-button.active-filter::after {
-  content: "";
+  content: '';
   position: absolute;
   bottom: 0;
   left: 0;
@@ -725,7 +614,7 @@ export default {
 }
 
 .dropdown-item::before {
-  content: "";
+  content: '';
   position: absolute;
   top: 0;
   left: -100%;
@@ -760,7 +649,7 @@ export default {
 }
 
 .tag-item::before {
-  content: "";
+  content: '';
   position: absolute;
   left: 0;
   top: 50%;

@@ -10,7 +10,7 @@
   --el-color-primary-light-7: #e1fcf8 !important;
   --el-color-primary-light-8: #f0fffd !important;
   --el-color-primary-light-9: #f8ffff !important;
-  
+
   /* 菜单相关变量 */
   --el-menu-active-color: var(--el-color-primary) !important;
   --el-menu-text-color: #2c3e50 !important;
@@ -18,14 +18,48 @@
   --el-menu-bg-color: #ffffff !important;
   --el-menu-hover-bg-color: rgba(24, 160, 88, 0.1) !important;
   --el-menu-border-color: transparent !important;
-  
+
   /* 按钮相关变量 */
   --el-button-hover-bg-color: rgba(24, 160, 88, 0.1) !important;
   --el-button-active-bg-color: rgba(24, 160, 88, 0.2) !important;
-  
+
   /* 文本颜色变量 */
   --el-text-color-primary: #2c3e50 !important;
   --el-text-color-regular: #606266 !important;
+
+  /* ===== 项目设计令牌（值取自现有代码高频魔法数，不改变任何现有颜色） ===== */
+  /* 品牌色：头部/导航/页脚等展示性 UI 使用 */
+  --color-brand: #42b983;
+  --color-brand-hover: #33a06f;
+  --color-brand-secondary: #33c6aa;
+  --color-brand-cyan: #00c4ff;
+  --gradient-brand: linear-gradient(90deg, #42b983, #00c4ff);
+  --gradient-brand-soft: linear-gradient(135deg, #42b983, #33c6aa);
+
+  /* 功能色：页面级主要动作按钮使用，与 Element Plus 主色保持一致 */
+  --color-primary: #18a058;
+  --color-primary-hover: #12804a;
+  --color-primary-shadow: rgba(24, 160, 88, 0.3);
+
+  /* 文本 */
+  --color-text-title: #1e293b;
+  --color-text-body: #475569;
+  --color-text-muted: #94a3b8;
+
+  /* 表面与边框 */
+  --color-surface: #ffffff;
+  --color-surface-muted: #f8fafc;
+  --color-border: #e2e8f0;
+
+  /* 圆角 */
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+
+  /* 阴影 */
+  --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.08);
+  --shadow-card-hover: 0 8px 24px rgba(0, 0, 0, 0.12);
 }
 
 /* 文本选择样式 */

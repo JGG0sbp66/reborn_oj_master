@@ -1923,7 +1923,7 @@ export default {
   height: 34px;
   font-size: 14px;
   font-weight: 500;
-  background: #42b983;
+  background: var(--color-primary);
   border: none;
   border-radius: 6px;
   color: white;
@@ -1937,7 +1937,7 @@ export default {
 }
 
 .submit-button:active {
-  box-shadow: 0 4px 12px rgba(66, 185, 131, 0.3);
+  box-shadow: 0 4px 12px var(--color-primary-shadow);
   transform: translateY(0px);
 }
 

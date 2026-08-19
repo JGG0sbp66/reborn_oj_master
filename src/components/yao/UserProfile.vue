@@ -4,24 +4,20 @@
     <div class="profile-form">
       <el-form label-position="top">
         <el-form-item label="用户名">
-          <el-input 
-            v-model="username" 
-            placeholder="请输入用户名"
-            class="username-input"
-          />
+          <el-input v-model="username" placeholder="请输入用户名" class="username-input" />
         </el-form-item>
         <el-form-item label="电子邮箱">
           <el-input v-model="email" placeholder="请输入电子邮箱" />
         </el-form-item>
         <el-form-item label="验证码">
           <div class="verification-code-container">
-            <el-input 
-              v-model="verificationCode" 
-              placeholder="请输入验证码" 
+            <el-input
+              v-model="verificationCode"
+              placeholder="请输入验证码"
               class="verification-input"
             />
-            <el-button 
-              type="primary" 
+            <el-button
+              type="primary"
               class="verification-btn"
               :disabled="cooldown > 0"
               @click="getVerificationCode"
@@ -75,9 +71,13 @@ onMounted(() => {
 });
 
 // 添加watch监听器，当props变化时更新本地数据
-watch(() => props.userProfile, (newUserProfile) => {
-  updateLocalData();
-}, { deep: true });
+watch(
+  () => props.userProfile,
+  (newUserProfile) => {
+    updateLocalData();
+  },
+  { deep: true }
+);
 
 const updateLocalData = () => {
   username.value = props.userProfile.username || '';
@@ -99,7 +99,7 @@ const getVerificationCode = async () => {
     const loadingInstance = ElLoading.service({
       lock: true,
       text: '发送验证码中...',
-      background: 'rgba(0, 0, 0, 0.7)'
+      background: 'rgba(0, 0, 0, 0.7)',
     });
 
     // 发送获取验证码请求
@@ -137,41 +137,41 @@ const saveProfile = async (): Promise<void> => {
       props.alertBox?.show('用户名不能为空', 2);
       return;
     }
-    
+
     // 处理邮箱变更 - 如果邮箱有变更且提供了验证码
     if (email.value !== props.userProfile.email) {
       if (!verificationCode.value.trim()) {
         props.alertBox?.show('更改邮箱需要验证码', 2);
         return;
       }
-      
+
       // 处理邮箱变更
       try {
         // 显示加载指示器
         const loadingInstance = ElLoading.service({
           lock: true,
           text: '修改邮箱中...',
-          background: 'rgba(0, 0, 0, 0.7)'
+          background: 'rgba(0, 0, 0, 0.7)',
         });
-        
+
         // 发送修改邮箱请求
         const emailData = await userApi.changeEmail(email.value, verificationCode.value);
-        
+
         // 关闭加载指示器
         loadingInstance.close();
-        
+
         if (!emailData || !emailData.success) {
           // 邮箱修改失败，显示错误信息
           props.alertBox?.show(emailData?.message || '邮箱修改失败', 2);
           return; // 终止后续操作
         }
-        
+
         // 邮箱修改成功
         props.alertBox?.show(emailData.message || '邮箱修改成功', 0);
-        
+
         // 更新本地存储中的邮箱
         localStorage.setItem('email', email.value);
-        
+
         // 清空验证码
         verificationCode.value = '';
       } catch (emailError) {
@@ -180,56 +180,63 @@ const saveProfile = async (): Promise<void> => {
         return; // 终止后续操作
       }
     }
-    
+
     // 检查用户名是否变更
     const isUsernameChanged = username.value !== props.userProfile.username;
-    
+
     // 如果用户名变更，修改用户名
     if (isUsernameChanged) {
       // 显示加载指示器
       const loadingInstance = ElLoading.service({
         lock: true,
         text: '修改用户名中...',
-        background: 'rgba(0, 0, 0, 0.7)'
+        background: 'rgba(0, 0, 0, 0.7)',
       });
-      
+
       try {
         // 发送修改用户名请求
         const usernameData = await userApi.changeUsername(username.value);
-        
+
         // 关闭加载指示器
         loadingInstance.close();
-        
+
         if (!usernameData || !usernameData.success) {
           // 用户名修改失败，显示错误信息
           props.alertBox?.show(usernameData?.message || '用户名修改失败', 2);
           return; // 终止后续操作
         }
-        
+
         // 用户名修改成功
         props.alertBox?.show(usernameData.message || '用户名修改成功', 0);
       } catch (usernameError) {
         // 确保关闭加载指示器
         loadingInstance.close();
-        
+
         console.error('修改用户名失败:', usernameError);
-        props.alertBox?.show((usernameError as ApiError).message || '修改用户名失败，请稍后重试', 2);
+        props.alertBox?.show(
+          (usernameError as ApiError).message || '修改用户名失败，请稍后重试',
+          2
+        );
         return; // 终止后续操作
       }
     }
-    
+
     // 个人简介变更
     if (!bio.value.trim()) {
       props.alertBox?.show('个人简介不能为空', 2);
       return;
     }
-    
-    if (!isUsernameChanged && email.value === props.userProfile.email && bio.value !== props.userProfile.bio) {
+
+    if (
+      !isUsernameChanged &&
+      email.value === props.userProfile.email &&
+      bio.value !== props.userProfile.bio
+    ) {
       // 发送请求到后端保存个人简介
       const loadingInstance = ElLoading.service({
         lock: true,
         text: '保存个人简介...',
-        background: 'rgba(0, 0, 0, 0.7)'
+        background: 'rgba(0, 0, 0, 0.7)',
       });
 
       try {
@@ -251,17 +258,16 @@ const saveProfile = async (): Promise<void> => {
         return;
       }
     }
-    
+
     // 创建更新后的用户数据并通知父组件
     const updatedProfile: UserProfileData = {
       username: username.value,
       email: email.value,
-      bio: bio.value
+      bio: bio.value,
     };
-    
+
     // 通知父组件数据已更新
     emit('profile-updated', updatedProfile);
-    
   } catch (error: any) {
     console.error('保存用户资料失败:', error);
     props.alertBox?.show(error.message || '保存失败，请稍后重试', 2);
@@ -326,20 +332,20 @@ const saveProfile = async (): Promise<void> => {
 
 .verification-btn {
   width: 120px;
-  background-color: #42b983;
-  border-color: #42b983;
+  background-color: var(--color-primary);
+  border-color: var(--color-primary);
   transition: all 0.3s ease;
 }
 
 .verification-btn:hover {
-  background-color: #33a06f;
-  border-color: #33a06f;
+  background-color: var(--color-primary-hover);
+  border-color: var(--color-primary-hover);
   transform: translateY(-2px);
 }
 
 .verification-btn:disabled {
-  background-color: #a0d6be;
-  border-color: #a0d6be;
+  background-color: var(--el-color-primary-light-5);
+  border-color: var(--el-color-primary-light-5);
   color: white;
   cursor: not-allowed;
 }
@@ -363,7 +369,7 @@ const saveProfile = async (): Promise<void> => {
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, rgba(255,255,255,0.2), rgba(255,255,255,0));
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0));
   transition: 0.6s;
   z-index: -1;
 }
@@ -411,4 +417,4 @@ const saveProfile = async (): Promise<void> => {
   background-color: transparent;
   cursor: text;
 }
-</style> 
+</style>
