@@ -3,18 +3,8 @@
     <template v-if="loading">
       <!-- 加载状态 -->
       <div class="loading-container">
-        <svg
-          class="loading-spinner"
-          viewBox="0 0 50 50"
-        >
-          <circle
-            class="path"
-            cx="25"
-            cy="25"
-            r="20"
-            fill="none"
-            stroke-width="5"
-          ></circle>
+        <svg class="loading-spinner" viewBox="0 0 50 50">
+          <circle class="path" cx="25" cy="25" r="20" fill="none" stroke-width="5"></circle>
         </svg>
         <span>正在加载题目...</span>
       </div>
@@ -46,25 +36,21 @@
                 <span class="hover-effect"></span>
               </td>
               <td class="tag-cell">
-                <div
-                  class="difficulty-tag"
-                  :class="difficultyClasses[question.topic]"
-                >
+                <div class="difficulty-tag" :class="difficultyClasses[question.topic]">
                   {{ question.topic }}
                 </div>
               </td>
               <td class="stats-cell">{{ question.submit_num }}/{{ question.solve_num }}</td>
-              <td class="rate-cell">{{ calculateRate(question.submit_num, question.solve_num) }}</td>
+              <td class="rate-cell">
+                {{ calculateRate(question.submit_num, question.solve_num) }}
+              </td>
             </tr>
           </template>
           <template v-else>
             <tr class="empty-row">
               <td colspan="5">
                 <div class="empty-message">
-                  <svg
-                    class="empty-icon"
-                    viewBox="0 0 24 24"
-                  >
+                  <svg class="empty-icon" viewBox="0 0 24 24">
                     <path
                       d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"
                       fill="currentColor"
@@ -94,12 +80,12 @@ export default {
     return {
       loading: true,
       difficultyClasses: {
-        入门: "easy",
-        普及: "popularize",
-        提高: "improve",
-        省选: "provincial-election",
-        NOI: "noi",
-        CTSC: "ctsc",
+        入门: 'easy',
+        普及: 'popularize',
+        提高: 'improve',
+        省选: 'provincial-election',
+        NOI: 'noi',
+        CTSC: 'ctsc',
       },
     };
   },
@@ -115,16 +101,16 @@ export default {
   },
   methods: {
     goToQuestionDetail(id) {
-      this.$store.dispatch("setCurrentQuestionId", id);
-      this.$router.push({ name: "questions_detail", params: { id } });
+      this.$store.dispatch('setCurrentQuestionId', id);
+      this.$router.push({ name: 'questions_detail', query: { id } });
       console.log(id);
     },
     calculateRate(submitNum, solveNum) {
-    if (submitNum === 0) {
-      return `${(0).toFixed(2)}%`;
-    }
-    return `${((solveNum / submitNum) * 100).toFixed(2)}%`;
-  },
+      if (submitNum === 0) {
+        return `${(0).toFixed(2)}%`;
+      }
+      return `${((solveNum / submitNum) * 100).toFixed(2)}%`;
+    },
   },
 };
 </script>
@@ -246,7 +232,9 @@ export default {
   width: 0;
   height: 2px;
   background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%);
-  transition: width 0.5s ease, opacity 0.5s ease;
+  transition:
+    width 0.5s ease,
+    opacity 0.5s ease;
   opacity: 0;
   z-index: 1;
 }

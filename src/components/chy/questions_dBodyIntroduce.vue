@@ -10,24 +10,12 @@
           <svg
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 16 16"
-            style="width: 18px; height: 18px;"
+            style="width: 18px; height: 18px"
           >
             <defs>
-              <linearGradient
-                id="descriptionGradient"
-                x1="0%"
-                y1="0%"
-                x2="100%"
-                y2="0%"
-              >
-                <stop
-                  offset="0%"
-                  stop-color="var(--gradient-start, #64748b)"
-                />
-                <stop
-                  offset="100%"
-                  stop-color="var(--gradient-end, #64748b)"
-                />
+              <linearGradient id="descriptionGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stop-color="var(--gradient-start, #64748b)" />
+                <stop offset="100%" stop-color="var(--gradient-end, #64748b)" />
               </linearGradient>
             </defs>
             <path
@@ -45,23 +33,12 @@
           <svg
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 24 24"
-            style="width: 18px; height: 18px;"
+            style="width: 18px; height: 18px"
           >
             <defs>
-              <linearGradient
-                id="submissionsGradient"
-                x1="0%"
-                y1="0%"
-                x2="100%"
-              >
-                <stop
-                  offset="0%"
-                  stop-color="var(--gradient-start, #64748b)"
-                />
-                <stop
-                  offset="100%"
-                  stop-color="var(--gradient-end, #64748b)"
-                />
+              <linearGradient id="submissionsGradient" x1="0%" y1="0%" x2="100%">
+                <stop offset="0%" stop-color="var(--gradient-start, #64748b)" />
+                <stop offset="100%" stop-color="var(--gradient-end, #64748b)" />
               </linearGradient>
             </defs>
             <path
@@ -72,19 +49,15 @@
           <span>我的提交</span>
         </div>
       </div>
-      <div
-        v-if="questionDetail"
-        class="content-container"
-        v-show="activeTab === 'description'"
-      >
+      <div v-if="questionDetail" v-show="activeTab === 'description'" class="content-container">
         <div class="bodyDescribe1">
-          <h2>{{this.questionDetail?.title}}</h2>
+          <h2>{{ questionDetail?.title }}</h2>
           <div class="bodyDescribe1Second">
             <div class="bodyDescribeSpan">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 24 24"
-                style="width: 14px; height: 14px;"
+                style="width: 14px; height: 14px"
               >
                 <g fill="none">
                   <path
@@ -93,33 +66,30 @@
                   ></path>
                 </g>
               </svg>
-              <span>时间限制:{{this.questionDetail?.tle}}ms</span>
+              <span>时间限制:{{ questionDetail?.tle }}ms</span>
             </div>
             <div class="bodyDescribeSpan">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 24 24"
-                style="width: 14px; height: 14px;"
+                style="width: 14px; height: 14px"
               >
                 <path
                   d="M15 9H9v6h6V9zm-2 4h-2v-2h2v2zm8-2V9h-2V7c0-1.1-.9-2-2-2h-2V3h-2v2h-2V3H9v2H7c-1.1 0-2 .9-2 2v2H3v2h2v2H3v2h2v2c0 1.1.9 2 2 2h2v2h2v-2h2v2h2v-2h2c1.1 0 2-.9 2-2v-2h2v-2h-2v-2h2zm-4 6H7V7h10v10z"
                   fill="currentColor"
                 ></path>
               </svg>
-              <span>空间限制:{{this.questionDetail?.mle}}MB</span>
+              <span>空间限制:{{ questionDetail?.mle }}MB</span>
             </div>
           </div>
           <h3>题目描述</h3>
-          <p>{{this.questionDetail?.description}}</p>
+          <p>{{ questionDetail?.description }}</p>
           <h3>输入格式</h3>
-          <p>{{this.questionDetail?.pattern_text}}</p>
+          <p>{{ questionDetail?.pattern_text }}</p>
           <h3>输出格式</h3>
-          <p>{{this.questionDetail?.print_text}}</p>
-          <template
-            v-for="(example, index) in questionDetail?.examples"
-            :key="index"
-          >
-            <h3>测试样例{{index+1}}</h3>
+          <p>{{ questionDetail?.print_text }}</p>
+          <template v-for="(example, index) in questionDetail?.examples" :key="index">
+            <h3>测试样例{{ index + 1 }}</h3>
             <div class="Testinput">
               <div class="TestinputB">
                 <div>
@@ -129,7 +99,7 @@
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     viewBox="0 0 24 24"
-                    style="width: 14px; height: 14px; position: relative; top:2px;"
+                    style="width: 14px; height: 14px; position: relative; top: 2px"
                   >
                     <path
                       d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"
@@ -141,8 +111,10 @@
               </div>
               <div
                 class="Testinputc"
-                style="padding: 5px 16px 12px; font-size: 14px; font-weight: 300;"
-              >{{ example?.input }}</div>
+                style="padding: 5px 16px 12px; font-size: 14px; font-weight: 300"
+              >
+                {{ example?.input }}
+              </div>
             </div>
             <div class="Testout">
               <div class="TestinputB">
@@ -153,7 +125,7 @@
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     viewBox="0 0 24 24"
-                    style="width: 14px; height: 14px; position: relative; top:2px;"
+                    style="width: 14px; height: 14px; position: relative; top: 2px"
                   >
                     <path
                       d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"
@@ -165,11 +137,13 @@
               </div>
               <div
                 class="Testinputc"
-                style="padding: 5px 16px 12px; font-size: 14px; font-weight: 300;"
-              >{{ example?.output }}</div>
+                style="padding: 5px 16px 12px; font-size: 14px; font-weight: 300"
+              >
+                {{ example?.output }}
+              </div>
             </div>
             <template v-if="example.explanation && example.explanation.trim() !== ''">
-              <h3>解释{{index+1}}</h3>
+              <h3>解释{{ index + 1 }}</h3>
               <div class="Testinput">
                 <div class="TestinputB">
                   <div>
@@ -179,7 +153,7 @@
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
                       viewBox="0 0 24 24"
-                      style="width: 14px; height: 14px; position: relative; top:2px;"
+                      style="width: 14px; height: 14px; position: relative; top: 2px"
                     >
                       <path
                         d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"
@@ -191,17 +165,16 @@
                 </div>
                 <div
                   class="Testinputc"
-                  style="padding: 5px 16px 12px; font-size: 14px; font-weight: 300;"
-                >{{example?.explanation}}</div>
+                  style="padding: 5px 16px 12px; font-size: 14px; font-weight: 300"
+                >
+                  {{ example?.explanation }}
+                </div>
               </div>
             </template>
           </template>
         </div>
       </div>
-      <div
-        v-else
-        class="skeleton-container"
-      >
+      <div v-else class="skeleton-container">
         <!-- 骨架屏内容 -->
         <div class="skeleton-title"></div>
         <div class="skeleton-meta">
@@ -212,10 +185,7 @@
         <div class="skeleton-content"></div>
         <div class="skeleton-content"></div>
       </div>
-      <div
-        class="content-container"
-        v-show="activeTab === 'submissions'"
-      >
+      <div v-show="activeTab === 'submissions'" class="content-container">
         <div class="bodyDescribe2">
           <table class="tableBox">
             <thead>
@@ -246,258 +216,21 @@
     </div>
   </div>
 </template>
-  
+
 <script>
-import { questionApi } from "@/api";
+import { questionApi } from '@/api';
 
 export default {
-  name: "DescribeComponent",
-  props: ["submissions", "activeTab", "isAuthenticated"],
+  name: 'DescribeComponent',
+  props: ['submissions', 'activeTab', 'isAuthenticated'],
   data() {
     return {
-      id: "",
+      id: '',
       questionDetail: null,
       isLoading: false,
       error: null,
       localSubmissions: [], // 用于存储本地提交记录
     };
-  },
-  created() {
-    // 检查本地存储中是否存在 uid
-    const hasUid = localStorage.getItem("uid") !== null;
-    const UidCode = localStorage.getItem("uid");
-    const prevUidCode = localStorage.getItem("prev_uid_code"); // 获取之前存储的 uid
-    console.log(hasUid);
-    console.log("Current uid:", UidCode, "Previous uid:", prevUidCode);
-
-    if (!hasUid || prevUidCode !== UidCode) {
-      this.clearAllLocalSubmissions();
-      // 在清理完成后，更新上一次的 uid 记录
-      localStorage.setItem("prev_uid_code", UidCode || "");
-    }
-
-    this.questionId =
-      this.$route.params.id ||
-      this.$store.getters.currentQuestionId ||
-      localStorage.getItem("currentQuestionId");
-
-    if (this.questionId) {
-      this.$store.commit("setCurrentQuestionId", this.questionId);
-      localStorage.setItem("currentQuestionId", this.questionId);
-      this.fetchQuestionDetail();
-    }
-
-    // 初始化时加载本地存储的提交记录
-    this.loadLocalSubmissions();
-  },
-  methods: {
-    switchTab(tab) {
-      this.$emit("switch-tab", tab);
-    },
-
-    // 加载本地存储的提交记录
-    loadLocalSubmissions() {
-      if (this.isAuthenticated && this.questionId) {
-        const storageKey = `submissions_${this.questionId}`;
-        const savedSubmissions = localStorage.getItem(storageKey);
-        if (savedSubmissions) {
-          this.localSubmissions = JSON.parse(savedSubmissions);
-          // 按时间排序确保最新的记录在前面
-          this.localSubmissions.sort(
-            (a, b) => new Date(b.submitTime) - new Date(a.submitTime)
-          );
-          console.log("Loaded from local storage:", this.localSubmissions);
-        }
-      }
-    },
-
-    // 修改保存提交记录到本地存储的方法
-    saveSubmissionsToLocal() {
-      if (
-        this.isAuthenticated &&
-        this.questionId &&
-        this.submissions.length > 0
-      ) {
-        const storageKey = `submissions_${this.questionId}`;
-        // 获取现有的提交记录
-        let existingSubmissions =
-          JSON.parse(localStorage.getItem(storageKey)) || [];
-
-        // 过滤出新的、非评测中的提交记录
-        const newSubmissions = this.submissions.filter((submission) => {
-          // 排除评测中的状态
-          if (submission.isPending || submission.status.includes("评测中")) {
-            return false;
-          }
-
-          // 检查是否已存在相同的提交记录
-          return !existingSubmissions.some(
-            (existing) =>
-              existing.submitTime === submission.submitTime &&
-              existing.status === submission.status &&
-              existing.language === submission.language &&
-              existing.index === submission.index // 添加index比较
-          );
-        });
-
-        if (newSubmissions.length > 0) {
-          // 合并新的提交记录到现有记录中
-          const updatedSubmissions = [
-            ...newSubmissions,
-            ...existingSubmissions,
-          ];
-
-          // 限制本地存储的记录数量，比如只保留最近的50条
-          const limitedSubmissions = updatedSubmissions.slice(0, 50);
-
-          // 存储更新后的提交记录
-          localStorage.setItem(storageKey, JSON.stringify(limitedSubmissions));
-          console.log("保存新的提交记录到本地存储:", newSubmissions);
-        }
-      }
-    },
-
-    // 修改清理本地存储的提交记录方法
-    clearAllLocalSubmissions() {
-      // 只有在用户未登录状态下才清除存储
-      if (!this.isAuthenticated) {
-        const keys = Object.keys(localStorage).filter((key) =>
-          key.startsWith("submissions_")
-        );
-        keys.forEach((key) => {
-          localStorage.removeItem(key);
-        });
-        this.localSubmissions = [];
-      }
-    },
-
-    async fetchQuestionDetail() {
-      this.isLoading = true;
-      this.error = null;
-      try {
-        const questionId = localStorage.getItem("currentQuestionId");
-        console.log("Fetching question detail for ID:", questionId);
-        localStorage.setItem("currentQuestionId", questionId);
-
-        const response = await questionApi.getQuestionDetail(questionId ?? '');
-
-        console.log("Fetched question detail:", response);
-        this.questionDetail = response.question_detail;
-
-        this.$emit("question-loaded", this.questionDetail);
-        this.$emit("question-id", this.questionId);
-      } catch (error) {
-        this.error = "获取题目详情失败，请稍后重试";
-        console.error("Failed to fetch data:", error);
-      } finally {
-        this.isLoading = false;
-      }
-    },
-
-    async copyToClipboard(text) {
-      try {
-        await navigator.clipboard.writeText(text);
-        this.$notify({
-          title: "复制成功",
-          message: "内容已复制到剪贴板",
-          type: "success",
-          duration: 2000,
-        });
-      } catch (err) {
-        console.error("复制失败:", err);
-        this.fallbackCopyToClipboard(text);
-      }
-    },
-
-    fallbackCopyToClipboard(text) {
-      const textarea = document.createElement("textarea");
-      textarea.value = text;
-      textarea.style.position = "fixed";
-      document.body.appendChild(textarea);
-      textarea.select();
-
-      try {
-        const successful = document.execCommand("copy");
-        if (successful) {
-          this.$notify({
-            title: "复制成功",
-            message: "内容已复制到剪贴板",
-            type: "success",
-            duration: 2000,
-          });
-        } else {
-          throw new Error("复制命令执行失败");
-        }
-      } catch (err) {
-        console.error("回退复制方法失败:", err);
-        this.$notify.error({
-          title: "复制失败",
-          message: "请手动选择文本并复制",
-          duration: 2000,
-        });
-      } finally {
-        document.body.removeChild(textarea);
-      }
-    },
-    handleStatusClick(submission) {
-      if (!submission.isPending) {
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(submission.status, "text/html");
-        const spanContent = doc.querySelector("span")?.textContent;
-        console.log("Status value:", spanContent);
-        return spanContent; // 返回解析后的内容
-      }
-      return null;
-    },
-  },
-  watch: {
-    submissions: {
-      deep: true,
-      handler(newVal) {
-        if (this.isAuthenticated) {
-          // 只处理最新的提交记录
-          const latestSubmission = newVal[0]; // 假设最新的提交总是在数组的第一个位置
-          
-          if (latestSubmission && !latestSubmission.isPending) {
-            this.saveSubmissionsToLocal(); // 先保存到本地存储
-            
-            // 获取状态文本
-            const status = this.handleStatusClick(latestSubmission);
-            if (status) {
-              // 设置延时显示评测结果，避免和"提交成功"的提示重叠
-              setTimeout(() => {
-                if (!status.includes("答案正确")) {
-                  this.$emit("show-alert", {
-                    type: "error",
-                    message: status,
-                  });
-                } else {
-                  this.$emit("show-alert", {
-                    type: "success",
-                    message: status,
-                  });
-                }
-              }, 100);
-            }
-          }
-        }
-      },
-    },
-    // 修改 isAuthenticated 的监听逻辑
-    isAuthenticated: {
-      immediate: false, // 改为 false，避免初始化时执行
-      handler(newVal, oldVal) {
-        console.log("Auth status changed:", newVal, "old value:", oldVal);
-        if (newVal) {
-          // 用户登录时，加载本地存储
-          this.loadLocalSubmissions();
-        } else if (oldVal === true && newVal === false) {
-          // 只有从登录状态变为未登录状态时才清除记录
-          console.log("User logged out, clearing submissions...");
-          this.clearAllLocalSubmissions();
-        }
-      },
-    },
   },
   computed: {
     displayedSubmissions() {
@@ -521,6 +254,231 @@ export default {
       return [...pendingSubmissions, ...completedSubmissions].sort(
         (a, b) => new Date(b.submitTime) - new Date(a.submitTime)
       );
+    },
+  },
+  watch: {
+    submissions: {
+      deep: true,
+      handler(newVal) {
+        if (this.isAuthenticated) {
+          // 只处理最新的提交记录
+          const latestSubmission = newVal[0]; // 假设最新的提交总是在数组的第一个位置
+
+          if (latestSubmission && !latestSubmission.isPending) {
+            this.saveSubmissionsToLocal(); // 先保存到本地存储
+
+            // 获取状态文本
+            const status = this.handleStatusClick(latestSubmission);
+            if (status) {
+              // 设置延时显示评测结果，避免和"提交成功"的提示重叠
+              setTimeout(() => {
+                if (!status.includes('答案正确')) {
+                  this.$emit('show-alert', {
+                    type: 'error',
+                    message: status,
+                  });
+                } else {
+                  this.$emit('show-alert', {
+                    type: 'success',
+                    message: status,
+                  });
+                }
+              }, 100);
+            }
+          }
+        }
+      },
+    },
+    // 修改 isAuthenticated 的监听逻辑
+    isAuthenticated: {
+      immediate: false, // 改为 false，避免初始化时执行
+      handler(newVal, oldVal) {
+        console.log('Auth status changed:', newVal, 'old value:', oldVal);
+        if (newVal) {
+          // 用户登录时，加载本地存储
+          this.loadLocalSubmissions();
+        } else if (oldVal === true && newVal === false) {
+          // 只有从登录状态变为未登录状态时才清除记录
+          console.log('User logged out, clearing submissions...');
+          this.clearAllLocalSubmissions();
+        }
+      },
+    },
+  },
+  created() {
+    // 检查本地存储中是否存在 uid
+    const hasUid = localStorage.getItem('uid') !== null;
+    const UidCode = localStorage.getItem('uid');
+    const prevUidCode = localStorage.getItem('prev_uid_code'); // 获取之前存储的 uid
+    console.log(hasUid);
+    console.log('Current uid:', UidCode, 'Previous uid:', prevUidCode);
+
+    if (!hasUid || prevUidCode !== UidCode) {
+      this.clearAllLocalSubmissions();
+      // 在清理完成后，更新上一次的 uid 记录
+      localStorage.setItem('prev_uid_code', UidCode || '');
+    }
+
+    this.questionId =
+      this.$route.query.id ||
+      this.$store.getters.currentQuestionId ||
+      localStorage.getItem('currentQuestionId');
+
+    if (this.questionId) {
+      this.$store.commit('setCurrentQuestionId', this.questionId);
+      localStorage.setItem('currentQuestionId', this.questionId);
+      this.fetchQuestionDetail();
+    }
+
+    // 初始化时加载本地存储的提交记录
+    this.loadLocalSubmissions();
+  },
+  methods: {
+    switchTab(tab) {
+      this.$emit('switch-tab', tab);
+    },
+
+    // 加载本地存储的提交记录
+    loadLocalSubmissions() {
+      if (this.isAuthenticated && this.questionId) {
+        const storageKey = `submissions_${this.questionId}`;
+        const savedSubmissions = localStorage.getItem(storageKey);
+        if (savedSubmissions) {
+          this.localSubmissions = JSON.parse(savedSubmissions);
+          // 按时间排序确保最新的记录在前面
+          this.localSubmissions.sort((a, b) => new Date(b.submitTime) - new Date(a.submitTime));
+          console.log('Loaded from local storage:', this.localSubmissions);
+        }
+      }
+    },
+
+    // 修改保存提交记录到本地存储的方法
+    saveSubmissionsToLocal() {
+      if (this.isAuthenticated && this.questionId && this.submissions.length > 0) {
+        const storageKey = `submissions_${this.questionId}`;
+        // 获取现有的提交记录
+        let existingSubmissions = JSON.parse(localStorage.getItem(storageKey)) || [];
+
+        // 过滤出新的、非评测中的提交记录
+        const newSubmissions = this.submissions.filter((submission) => {
+          // 排除评测中的状态
+          if (submission.isPending || submission.status.includes('评测中')) {
+            return false;
+          }
+
+          // 检查是否已存在相同的提交记录
+          return !existingSubmissions.some(
+            (existing) =>
+              existing.submitTime === submission.submitTime &&
+              existing.status === submission.status &&
+              existing.language === submission.language &&
+              existing.index === submission.index // 添加index比较
+          );
+        });
+
+        if (newSubmissions.length > 0) {
+          // 合并新的提交记录到现有记录中
+          const updatedSubmissions = [...newSubmissions, ...existingSubmissions];
+
+          // 限制本地存储的记录数量，比如只保留最近的50条
+          const limitedSubmissions = updatedSubmissions.slice(0, 50);
+
+          // 存储更新后的提交记录
+          localStorage.setItem(storageKey, JSON.stringify(limitedSubmissions));
+          console.log('保存新的提交记录到本地存储:', newSubmissions);
+        }
+      }
+    },
+
+    // 修改清理本地存储的提交记录方法
+    clearAllLocalSubmissions() {
+      // 只有在用户未登录状态下才清除存储
+      if (!this.isAuthenticated) {
+        const keys = Object.keys(localStorage).filter((key) => key.startsWith('submissions_'));
+        keys.forEach((key) => {
+          localStorage.removeItem(key);
+        });
+        this.localSubmissions = [];
+      }
+    },
+
+    async fetchQuestionDetail() {
+      this.isLoading = true;
+      this.error = null;
+      try {
+        const questionId = localStorage.getItem('currentQuestionId');
+        console.log('Fetching question detail for ID:', questionId);
+        localStorage.setItem('currentQuestionId', questionId);
+
+        const response = await questionApi.getQuestionDetail(questionId ?? '');
+
+        console.log('Fetched question detail:', response);
+        this.questionDetail = response.question_detail;
+
+        this.$emit('question-loaded', this.questionDetail);
+        this.$emit('question-id', this.questionId);
+      } catch (error) {
+        this.error = '获取题目详情失败，请稍后重试';
+        console.error('Failed to fetch data:', error);
+      } finally {
+        this.isLoading = false;
+      }
+    },
+
+    async copyToClipboard(text) {
+      try {
+        await navigator.clipboard.writeText(text);
+        this.$notify({
+          title: '复制成功',
+          message: '内容已复制到剪贴板',
+          type: 'success',
+          duration: 2000,
+        });
+      } catch (err) {
+        console.error('复制失败:', err);
+        this.fallbackCopyToClipboard(text);
+      }
+    },
+
+    fallbackCopyToClipboard(text) {
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      textarea.style.position = 'fixed';
+      document.body.appendChild(textarea);
+      textarea.select();
+
+      try {
+        const successful = document.execCommand('copy');
+        if (successful) {
+          this.$notify({
+            title: '复制成功',
+            message: '内容已复制到剪贴板',
+            type: 'success',
+            duration: 2000,
+          });
+        } else {
+          throw new Error('复制命令执行失败');
+        }
+      } catch (err) {
+        console.error('回退复制方法失败:', err);
+        this.$notify.error({
+          title: '复制失败',
+          message: '请手动选择文本并复制',
+          duration: 2000,
+        });
+      } finally {
+        document.body.removeChild(textarea);
+      }
+    },
+    handleStatusClick(submission) {
+      if (!submission.isPending) {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(submission.status, 'text/html');
+        const spanContent = doc.querySelector('span')?.textContent;
+        console.log('Status value:', spanContent);
+        return spanContent; // 返回解析后的内容
+      }
+      return null;
     },
   },
 };
@@ -580,7 +538,11 @@ skeleton-container {
   border-radius: 12px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
   overflow: hidden;
-  font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family:
+    'Inter',
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif;
   transition: all 0.3s ease;
   display: flex;
   flex-direction: column;
@@ -628,11 +590,7 @@ skeleton-container {
 }
 
 .headerSpan.active span {
-  background: linear-gradient(
-    90deg,
-    var(--gradient-start),
-    var(--gradient-end)
-  );
+  background: linear-gradient(90deg, var(--gradient-start), var(--gradient-end));
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -645,17 +603,13 @@ skeleton-container {
 }
 
 .headerSpan.active::after {
-  content: "";
+  content: '';
   position: absolute;
   bottom: 0;
   left: 0;
   right: 0;
   height: 3px;
-  background: linear-gradient(
-    90deg,
-    var(--gradient-start),
-    var(--gradient-end)
-  );
+  background: linear-gradient(90deg, var(--gradient-start), var(--gradient-end));
   border-radius: 3px 3px 0 0;
   animation: fadeIn 0.3s ease-out;
 }
@@ -744,7 +698,7 @@ h3 {
 }
 
 h3::before {
-  content: "";
+  content: '';
   position: absolute;
   left: 0;
   top: 4px;
@@ -811,7 +765,7 @@ p {
 .Testinputc {
   padding: 12px 16px;
   font-size: 14px;
-  font-family: "SF Mono", "Roboto Mono", monospace;
+  font-family: 'SF Mono', 'Roboto Mono', monospace;
   color: #334155;
   background-color: #ffffff;
   white-space: pre-wrap;
