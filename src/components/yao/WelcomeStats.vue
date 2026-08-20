@@ -2,14 +2,18 @@
   <div class="welcome-section" :class="{ appear: appear }">
     <h3 class="welcome-title"><i class="welcome-icon"></i> 欢迎来到 OJ Master</h3>
     <div class="welcome-content">
-      <div style="display: flex;justify-content: center;align-items: center;">
-        <p>{{ displayMessage }}<span class="cursor" :class="{ 'cursor-hidden': isCursorHidden }">|</span></p>
+      <div style="display: flex; justify-content: center; align-items: center">
+        <p>
+          {{ displayMessage
+          }}<span class="cursor" :class="{ 'cursor-hidden': isCursorHidden }">|</span>
+        </p>
       </div>
       <div class="welcome-stats">
-        <div class="stat-item" v-for="(stat, index) in statsData" :key="index">
+        <div v-for="(stat, index) in statsData" :key="index" class="stat-item">
           <div class="stat-value">
-            <span class="count number-animate" :class="{ animate: animationTriggered[index] }">{{ formattedCounts[index]
-              }}</span>
+            <span class="count number-animate" :class="{ animate: animationTriggered[index] }">{{
+              formattedCounts[index]
+            }}</span>
           </div>
           <div class="stat-label">{{ stat.label }}</div>
         </div>
@@ -19,7 +23,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, defineProps, computed } from 'vue';
+import { ref, onMounted, onUnmounted, computed } from 'vue';
 import { userApi } from '@/api';
 
 interface StatItem {
@@ -38,22 +42,22 @@ interface StatsResponse {
 const props = defineProps({
   message: {
     type: String,
-    default: '开始你的编程之旅，提升算法能力！'
+    default: '开始你的编程之旅，提升算法能力！',
   },
   appear: {
     type: Boolean,
-    default: true
+    default: true,
   },
   animationDelay: {
     type: Number,
-    default: 300
-  }
+    default: 300,
+  },
 });
 
 const statsData = ref<StatItem[]>([
   { value: 0, label: '题目总数' },
   { value: 0, label: '在线人数' },
-  { value: 0, label: '近期比赛' }
+  { value: 0, label: '近期比赛' },
 ]);
 
 const fetchStats = async () => {
@@ -63,7 +67,7 @@ const fetchStats = async () => {
       statsData.value = [
         { value: data.题目数量, label: '题目总数' },
         { value: data.在线用户数, label: '在线人数' },
-        { value: data.竞赛数量, label: '近期比赛' }
+        { value: data.竞赛数量, label: '近期比赛' },
       ];
     }
   } catch (error) {
@@ -87,7 +91,8 @@ const animateNumbers = () => {
   statsData.value.forEach((stat: StatItem, index: number) => {
     const targetValue = stat.value;
     const duration = 1500; // 增加动画持续时间
-    const easing = (t: number) => t < 0.5 ? 4 * t * t * t : (t - 1) * (2 * t - 2) * (2 * t - 2) + 1; // 三次贝塞尔缓动函数
+    const easing = (t: number) =>
+      t < 0.5 ? 4 * t * t * t : (t - 1) * (2 * t - 2) * (2 * t - 2) + 1; // 三次贝塞尔缓动函数
 
     const startTime = Date.now();
     const startValue = 0;
@@ -119,16 +124,19 @@ const animateNumbers = () => {
     };
 
     // 开始动画
-    setTimeout(() => {
-      requestAnimationFrame(updateValue);
-    }, props.animationDelay + index * 150); // 为每个数字添加不同的延迟
+    setTimeout(
+      () => {
+        requestAnimationFrame(updateValue);
+      },
+      props.animationDelay + index * 150
+    ); // 为每个数字添加不同的延迟
   });
 };
 
 const displayMessage = ref('');
 const isCursorHidden = ref(false);
-let typewriterTimeout: NodeJS.Timeout;
-let cursorInterval: NodeJS.Timer;
+let typewriterTimeout: ReturnType<typeof setTimeout>;
+let cursorInterval: ReturnType<typeof setInterval>;
 
 const typeWriter = (text: string, speed = 100) => {
   const middleIndex = Math.floor(text.length / 2);
@@ -236,7 +244,9 @@ onUnmounted(() => {
 
 .count {
   display: inline-block;
-  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease;
+  transition:
+    transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+    opacity 0.3s ease;
 }
 
 .stat-label {

@@ -192,15 +192,7 @@
 </template>
 
 <script setup lang="ts">
-import {
-  ref,
-  computed,
-  onMounted,
-  watch,
-  defineAsyncComponent,
-  defineExpose,
-  onBeforeUnmount,
-} from 'vue';
+import { ref, computed, onMounted, watch, defineAsyncComponent, onBeforeUnmount } from 'vue';
 import type { Ref } from 'vue';
 import { useRoute } from 'vue-router';
 import AppHeader from '@/components/AppHeader.vue';
@@ -469,6 +461,10 @@ const fetchUserProfile = async (): Promise<void> => {
         username?: string;
         email?: string;
         description?: string;
+        questions_num?: number;
+        races_num?: number;
+        create_time?: string;
+        rating?: number;
         [key: string]: unknown;
       };
 
@@ -639,7 +635,7 @@ interface UserProfileData {
 }
 
 // 添加alertBox引用，使用简单方式声明
-const alertBox = ref(null);
+const alertBox = ref<{ show: (message: string, type: number) => void } | null>(null);
 
 const handleProfileUpdated = (updatedProfile: UserProfileData) => {
   // 更新本地状态
@@ -711,8 +707,8 @@ const handlePasswordChanged = () => {
 };
 
 // 添加新的状态变量，用于预加载数据
-const solvedProblemsData = ref([]);
-const competitionRecordsData = ref([]);
+const solvedProblemsData = ref<any[]>([]);
+const competitionRecordsData = ref<any[]>([]);
 const isLoadingSolvedProblems = ref(true);
 const isLoadingCompetitions = ref(true);
 
@@ -793,8 +789,9 @@ const onFileChange = (event: Event): void => {
     const reader = new FileReader();
     reader.onload = (e) => {
       if (e.target && typeof e.target.result === 'string') {
+        const base64 = e.target.result;
         // 本地临时预览
-        avatarUrl.value = e.target.result;
+        avatarUrl.value = base64;
 
         // 显示上传中提示
         const loadingInstance = ElLoading.service({
@@ -815,14 +812,14 @@ const onFileChange = (event: Event): void => {
               localStorage.setItem('avatar_timestamp', timestamp.toString());
 
               // 保存Base64格式的图片到localStorage
-              localStorage.setItem('avatarBase64', e.target.result);
+              localStorage.setItem('avatarBase64', base64);
 
               // 保存用户ID与头像的关联
               localStorage.setItem('avatar_user_id', userId);
 
               // 触发全局事件，通知其他组件更新头像
               emitter.emit('avatar-updated', {
-                avatarUrl: e.target.result,
+                avatarUrl: base64,
                 timestamp: timestamp,
               });
 

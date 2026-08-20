@@ -16,7 +16,7 @@
   </main>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref } from 'vue';
 import AppHeader from '@/components/AppHeader.vue';
 import sidebarrank from '@/components/zq/contest-sidebar.vue';
@@ -25,13 +25,13 @@ import { raceApi } from '@/api';
 import { onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 
-const raceInfo = ref({});
-const raceRank = ref({
+const raceInfo = ref<any>({});
+const raceRank = ref<any>({
   race_rank: [],
 });
 
 const route = useRoute();
-const uid = route.query.uid;
+const uid = route.query.uid as string;
 
 const get_race_info = async () => {
   try {

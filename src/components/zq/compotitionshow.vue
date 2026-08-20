@@ -70,7 +70,7 @@
             </td>
             <td class="column-title">
               <div class="problem-link">
-                <span class="problem-id">{{ getAlphabetIndex(index) }}</span>
+                <span class="problem-id">{{ getAlphabetIndex(Number(index)) }}</span>
                 <span class="problem-name">{{ problem.title }}</span>
               </div>
             </td>
@@ -114,7 +114,7 @@
 import { ref, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useStore } from 'vuex';
-import { defineProps } from 'vue';
+
 import {
   Document,
   Edit,
@@ -135,7 +135,7 @@ const props = defineProps({
     required: true,
   },
   uid: {
-    type: Object,
+    type: [String, Number],
     required: true,
   },
 });
@@ -170,7 +170,7 @@ const competitionStatusText = computed(() => {
 const problemsWithAvatars = computed(() => {
   if (!isCompetitionStarted.value || !props.raceInfo?.value?.race_info?.problems) return [];
 
-  return props.raceInfo.value.race_info.problems.map((problem) => {
+  return props.raceInfo.value.race_info.problems.map((problem: any) => {
     // 如果已经有头像数据，直接返回
     if (problem.first_blood_user?.avatar) return problem;
 
@@ -219,11 +219,11 @@ const formatPassRate = (solveNum: number, submitNum: number) => {
 };
 
 // 跳转到题目详情
-const goToQuestionDetail = (id: string, race_uid: string) => {
+const goToQuestionDetail = (id: string | number, race_uid: string | number) => {
   store.dispatch('setCurrentQuestionId', id);
   router.push({
     name: 'questions_detail',
-    query: { id, race_uid },
+    query: { id: String(id), race_uid: String(race_uid) },
   });
 };
 

@@ -175,7 +175,7 @@ const stopSlideshow = () => {
 };
 
 // 竞赛数据
-const competitions = ref([
+const competitions = ref<any[]>([
   {
     title: '全国高校编程马拉松',
     logos: ['ACM', 'ICPC', 'CCF'],
@@ -191,7 +191,7 @@ const competitions = ref([
 ]);
 
 // 难度等级映射
-const difficultyMap = {
+const difficultyMap: Record<string, { level: string; difficulty: string }> = {
   入门: { level: '入门', difficulty: '入门' },
   普及: { level: '普及', difficulty: '普及' },
   提高: { level: '提高', difficulty: '提高' },
@@ -201,7 +201,7 @@ const difficultyMap = {
 };
 
 // 最新题目 - 改为从API获取
-const latestProblems = ref([]);
+const latestProblems = ref<any[]>([]);
 
 // 获取最新题目数据
 const fetchLatestProblems = async () => {

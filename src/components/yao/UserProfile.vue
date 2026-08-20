@@ -38,7 +38,7 @@
 </template>
 
 <script setup lang="ts">
-import { defineProps, defineEmits, ref, computed, onMounted, watch } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { ElLoading } from 'element-plus';
 import { userApi, authApi } from '@/api';
 import type { ApiError } from '@/api';

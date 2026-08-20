@@ -14,7 +14,7 @@
             <div class="competition-date">
               {{ formatDate(competition.start_time) }} - {{ formatDate(competition.end_time) }}
             </div>
-            <div class="competition-registration" v-if="competition.register_time">
+            <div v-if="competition.register_time" class="competition-registration">
               注册时间: {{ formatDate(competition.register_time) }}
             </div>
           </div>
@@ -32,7 +32,7 @@
 </template>
 
 <script setup lang="ts">
-import { defineProps, ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { raceApi } from '@/api';
 
 // 定义接口数据结构，与API返回格式匹配
@@ -57,13 +57,13 @@ interface Competition {
   start_time: string;
   end_time: string;
   race_uid: string;
-  status: string;  // 'active', 'pending', 'ended'
+  status: string; // 'active', 'pending', 'ended'
   ranking?: Ranking;
 }
 
 const props = defineProps<{
-  competitions?: Competition[];  // 可选参数，允许从父组件传入数据
-  loading?: boolean;           // 加载状态
+  competitions?: Competition[]; // 可选参数，允许从父组件传入数据
+  loading?: boolean; // 加载状态
 }>();
 
 // 本地存储比赛列表
@@ -91,24 +91,24 @@ onMounted(async () => {
 // 根据比赛状态和排名确定结果样式类
 const getResultClass = (competition: Competition): string => {
   if (!competition.ranking) return 'poor';
-  
+
   const { rank, total_participants } = competition.ranking;
-  
+
   // 计算百分比排名
   const percentile = rank / total_participants;
-  
-  if (percentile <= 0.2) return 'good';      // 前20%
-  if (percentile <= 0.5) return 'average';   // 前50%
-  return 'poor';                             // 后50%
+
+  if (percentile <= 0.2) return 'good'; // 前20%
+  if (percentile <= 0.5) return 'average'; // 前50%
+  return 'poor'; // 后50%
 };
 
 // 获取结果文本
 const getResultText = (competition: Competition): string => {
   if (competition.status === 'pending') return '未开始';
   if (competition.status === 'active') return '进行中';
-  
+
   if (!competition.ranking) return '未参与';
-  
+
   const { rank, total_participants } = competition.ranking;
   return `第${rank}名 / 共${total_participants}人`;
 };
@@ -117,30 +117,30 @@ const getResultText = (competition: Competition): string => {
 const dateFormatCache = new Map();
 const formatDate = (dateString: string): string => {
   if (!dateString) return '';
-  
+
   // 创建缓存键
   const cacheKey = dateString;
-  
+
   // 检查缓存
   if (dateFormatCache.has(cacheKey)) {
     return dateFormatCache.get(cacheKey);
   }
-  
+
   // 解析日期字符串
   const date = new Date(dateString);
-  
+
   // 格式化日期
   const formatted = date.toLocaleDateString('zh-CN', {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
     hour: '2-digit',
-    minute: '2-digit'
+    minute: '2-digit',
   });
-  
+
   // 存入缓存
   dateFormatCache.set(cacheKey, formatted);
-  
+
   return formatted;
 };
 </script>
@@ -204,11 +204,11 @@ const formatDate = (dateString: string): string => {
 }
 
 @keyframes fadeIn {
-  from { 
-    opacity: 0; 
+  from {
+    opacity: 0;
     transform: translateX(-15px);
   }
-  to { 
+  to {
     opacity: 1;
     transform: translateX(0);
   }
@@ -316,6 +316,8 @@ const formatDate = (dateString: string): string => {
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
-</style> 
+</style>

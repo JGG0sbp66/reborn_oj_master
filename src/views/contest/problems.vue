@@ -28,9 +28,9 @@ import competitionshow from '@/components/zq/compotitionshow.vue';
 import competitioninformation from '@/components/zq/competitioninformation.vue';
 import { useRoute } from 'vue-router';
 
-const raceInfo = reactive({}); // 定义一个响应式对象来存储比赛信息
+const raceInfo = reactive<Record<string, any>>({}); // 定义一个响应式对象来存储比赛信息
 const route = useRoute();
-const uid = ref(route.query.uid);
+const uid = ref(route.query.uid as string);
 console.log('uid', uid); // 打印 uid 以调试
 
 const get_race_info = async () => {

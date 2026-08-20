@@ -55,7 +55,7 @@ export default {
   },
   props: {
     raceUid: {
-      type: Object, // 指定类型
+      type: [String, Number], // 指定类型
       required: true,
     },
   },

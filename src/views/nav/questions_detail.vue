@@ -23,7 +23,7 @@ import foot from '@/components/foot.vue';
 import { useRoute } from 'vue-router';
 
 const route = useRoute();
-const race_uid = route.query.race_uid; // 从 query 获取
+const race_uid = route.query.race_uid as string; // 从 query 获取
 
 console.log('接收到的参数:', { race_uid });
 </script>
