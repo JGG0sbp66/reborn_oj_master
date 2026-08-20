@@ -24,20 +24,20 @@
 </template>
 
 <script setup lang="ts">
-import { defineProps, ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { questionApi } from '@/api';
 
 // 更新接口定义为后端返回的数据格式
 interface ProblemRecord {
-  submit_time: string;    // 提交时间，格式为 "2025-04-11 20:45:32"
-  title: string;          // 题目标题
-  topic: string;          // 题目主题或分类
-  question_uid: string;   // 题目唯一ID
+  submit_time: string; // 提交时间，格式为 "2025-04-11 20:45:32"
+  title: string; // 题目标题
+  topic: string; // 题目主题或分类
+  question_uid: string; // 题目唯一ID
 }
 
 const props = defineProps<{
-  problems?: ProblemRecord[];  // 可选参数，允许从父组件传入数据
-  loading?: boolean;           // 加载状态
+  problems?: ProblemRecord[]; // 可选参数，允许从父组件传入数据
+  loading?: boolean; // 加载状态
 }>();
 
 // 本地存储问题列表
@@ -66,30 +66,30 @@ onMounted(async () => {
 const dateFormatCache = new Map();
 const formatDate = (dateString: string): string => {
   if (!dateString) return '';
-  
+
   // 创建缓存键
   const cacheKey = dateString;
-  
+
   // 检查缓存
   if (dateFormatCache.has(cacheKey)) {
     return dateFormatCache.get(cacheKey);
   }
-  
+
   // 解析日期字符串
   const date = new Date(dateString);
-  
+
   // 格式化日期
   const formatted = date.toLocaleDateString('zh-CN', {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
     hour: '2-digit',
-    minute: '2-digit'
+    minute: '2-digit',
   });
-  
+
   // 存入缓存
   dateFormatCache.set(cacheKey, formatted);
-  
+
   return formatted;
 };
 </script>
@@ -153,11 +153,11 @@ const formatDate = (dateString: string): string => {
 }
 
 @keyframes fadeIn {
-  from { 
-    opacity: 0; 
+  from {
+    opacity: 0;
     transform: translateX(-15px);
   }
-  to { 
+  to {
     opacity: 1;
     transform: translateX(0);
   }
@@ -279,6 +279,8 @@ const formatDate = (dateString: string): string => {
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
-</style> 
+</style>

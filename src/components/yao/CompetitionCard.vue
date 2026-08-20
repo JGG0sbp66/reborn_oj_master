@@ -65,7 +65,7 @@
 </template>
 
 <script setup lang="ts">
-import { defineProps, computed } from 'vue';
+import { computed } from 'vue';
 
 // 定义竞赛对象类型
 interface Tag {

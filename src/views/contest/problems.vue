@@ -1,17 +1,17 @@
 <template>
   <main>
-    <competitionheader :raceInfo="raceInfo"/>
+    <AppHeader variant="title" :title="raceInfo?.race_info?.title" />
     <div class="main-content">
       <aside class="left-panel">
-        <sidebarproblem :raceInfo="raceInfo"/>
+        <sidebarproblem :race-info="raceInfo" />
       </aside>
       <section class="content-area">
         <div class="content-wrapper">
           <article class="left-main">
-            <competitionshow :raceInfo="raceInfo" :uid="uid"/>
+            <competitionshow :race-info="raceInfo" :uid="uid" />
           </article>
           <aside class="right-main">
-            <competitioninformation :raceInfo="raceInfo" :uid="uid"/>
+            <competitioninformation :race-info="raceInfo" :uid="uid" />
           </aside>
         </div>
       </section>
@@ -20,18 +20,18 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from "vue";
-import { raceApi } from "@/api";
-import competitionheader from "@/components/zq/competitionheader.vue";
-import sidebarproblem from "@/components/zq/contest-sidebar.vue";
-import competitionshow from "@/components/zq/compotitionshow.vue";
-import competitioninformation from "@/components/zq/competitioninformation.vue";
-import { useRoute } from "vue-router";
+import { ref, reactive, onMounted } from 'vue';
+import { raceApi } from '@/api';
+import AppHeader from '@/components/AppHeader.vue';
+import sidebarproblem from '@/components/zq/contest-sidebar.vue';
+import competitionshow from '@/components/zq/compotitionshow.vue';
+import competitioninformation from '@/components/zq/competitioninformation.vue';
+import { useRoute } from 'vue-router';
 
-const raceInfo = reactive({}); // 定义一个响应式对象来存储比赛信息
+const raceInfo = reactive<Record<string, any>>({}); // 定义一个响应式对象来存储比赛信息
 const route = useRoute();
-const uid = ref(route.query.uid);
-console.log("uid", uid); // 打印 uid 以调试
+const uid = ref(route.query.uid as string);
+console.log('uid', uid); // 打印 uid 以调试
 
 const get_race_info = async () => {
   const userData = await raceApi.getRaceInfo(uid.value as string);
@@ -44,7 +44,6 @@ const fetchData = async () => {
 };
 
 onMounted(fetchData); // 在组件挂载时调用 fetchData 函数
-
 </script>
 
 <style scoped>
@@ -120,7 +119,9 @@ onMounted(fetchData); // 在组件挂载时调用 fetchData 函数
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
   padding: 24px;
   animation: fadeInUp 0.6s ease-out;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
   position: relative;
   overflow: hidden;
   backdrop-filter: blur(10px);
@@ -182,9 +183,15 @@ onMounted(fetchData); // 在组件挂载时调用 fetchData 函数
 
 /* 新增样式 */
 @keyframes pulse {
-  0% { box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06); }
-  50% { box-shadow: 0 4px 25px rgba(59, 130, 246, 0.15); }
-  100% { box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06); }
+  0% {
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+  }
+  50% {
+    box-shadow: 0 4px 25px rgba(59, 130, 246, 0.15);
+  }
+  100% {
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+  }
 }
 
 main {
@@ -201,7 +208,7 @@ main::before {
   position: absolute;
   width: 100%;
   height: 100%;
-  background-image: 
+  background-image:
     radial-gradient(circle at 20% 20%, rgba(16, 185, 129, 0.03) 0, transparent 50px),
     radial-gradient(circle at 80% 80%, rgba(59, 130, 246, 0.03) 0, transparent 50px);
 }
@@ -228,7 +235,7 @@ main::before {
   .content-wrapper {
     flex-direction: column;
   }
-  
+
   .right-main {
     width: 100%;
     margin-top: 20px;
@@ -239,11 +246,11 @@ main::before {
   .main-content {
     padding: 16px;
   }
-  
+
   .content-area {
     padding: 16px;
   }
-  
+
   .left-main {
     padding: 16px;
   }

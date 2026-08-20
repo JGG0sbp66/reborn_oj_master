@@ -5,20 +5,20 @@
       <div class="profile-form">
         <el-form label-position="top">
           <el-form-item label="修改密码">
-            <el-input type="password" v-model="oldPassword" placeholder="当前密码" />
+            <el-input v-model="oldPassword" type="password" placeholder="当前密码" />
           </el-form-item>
           <el-form-item>
-            <el-input type="password" v-model="newPassword" placeholder="新密码" />
+            <el-input v-model="newPassword" type="password" placeholder="新密码" />
           </el-form-item>
           <el-form-item>
-            <el-input type="password" v-model="confirmPassword" placeholder="确认新密码" />
+            <el-input v-model="confirmPassword" type="password" placeholder="确认新密码" />
           </el-form-item>
           <el-form-item>
             <el-button type="primary" class="save-btn" @click="changePassword">修改密码</el-button>
           </el-form-item>
         </el-form>
       </div>
-      
+
       <!-- <div class="settings-section">
         <h4 class="settings-subtitle">账户安全</h4>
         <div class="settings-option">
@@ -42,13 +42,12 @@
           <el-switch v-model="publicRanking" @change="handlePrivacyOptionChange" />
         </div>
       </div> -->
-      
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { defineProps, defineEmits, ref } from 'vue';
+import { ref } from 'vue';
 import { ElLoading } from 'element-plus';
 import { userApi } from '@/api';
 import type { ApiError } from '@/api';
@@ -94,39 +93,39 @@ const changePassword = async (): Promise<void> => {
     props.alertBox?.show('请填写所有密码字段', 2);
     return;
   }
-  
+
   if (newPassword.value !== confirmPassword.value) {
     props.alertBox?.show('两次输入的新密码不一致', 2);
     return;
   }
-  
+
   try {
     // 显示加载中
     const loadingInstance = ElLoading.service({
       lock: true,
       text: '正在修改密码...',
-      background: 'rgba(0, 0, 0, 0.7)'
+      background: 'rgba(0, 0, 0, 0.7)',
     });
-    
+
     // 发送请求到后端修改密码
     const data = await userApi.changePassword(
       oldPassword.value,
       newPassword.value,
       confirmPassword.value
     );
-    
+
     // 关闭加载提示
     loadingInstance.close();
-    
+
     // 处理响应
     if (data && data.success) {
       props.alertBox?.show(data.message || '密码已成功修改', 0);
-      
+
       // 清空表单
       oldPassword.value = '';
       newPassword.value = '';
       confirmPassword.value = '';
-      
+
       // 通知父组件密码已修改
       emit('password-changed');
     } else {
@@ -135,7 +134,7 @@ const changePassword = async (): Promise<void> => {
     }
   } catch (error) {
     console.error('修改密码失败:', error);
-    
+
     // 提供更详细的错误信息
     const apiError = error as ApiError;
     let errorMessage = '修改密码失败，请稍后重试';
@@ -146,7 +145,7 @@ const changePassword = async (): Promise<void> => {
       // 请求发送了但没有收到响应
       errorMessage = apiError.message || '服务器未响应，请检查网络连接';
     }
-    
+
     props.alertBox?.show(errorMessage, 2);
   }
 };
@@ -155,12 +154,12 @@ const changePassword = async (): Promise<void> => {
 const handleSecurityOptionChange = () => {
   const securitySettings: SecuritySettings = {
     twoFactorEnabled: twoFactorEnabled.value,
-    loginNotificationsEnabled: loginNotificationsEnabled.value
+    loginNotificationsEnabled: loginNotificationsEnabled.value,
   };
-  
+
   // 模拟保存到后端
   // axios.post('/api/user/security-settings', securitySettings);
-  
+
   // 通知父组件设置已更新
   emit('security-settings-updated', securitySettings);
 };
@@ -169,12 +168,12 @@ const handleSecurityOptionChange = () => {
 const handlePrivacyOptionChange = () => {
   const privacySettings: PrivacySettings = {
     publicSolvedProblems: publicSolvedProblems.value,
-    publicRanking: publicRanking.value
+    publicRanking: publicRanking.value,
   };
-  
+
   // 模拟保存到后端
   // axios.post('/api/user/privacy-settings', privacySettings);
-  
+
   // 通知父组件设置已更新
   emit('privacy-settings-updated', privacySettings);
 };
@@ -313,7 +312,7 @@ const handlePrivacyOptionChange = () => {
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, rgba(255,255,255,0.2), rgba(255,255,255,0));
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0));
   transition: 0.6s;
   z-index: -1;
 }
@@ -398,4 +397,4 @@ const handlePrivacyOptionChange = () => {
   border-color: #42b983;
   background-color: #42b983;
 }
-</style> 
+</style>

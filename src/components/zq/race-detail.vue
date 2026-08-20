@@ -1,18 +1,13 @@
 <template>
   <div>
     <!-- 查看竞赛详情弹窗 -->
-    <el-dialog
-      v-model="dialogVisible"
-      title="竞赛详情"
-      width="680px"
-      :close-on-click-modal="false"
-    >
-      <div class="race-detail-container" v-loading="loading">
+    <el-dialog v-model="dialogVisible" title="竞赛详情" width="680px" :close-on-click-modal="false">
+      <div v-loading="loading" class="race-detail-container">
         <div class="race-header">
           <h2 class="race-title">{{ raceData.title }}</h2>
           <div class="race-tags">
-            <el-tag 
-              v-for="(tag, index) in raceData.tags" 
+            <el-tag
+              v-for="(tag, index) in raceData.tags"
               :key="index"
               :type="getTagType(tag.type)"
               class="race-tag"
@@ -21,8 +16,8 @@
             </el-tag>
           </div>
           <div class="race-logos">
-            <el-tag 
-              v-for="(logo, index) in raceData.logos" 
+            <el-tag
+              v-for="(logo, index) in raceData.logos"
               :key="index"
               type="primary"
               effect="plain"
@@ -32,9 +27,9 @@
             </el-tag>
           </div>
         </div>
-        
+
         <el-divider></el-divider>
-        
+
         <div class="race-info">
           <div class="info-item">
             <span class="label">开始时间:</span>
@@ -55,19 +50,22 @@
             <span class="value">{{ raceData.user_list ? raceData.user_list.length : 0 }}人</span>
           </div>
         </div>
-        
+
         <!-- <el-divider></el-divider>
         
         <div class="race-description" v-if="raceData.description">
           <h3>竞赛描述</h3>
           <p>{{ raceData.description }}</p>
         </div> -->
-        
+
         <el-divider></el-divider>
-        
+
         <div class="race-problems">
           <h3>题目列表 ({{ raceData.problems_list ? raceData.problems_list.length : 0 }}题)</h3>
-          <div class="problem-list" v-if="raceData.problems_list && raceData.problems_list.length > 0">
+          <div
+            v-if="raceData.problems_list && raceData.problems_list.length > 0"
+            class="problem-list"
+          >
             <el-tag
               v-for="problemId in raceData.problems_list"
               :key="problemId"
@@ -79,25 +77,25 @@
           </div>
           <el-empty v-else description="暂无题目" :image-size="80"></el-empty>
         </div>
-        
+
         <el-divider></el-divider>
-        
+
         <div class="race-users">
           <h3>参赛用户 ({{ raceData.user_list ? raceData.user_list.length : 0 }}人)</h3>
-          <div class="user-list" v-if="raceData.user_list && raceData.user_list.length > 0">
+          <div v-if="raceData.user_list && raceData.user_list.length > 0" class="user-list">
             <el-tag
               v-for="userId in raceData.user_list"
               :key="userId"
               effect="plain"
               class="user-tag"
             >
-               {{ userId }}
+              {{ userId }}
             </el-tag>
           </div>
           <el-empty v-else description="暂无参赛用户" :image-size="80"></el-empty>
         </div>
       </div>
-      
+
       <template #footer>
         <span class="dialog-footer">
           <el-button @click="dialogVisible = false">关闭</el-button>
@@ -109,7 +107,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, defineProps, defineEmits, defineExpose } from 'vue';
+import { ref, reactive } from 'vue';
 import { ElMessage } from 'element-plus';
 import { adminApi } from '@/api';
 import { nextTick } from 'vue';
@@ -118,8 +116,8 @@ import { nextTick } from 'vue';
 const props = defineProps({
   alertBoxRef: {
     type: Object,
-    default: null
-  }
+    default: null,
+  },
 });
 
 const emits = defineEmits(['refreshData', 'editRace']);
@@ -158,7 +156,7 @@ const raceData = reactive<RaceData>({
   tags: [],
   problems_list: [],
   user_list: [],
-  status: ''
+  status: '',
 });
 
 // 题目信息缓存
@@ -172,7 +170,7 @@ const problemsInfo = ref<QuestionInfo[]>([]);
 // 格式化日期时间
 const formatDateTime = (dateString: string): string => {
   if (!dateString) return '';
-  
+
   try {
     const date = new Date(dateString);
     return date.toLocaleString('zh-CN', {
@@ -182,7 +180,7 @@ const formatDateTime = (dateString: string): string => {
       hour: '2-digit',
       minute: '2-digit',
       second: '2-digit',
-      hour12: false
+      hour12: false,
     });
   } catch (e) {
     return dateString;
@@ -192,58 +190,75 @@ const formatDateTime = (dateString: string): string => {
 // 获取标签类型
 const getTagType = (type: string): string => {
   switch (type) {
-    case 'pending': return 'info';       // 未开始
-    case 'registration': return 'info';  // 报名中
-    case 'ongoing': return 'success';    // 进行中
-    case 'ended': return 'warning';      // 已结束
-    case 'individual': return 'success'; // 个人赛
-    case 'team': return 'success';       // 团队赛
-    default: return 'info';
+    case 'pending':
+      return 'info'; // 未开始
+    case 'registration':
+      return 'info'; // 报名中
+    case 'ongoing':
+      return 'success'; // 进行中
+    case 'ended':
+      return 'warning'; // 已结束
+    case 'individual':
+      return 'success'; // 个人赛
+    case 'team':
+      return 'success'; // 团队赛
+    default:
+      return 'info';
   }
 };
 
 // 获取状态文本
 const getStatusText = (status: string): string => {
   switch (status) {
-    case 'upcoming': return '未开始';
-    case 'registration': return '报名中';
-    case 'in_progress': return '进行中';
-    case 'ended': return '已结束';
-    default: return status;
+    case 'upcoming':
+      return '未开始';
+    case 'registration':
+      return '报名中';
+    case 'in_progress':
+      return '进行中';
+    case 'ended':
+      return '已结束';
+    default:
+      return status;
   }
 };
 
 // 获取状态标签类型
 const getStatusType = (status: string): string => {
   switch (status) {
-    case 'in_progress': return 'success';
-    case 'upcoming': return 'info';
-    case 'ended': return 'danger';
-    case 'registration': return 'warning';
-    default: return 'info';
+    case 'in_progress':
+      return 'success';
+    case 'upcoming':
+      return 'info';
+    case 'ended':
+      return 'danger';
+    case 'registration':
+      return 'warning';
+    default:
+      return 'info';
   }
 };
 
 // 获取题目标题信息
 const fetchQuestionsInfo = async (problemIds: number[]) => {
   if (!problemIds || problemIds.length === 0) return;
-  
+
   try {
-    const promises = problemIds.map(id => 
-      adminApi.getAdminQuestionDetail(id)
-        .then(data => ({
+    const promises = problemIds.map((id) =>
+      adminApi
+        .getAdminQuestionDetail(id)
+        .then((data) => ({
           id,
-          title: (data.question as Record<string, string> | undefined)?.title || ''
+          title: (data.question as Record<string, string> | undefined)?.title || '',
         }))
         .catch(() => ({
           id,
-          title: ''
+          title: '',
         }))
     );
-    
+
     const results = await Promise.all(promises);
     problemsInfo.value = results;
-    
   } catch (error) {
     console.error('获取题目信息失败:', error);
   }
@@ -251,11 +266,11 @@ const fetchQuestionsInfo = async (problemIds: number[]) => {
 
 // 根据ID获取题目标题
 const getProblemTitle = (problemId: number): string => {
-  const problem = problemsInfo.value.find(p => p.id === problemId);
+  const problem = problemsInfo.value.find((p) => p.id === problemId);
   if (problem && problem.title) {
     return problem.title;
   }
-  
+
   // 如果找不到题目或标题为空，尝试单独获取题目
   fetchSingleProblem(problemId);
   return '加载中...';
@@ -268,7 +283,7 @@ const fetchSingleProblem = async (problemId: number) => {
     const title = (data.question as Record<string, string> | undefined)?.title || '';
     if (title) {
       // 更新到缓存
-      const existingIndex = problemsInfo.value.findIndex(p => p.id === problemId);
+      const existingIndex = problemsInfo.value.findIndex((p) => p.id === problemId);
       if (existingIndex >= 0) {
         problemsInfo.value[existingIndex].title = title;
       } else {
@@ -289,19 +304,20 @@ const openDetailDialog = async (raceId: number) => {
 // 获取竞赛详情
 const fetchRaceDetails = async (raceId: number) => {
   loading.value = true;
-  
+
   try {
     const data = await adminApi.getAdminRaceDetail(raceId);
-    
+
     // 使用 Object.assign 一次性更新响应式数据
     Object.assign(raceData, data);
-    
+
     // 并行获取题目信息和用户信息
     await Promise.all([
-      raceData.problems_list?.length ? fetchQuestionsInfo(raceData.problems_list) : Promise.resolve(),
+      raceData.problems_list?.length
+        ? fetchQuestionsInfo(raceData.problems_list)
+        : Promise.resolve(),
       // 可以添加其他需要并行获取的数据
     ]);
-    
   } catch (error) {
     console.error('获取竞赛详情失败:', error);
     props.alertBoxRef?.show('获取竞赛详情失败，请稍后重试', 1);
@@ -324,7 +340,7 @@ const handleEdit = () => {
 
 // 暴露方法给父组件
 defineExpose({
-  openDetailDialog
+  openDetailDialog,
 });
 </script>
 
@@ -360,7 +376,8 @@ defineExpose({
   gap: 8px;
 }
 
-.race-tag, .race-logo {
+.race-tag,
+.race-logo {
   margin: 0;
 }
 
@@ -402,14 +419,16 @@ defineExpose({
   white-space: pre-line;
 }
 
-.problem-list, .user-list {
+.problem-list,
+.user-list {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
   margin-top: 12px;
 }
 
-.problem-tag, .user-tag {
+.problem-tag,
+.user-tag {
   margin: 0;
 }
 

@@ -1,41 +1,84 @@
 <template>
-  <header class="header">
+  <header class="header" :class="`header--${variant}`">
     <div class="header-content">
-      <!-- 网站标题 -->
-      <router-link
-        to="/nav/home"
-        class="logo"
-      >
+      <!-- 答题页布局：logo 与导航组合在左侧 -->
+      <div v-if="variant === 'detail'" class="header-left">
+        <router-link to="/nav/home" class="logo">
+          <span class="logo-text">OJ Master</span>
+          <span class="logo-highlight"></span>
+        </router-link>
+
+        <nav class="main-nav">
+          <router-link :to="questionRoute.path" class="nav-item">
+            <el-icon class="nav-icon">
+              <component :is="questionRoute.icon" />
+            </el-icon>
+            <span class="nav-text">{{ questionRoute.text }}</span>
+            <span class="nav-hover-effect"></span>
+          </router-link>
+          <div class="nav-item nav-item--clickable" @click="handleShare">
+            <el-icon class="nav-icon">
+              <Share />
+            </el-icon>
+            <span class="nav-text">分享</span>
+            <span class="nav-hover-effect"></span>
+          </div>
+        </nav>
+      </div>
+
+      <!-- 其他布局：独立 logo -->
+      <router-link v-else to="/nav/home" class="logo">
         <span class="logo-text">OJ Master</span>
         <span class="logo-highlight"></span>
       </router-link>
 
-      <!-- 修正后的主导航菜单 -->
-      <div class="main-nav">
+      <!-- 标题布局：后台管理 / 竞赛标题 -->
+      <div v-if="variant === 'title'" class="main-nav">
         <div class="competition-title">
-          <span class="title-text">{{ props.raceInfo?.value?.race_info.title }}</span>
+          <span class="title-text">{{ title }}</span>
           <span class="title-highlight"></span>
         </div>
       </div>
 
+      <!-- 默认布局：主导航菜单 -->
+      <nav v-else-if="variant === 'default'" class="main-nav">
+        <router-link to="/nav/home" class="nav-item">
+          <el-icon class="nav-icon">
+            <House />
+          </el-icon>
+          <span class="nav-text">首页</span>
+          <span class="nav-hover-effect"></span>
+        </router-link>
+        <router-link to="/nav/question" class="nav-item">
+          <el-icon class="nav-icon">
+            <Collection />
+          </el-icon>
+          <span class="nav-text">题库</span>
+          <span class="nav-hover-effect"></span>
+        </router-link>
+        <router-link to="/nav/competition" class="nav-item">
+          <el-icon class="nav-icon">
+            <Trophy />
+          </el-icon>
+          <span class="nav-text">竞赛</span>
+          <span class="nav-hover-effect"></span>
+        </router-link>
+      </nav>
+
       <!-- 用户操作区 -->
       <div class="user-actions">
         <template v-if="!isAuthenticated">
-          <router-link
-            to="/account/register"
-            class="btn btn-register"
-          >注册</router-link>
-          <router-link
-            to="/account/login"
-            class="btn btn-login"
-          >登录</router-link>
+          <router-link to="/account/register" class="btn btn-register">注册</router-link>
+          <router-link to="/account/login" class="btn btn-login">登录</router-link>
         </template>
         <div v-else class="user-profile">
           <router-link to="/user/profile" class="avatar-link">
-            <div class="avatar" 
-                 @mouseenter="handleUserMenuEnter" 
-                 @mouseleave="handleUserMenuLeave"
-                 @click="goToUserProfile">
+            <div
+              class="avatar"
+              @mouseenter="handleUserMenuEnter"
+              @mouseleave="handleUserMenuLeave"
+              @click="goToUserProfile"
+            >
               <div v-if="avatarUrl || defaultAvatarUrl" class="avatar-img">
                 <img :src="avatarUrl || defaultAvatarUrl" alt="用户头像" />
               </div>
@@ -45,7 +88,12 @@
             </div>
           </router-link>
           <transition name="menu-fade">
-            <div class="user-menu" v-if="showUserMenu" @mouseenter="handleUserMenuEnter" @mouseleave="handleUserMenuLeave">
+            <div
+              v-if="showUserMenu"
+              class="user-menu"
+              @mouseenter="handleUserMenuEnter"
+              @mouseleave="handleUserMenuLeave"
+            >
               <div class="user-menu-header">
                 <div class="user-menu-avatar">
                   <div v-if="avatarUrl || defaultAvatarUrl" class="menu-avatar-img">
@@ -60,16 +108,16 @@
                   <div class="user-menu-role">{{ userRole }}</div>
                 </div>
               </div>
-              
+
               <div class="user-menu-divider"></div>
-              
+
               <div class="menu-quick-actions">
                 <router-link to="/user/profile" class="quick-action-btn">
                   <el-icon><UserFilled /></el-icon>
                   <span>个人中心</span>
                 </router-link>
               </div>
-              
+
               <div class="user-menu-items">
                 <div class="user-menu-item logout" @click="logout">
                   <el-icon><SwitchButton /></el-icon>
@@ -83,331 +131,117 @@
     </div>
   </header>
 </template>
-  
+
 <script setup lang="ts">
-import { ref, computed, onMounted, onBeforeUnmount, defineExpose } from "vue";
-import { House, Collection, Trophy, UserFilled, SwitchButton } from "@element-plus/icons-vue";
-import { checkAuth } from '@/utils/auth';
-import { authApi } from '@/api';
-import { useRouter } from 'vue-router';
-import emitter from '@/utils/eventBus';
+import { computed } from 'vue';
+import {
+  House,
+  Collection,
+  Trophy,
+  UserFilled,
+  SwitchButton,
+  Share,
+} from '@element-plus/icons-vue';
+import { ElNotification } from 'element-plus';
+import { useUserState } from '@/composables/useUserState';
 
-const router = useRouter();
-const isAuthenticated = ref<boolean>(false);
-const username = ref<string>('');
-const userRole = ref<string>('');
-const avatarUrl = ref<string>('');
-const showUserMenu = ref<boolean>(false);
-const menuCloseTimer = ref<number | null>(null); // 用于延迟关闭菜单
+const props = withDefaults(
+  defineProps<{
+    /** 头部布局：default=主导航；title=居中标题（后台/竞赛）；detail=答题页（返回导航+分享） */
+    variant?: 'default' | 'title' | 'detail';
+    /** variant 为 title 时显示的居中标题 */
+    title?: string;
+    /** variant 为 detail 时传入的竞赛 uid，用于「回到竞赛」路由 */
+    raceUid?: string | number;
+  }>(),
+  {
+    variant: 'default',
+    title: '',
+    raceUid: undefined,
+  }
+);
 
-const props = defineProps({
-  raceInfo: Object,
+const {
+  isAuthenticated,
+  username,
+  userRole,
+  avatarUrl,
+  showUserMenu,
+  userInitials,
+  defaultAvatarUrl,
+  verifyUserState,
+  logout,
+  handleUserMenuEnter,
+  handleUserMenuLeave,
+  goToUserProfile,
+} = useUserState();
+
+// 计算题库路由地址（detail 布局使用）
+const questionRoute = computed(() => {
+  if (props.raceUid === undefined) {
+    return {
+      path: '/nav/question',
+      icon: Collection,
+      text: '回到题库',
+    };
+  }
+  return {
+    path: `/contest/problems?uid=${props.raceUid}`,
+    icon: Trophy,
+    text: '回到竞赛',
+  };
 });
-console.log(props.raceInfo);
-// 从用户名生成缩写
-const userInitials = computed(() => {
-  if (!username.value || typeof username.value !== 'string') return '?';
-  return username.value.substring(0, 2).toUpperCase();
-});
 
-// 生成随机颜色以便为用户头像创建背景色
-const getRandomColor = () => {
-  const colors = [
-    '#42b983', '#33c6aa', '#00c4ff', '#3399ff', '#2979ff',
-    '#5e72e4', '#7795f8', '#6772e5', '#7b69ee', '#6f42c1'
-  ];
-  const randomIndex = Math.floor(Math.random() * colors.length);
-  return colors[randomIndex];
-};
+// 分享功能（detail 布局使用）
+const handleShare = async () => {
+  try {
+    const currentUrl = window.location.href;
 
-// 生成随机矢量图头像
-const generateAvatarSvg = (username: string) => {
-  // 从用户名生成一个稳定的哈希值，确保同一用户名总是生成相同的图案
-  const hash = username.split('').reduce((acc, char, i) => {
-    return acc + (char.charCodeAt(0) * (i + 1));
-  }, 0);
-  
-  // 定义一些颜色方案
-  const colorSchemes = [
-    { bg: '#E8F4F8', fg: ['#2980b9', '#3498db', '#1abc9c', '#16a085'] },
-    { bg: '#F8F4E8', fg: ['#E67E22', '#F39C12', '#D35400', '#FFA07A'] },
-    { bg: '#F4E8F8', fg: ['#8E44AD', '#9B59B6', '#745399', '#B19CD9'] },
-    { bg: '#E8F8F4', fg: ['#27AE60', '#2ECC71', '#1E8449', '#A0DAA9'] },
-    { bg: '#F8E8E8', fg: ['#C0392B', '#E74C3C', '#922B21', '#F5B7B1'] },
-    { bg: '#E8F0F8', fg: ['#3498DB', '#2874A6', '#2E86C1', '#85C1E9'] }
-  ];
-  
-  // 根据哈希值选择颜色方案
-  const schemeIndex = hash % colorSchemes.length;
-  const colorScheme = colorSchemes[schemeIndex];
-  
-  // 生成SVG的尺寸
-  const size = 200;
-  const halfSize = size / 2;
-  
-  // 生成一些随机形状
-  const shapes = [];
-  const shapesCount = 4 + (hash % 4); // 4到7个形状
-  
-  for (let i = 0; i < shapesCount; i++) {
-    const shapeType = (hash + i) % 3; // 0: 圆形, 1: 矩形, 2: 多边形
-    const color = colorScheme.fg[i % colorScheme.fg.length];
-    const shapeSeed = hash + (i * 13);
-    
-    if (shapeType === 0) {
-      // 圆形
-      const cx = 30 + (shapeSeed % (size - 60));
-      const cy = 30 + ((shapeSeed * 5) % (size - 60));
-      const r = 10 + (shapeSeed % 40);
-      shapes.push(`<circle cx="${cx}" cy="${cy}" r="${r}" fill="${color}" opacity="0.8" />`);
-    } else if (shapeType === 1) {
-      // 矩形
-      const x = 20 + (shapeSeed % (size - 80));
-      const y = 20 + ((shapeSeed * 7) % (size - 80));
-      const width = 15 + (shapeSeed % 50);
-      const height = 15 + ((shapeSeed * 3) % 50);
-      const rx = shapeSeed % 15; // 圆角
-      shapes.push(`<rect x="${x}" y="${y}" width="${width}" height="${height}" rx="${rx}" fill="${color}" opacity="0.8" />`);
+    // 尝试使用现代 Clipboard API
+    if (navigator.clipboard) {
+      await navigator.clipboard.writeText(currentUrl);
     } else {
-      // 多边形 (三角形或其他简单形状)
-      const points = [];
-      const sides = 3 + (shapeSeed % 3); // 3到5条边
-      const centerX = 30 + (shapeSeed % (size - 60));
-      const centerY = 30 + ((shapeSeed * 11) % (size - 60));
-      const radius = 10 + (shapeSeed % 30);
-      
-      for (let j = 0; j < sides; j++) {
-        const angle = (j * 2 * Math.PI / sides) + (shapeSeed % Math.PI);
-        const x = centerX + radius * Math.cos(angle);
-        const y = centerY + radius * Math.sin(angle);
-        points.push(`${x},${y}`);
-      }
-      
-      shapes.push(`<polygon points="${points.join(' ')}" fill="${color}" opacity="0.8" />`);
-    }
-  }
-  
-  // 组合SVG
-  const svg = `
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${size} ${size}" width="${size}" height="${size}">
-      <rect width="${size}" height="${size}" fill="${colorScheme.bg}" />
-      ${shapes.join('\n      ')}
-    </svg>
-  `;
-  
-  // 返回Data URL形式的SVG
-  return `data:image/svg+xml;utf8,${encodeURIComponent(svg.trim())}`;
-};
+      // 回退到传统方法
+      const textarea = document.createElement('textarea');
+      textarea.value = currentUrl;
+      textarea.style.position = 'fixed'; // 避免滚动到页面底部
+      document.body.appendChild(textarea);
+      textarea.select();
 
-// 修补：生成随机矢量图头像
-const tryRefreshAvatar = async (userId?: string | number) => {
-  try {
-    // 使用传入的userId或从localStorage获取
-    const id = userId || localStorage.getItem('uid');
-    if (!id) return;
-    
-    // 添加时间戳以防止缓存
-    const timestamp = localStorage.getItem('avatar_timestamp') || Date.now().toString();
-    
-    // 检查是否有头像
-    const avatarBlob = await authApi.getUserAvatar(id, timestamp);
-    
-    // 如果成功获取头像
-    if (avatarBlob) {
-      // 释放之前的blob URL资源
-      if (avatarUrl.value && avatarUrl.value.startsWith('blob:')) {
-        try {
-          URL.revokeObjectURL(avatarUrl.value);
-        } catch (e) {
-          console.log('释放旧头像URL资源失败:', e);
-        }
-      }
-      
-      // 创建blob URL用于当前会话显示
-      const blob = new Blob([avatarBlob], { type: 'image/jpeg' });
-      const imageUrl = URL.createObjectURL(blob);
-      avatarUrl.value = imageUrl;
-      
-      // 将blob转换为Base64，用于持久化存储
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        if (reader.result) {
-          // 保存Base64格式的图片到localStorage
-          localStorage.setItem('avatarBase64', reader.result.toString());
-          // 更新时间戳
-          localStorage.setItem('avatar_timestamp', Date.now().toString());
-        }
-      };
-      reader.readAsDataURL(blob);
-    }
-  } catch (avatarError) {
-    console.log('没有找到用户头像或头像加载失败:', avatarError);
-  }
-};
-
-// 修改：修改生成用户默认头像逻辑
-const defaultAvatarUrl = computed(() => {
-  // 首先检查localStorage中是否有Base64格式的头像
-  const cachedAvatarBase64 = localStorage.getItem('avatarBase64');
-  if (cachedAvatarBase64) return cachedAvatarBase64;
-  
-  // 其次检查avatarUrl
-  if (avatarUrl.value) return avatarUrl.value;
-  
-  // 最后才生成默认头像
-  if (!username.value) return '';
-  return generateAvatarSvg(username.value);
-});
-
-// 修改：验证用户状态方法
-const verifyUserState = async () => {
-  try {
-    // 先检查localStorage中是否有登录状态
-    const isLoggedInFromStorage = localStorage.getItem('isLoggedIn') === 'true';
-    const usernameFromStorage = localStorage.getItem('username');
-    const userRoleFromStorage = localStorage.getItem('userRole');
-    
-    // 如果localStorage中有数据，先使用这些数据更新UI
-    if (isLoggedInFromStorage && usernameFromStorage) {
-      isAuthenticated.value = true;
-      username.value = usernameFromStorage;
-      userRole.value = userRoleFromStorage || '普通用户';
-      
-      // 优先使用储存的Base64头像，避免闪烁
-      const cachedAvatarBase64 = localStorage.getItem('avatarBase64');
-      if (cachedAvatarBase64) {
-        avatarUrl.value = cachedAvatarBase64;
+      try {
+        const successful = document.execCommand('copy');
+        if (!successful) throw new Error('Copy command failed');
+      } finally {
+        document.body.removeChild(textarea);
       }
     }
-    
-    // 获取用户ID用于头像
-    const userId = localStorage.getItem('uid');
-    
-    // 如果有用户ID，尝试从服务器获取最新头像，但不阻塞UI显示
-    if (userId) {
-      requestAnimationFrame(() => {
-        tryRefreshAvatar(userId);
-      });
-    }
-    
-    // 然后再通过API获取最新状态
-    const { authenticated, user } = await checkAuth();
-    isAuthenticated.value = authenticated;
-    if (authenticated && user) {
-      username.value = user.username || '用户';
-      userRole.value = user.role || '普通用户';
-      
-      // 保存用户ID
-      if (user.uid) {
-        localStorage.setItem('uid', user.uid.toString());
-        
-        // 如果之前没有获取头像，尝试用获取到的ID获取
-        if (!avatarUrl.value) {
-          tryRefreshAvatar(user.uid);
-        }
-      }
-      
-      // 更新localStorage
-      localStorage.setItem('isLoggedIn', 'true');
-      localStorage.setItem('username', user.username);
-      localStorage.setItem('userRole', user.role);
-    } else {
-      // 如果API返回未认证，清除localStorage
-      localStorage.removeItem('isLoggedIn');
-      localStorage.removeItem('username');
-      localStorage.removeItem('userRole');
-      localStorage.removeItem('uid');
-    }
-  } catch (error) {
-    console.error('验证用户状态错误:', error);
-    isAuthenticated.value = false;
+
+    ElNotification({
+      title: '复制成功',
+      message: '内容已复制到剪贴板',
+      type: 'success',
+      duration: 2000,
+    });
+  } catch (err) {
+    console.error('复制失败:', err);
+    ElNotification.error({
+      title: '复制失败',
+      message: '请手动选择文本并复制',
+      duration: 2000,
+    });
+
+    // 提供手动复制选项
+    const currentUrl = window.location.href;
+    prompt('请手动复制以下链接:', currentUrl);
   }
 };
-
-// 退出登录
-const logout = async () => {
-  try {
-    await authApi.logout();
-    isAuthenticated.value = false;
-    showUserMenu.value = false;
-    
-    // 清除localStorage中的登录信息
-    localStorage.removeItem('isLoggedIn');
-    localStorage.removeItem('username');
-    localStorage.removeItem('userRole');
-    
-    router.push('/nav/home');
-  } catch (error) {
-    console.error('退出登录失败:', error);
-  }
-};
-
-// 处理鼠标移入用户头像或菜单
-const handleUserMenuEnter = () => {
-  // 清除可能存在的关闭定时器
-  if (menuCloseTimer.value !== null) {
-    clearTimeout(menuCloseTimer.value);
-    menuCloseTimer.value = null;
-  }
-  // 显示菜单
-  showUserMenu.value = true;
-};
-
-// 处理鼠标移出菜单或头像
-const handleUserMenuLeave = () => {
-  // 设置延迟关闭定时器，给用户足够时间移动到菜单上
-  menuCloseTimer.value = window.setTimeout(() => {
-    showUserMenu.value = false;
-    menuCloseTimer.value = null;
-  }, 500); // 500毫秒(0.5秒)延迟
-};
-
-// 跳转到用户个人中心
-const goToUserProfile = () => {
-  router.push('/user/profile');
-};
-
-// 修改：组件加载时添加事件监听
-onMounted(() => {
-  verifyUserState();
-  
-  // 监听头像更新事件
-  emitter.on('avatar-updated', (data: any) => {
-    // 更新头像URL
-    if (data.avatarUrl) {
-      avatarUrl.value = data.avatarUrl;
-    }
-    
-    // 也可以直接刷新用户状态
-    verifyUserState();
-  });
-});
-
-// 修改：组件销毁前的清理
-onBeforeUnmount(() => {
-  if (menuCloseTimer.value !== null) {
-    clearTimeout(menuCloseTimer.value);
-  }
-  
-  // 取消事件监听
-  emitter.off('avatar-updated');
-  
-  // 释放blob URL
-  if (avatarUrl.value && avatarUrl.value.startsWith('blob:')) {
-    try {
-      URL.revokeObjectURL(avatarUrl.value);
-    } catch (e) {
-      console.log('释放头像URL资源失败:', e);
-    }
-  }
-});
 
 // 暴露方法给父组件
 defineExpose({
-  verifyUserState
+  verifyUserState,
 });
 </script>
-  
+
 <style scoped>
 /* 基础样式 */
 .header {
@@ -418,10 +252,21 @@ defineExpose({
   position: fixed;
   top: 0;
   left: 0;
-  z-index: 1000;
+  z-index: 10000;
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+/* 标题与答题页布局保持原有层级，避免遮挡弹窗 */
+.header--title,
+.header--detail {
+  z-index: 1000;
+}
+
+/* 答题页布局保持原有的绝对定位（随页面滚动） */
+.header--detail {
+  position: absolute;
 }
 
 .header-content {
@@ -432,6 +277,13 @@ defineExpose({
   display: flex;
   align-items: center;
   justify-content: space-between;
+}
+
+/* 答题页布局：logo 与导航同处左侧容器 */
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 60px; /* 调整logo和导航菜单之间的间距 */
 }
 
 /* 标志设计 */
@@ -446,6 +298,10 @@ defineExpose({
   padding: 10px 0;
   flex: 0 0 auto; /* 防止flex缩放 */
   width: 180px; /* 固定宽度 */
+}
+
+.header--detail .logo {
+  width: auto;
 }
 
 .logo-text {
@@ -492,6 +348,13 @@ defineExpose({
   transform: translateX(-50%); /* 水平居中 */
 }
 
+/* 答题页布局：导航跟随 logo，不做绝对居中 */
+.header--detail .main-nav {
+  position: static;
+  transform: none;
+  margin: 0;
+}
+
 .nav-item {
   color: #4a5568;
   text-decoration: none;
@@ -503,6 +366,10 @@ defineExpose({
   padding: 24px 0;
   position: relative;
   transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.nav-item--clickable {
+  cursor: pointer;
 }
 
 .nav-icon {
@@ -579,6 +446,10 @@ defineExpose({
   justify-content: flex-end; /* 靠右对齐 */
 }
 
+.header--detail .user-actions {
+  width: auto;
+}
+
 .btn {
   padding: 10px 24px;
   border-radius: 8px;
@@ -614,7 +485,7 @@ defineExpose({
 }
 
 .btn-register::after {
-  content: "";
+  content: '';
   position: absolute;
   bottom: 0;
   left: 0;
@@ -651,7 +522,7 @@ defineExpose({
 }
 
 .btn-login::before {
-  content: "";
+  content: '';
   position: absolute;
   top: 0;
   left: 0;
@@ -811,7 +682,12 @@ defineExpose({
 
 .user-menu-divider {
   height: 1px;
-  background: linear-gradient(to right, rgba(0,0,0,0.02), rgba(0,0,0,0.06), rgba(0,0,0,0.02));
+  background: linear-gradient(
+    to right,
+    rgba(0, 0, 0, 0.02),
+    rgba(0, 0, 0, 0.06),
+    rgba(0, 0, 0, 0.02)
+  );
   margin: 0 15px;
 }
 
@@ -895,89 +771,7 @@ defineExpose({
   transform: translateX(2px);
 }
 
-/* 响应式设计 */
-@media (max-width: 768px) {
-  .header {
-    height: 64px;
-  }
-
-  .header-content {
-    padding: 0 20px;
-  }
-
-  .logo {
-    font-size: 24px;
-  }
-
-  .main-nav {
-    gap: 20px;
-  }
-
-  .nav-item {
-    font-size: 15px;
-    padding: 20px 0;
-  }
-
-  .btn {
-    padding: 8px 16px;
-    font-size: 14px;
-  }
-  
-  .avatar {
-    width: 36px;
-    height: 36px;
-  }
-  
-  .user-menu {
-    width: 200px;
-  }
-}
-
-.avatar-link {
-  text-decoration: none;
-  display: block;
-}
-
-/* 菜单淡入淡出动画 - 优化使其更加丝滑 */
-.menu-fade-enter-active {
-  animation: menu-fade-in 0.35s cubic-bezier(0.21, 1.11, 0.81, 1.05) forwards;
-}
-
-.menu-fade-leave-active {
-  animation: menu-fade-out 0.25s cubic-bezier(0.55, 0.06, 0.68, 0.19) forwards;
-}
-
-@keyframes menu-fade-in {
-  0% {
-    opacity: 0;
-    transform: translateY(-12px) scale(0.96);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0);
-  }
-  70% {
-    opacity: 1;
-    transform: translateY(2px) scale(1.01);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
-  }
-}
-
-@keyframes menu-fade-out {
-  0% {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
-  }
-  100% {
-    opacity: 0;
-    transform: translateY(-12px) scale(0.96);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0);
-  }
-}
-
-/* 比赛标题样式 */
+/* 居中标题样式（后台管理 / 竞赛标题布局） */
 .competition-title {
   position: relative;
   display: flex;
@@ -1026,15 +820,92 @@ defineExpose({
 
 /* 响应式设计 */
 @media (max-width: 768px) {
+  .header {
+    height: 64px;
+  }
+
+  .header-content {
+    padding: 0 20px;
+  }
+
+  .logo {
+    font-size: 24px;
+  }
+
+  .main-nav {
+    gap: 20px;
+  }
+
+  .nav-item {
+    font-size: 15px;
+    padding: 20px 0;
+  }
+
+  .btn {
+    padding: 8px 16px;
+    font-size: 14px;
+  }
+
+  .avatar {
+    width: 36px;
+    height: 36px;
+  }
+
+  .user-menu {
+    width: 200px;
+  }
+
   .title-text {
     font-size: 20px;
   }
-  
+
   .title-highlight {
     height: 6px;
     bottom: -3px;
   }
 }
+
+.avatar-link {
+  text-decoration: none;
+  display: block;
+}
+
+/* 菜单淡入淡出动画 - 优化使其更加丝滑 */
+.menu-fade-enter-active {
+  animation: menu-fade-in 0.35s cubic-bezier(0.21, 1.11, 0.81, 1.05) forwards;
+}
+
+.menu-fade-leave-active {
+  animation: menu-fade-out 0.25s cubic-bezier(0.55, 0.06, 0.68, 0.19) forwards;
+}
+
+@keyframes menu-fade-in {
+  0% {
+    opacity: 0;
+    transform: translateY(-12px) scale(0.96);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0);
+  }
+  70% {
+    opacity: 1;
+    transform: translateY(2px) scale(1.01);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+  }
+}
+
+@keyframes menu-fade-out {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-12px) scale(0.96);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0);
+  }
+}
 </style>
-
-

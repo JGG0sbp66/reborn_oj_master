@@ -382,33 +382,33 @@ interface FormattedCompetition {
 }
 
 // AlertBox引用
-const alertBox = ref(null);
-const raceCreateRef = ref(null);
-const raceEditRef = ref(null);
-const raceDetailRef = ref(null);
+const alertBox = ref<any>(null);
+const raceCreateRef = ref<any>(null);
+const raceEditRef = ref<any>(null);
+const raceDetailRef = ref<any>(null);
 
 // 页面状态
 const loading = ref(false);
 const searchQuery = ref('');
 const statusFilter = ref('');
-const dateRange = ref([]);
+const dateRange = ref<any[]>([]);
 const currentPage = ref(1);
 const pageSize = ref(8);
 const totalCompetitions = ref(100);
 const showAdvancedSearch = ref(false);
 const participantsRange = ref([0, 200]);
 const durationFilter = ref('');
-const selectedCompetitions = ref([]);
-const searchTimeout = ref(null);
+const selectedCompetitions = ref<any[]>([]);
+const searchTimeout = ref<any>(null);
 const competitionTypeFilter = ref('');
 const competitionModeFilter = ref('');
 
 // 用户数据
-const competitions = ref([]);
+const competitions = ref<any[]>([]);
 // 预取的下一页数据缓存
-const nextPageCache = ref([]);
+const nextPageCache = ref<any[]>([]);
 // 分页数据缓存，key为页码，value为用户数据
-const pageDataCache = ref({});
+const pageDataCache = ref<Record<number, any[]>>({});
 
 // 总页数
 const totalPages = ref(1);
@@ -461,8 +461,17 @@ const CreateRace = () => {
   }
 };
 
+// 从详情组件跳转编辑（race-detail 的 edit-race 事件）
+const handleEditFromDetail = (raceData: any) => {
+  if (raceEditRef.value) {
+    raceEditRef.value.openEditDialog(raceData);
+  } else {
+    alertBox.value?.show('编辑组件未初始化', 1);
+  }
+};
+
 // 获取用户列表（新接口）
-const fetchUsers = async (page = 1) => {
+const fetchUsers = async (page = 1): Promise<any> => {
   // 保证页码不小于1
   const safePage = page < 1 ? 1 : page;
   try {
@@ -561,6 +570,25 @@ const handleSearch = () => {
     // 触发过滤计算
     // 如果是API请求，这里不需要手动触发，因为计算属性会自动重新计算
   }, 300);
+};
+
+// 重置高级筛选
+const resetAdvancedSearch = () => {
+  searchQuery.value = '';
+  statusFilter.value = '';
+  dateRange.value = [];
+  participantsRange.value = [0, 200];
+  durationFilter.value = '';
+  competitionTypeFilter.value = '';
+  competitionModeFilter.value = '';
+  // 立即应用重置的筛选条件
+  handleSearch();
+};
+
+// 应用高级筛选
+const applyAdvancedSearch = () => {
+  handleSearch();
+  showAdvancedSearch.value = false;
 };
 
 // 处理表格选择变更
@@ -672,13 +700,23 @@ const getStatusType = (status: string) => {
 };
 
 // 分页处理
-const handleCurrentChange = async (page: number) => {
-  currentPage.value = page;
+const handleCurrentChange = async (page: number | string) => {
+  // 省略号按钮或非法页码直接忽略
+  const pageNum = Number(page);
+  if (
+    isNaN(pageNum) ||
+    pageNum < 1 ||
+    pageNum > totalPages.value ||
+    pageNum === currentPage.value
+  ) {
+    return;
+  }
+  currentPage.value = pageNum;
   // 优先从缓存取
-  if (pageDataCache.value[page]) {
-    competitions.value = pageDataCache.value[page];
+  if (pageDataCache.value[pageNum]) {
+    competitions.value = pageDataCache.value[pageNum];
     // 预取下一页
-    const nextPage = page + 1;
+    const nextPage = pageNum + 1;
     if (!pageDataCache.value[nextPage]) {
       loading.value = true;
       try {
@@ -697,15 +735,15 @@ const handleCurrentChange = async (page: number) => {
     }
   } else {
     // 其他页正常请求
-    await fetchData(page === 1); // 如果是第一页，预取第二页
+    await fetchData(pageNum === 1); // 如果是第一页，预取第二页
   }
 };
 
 // 封禁用户相关
 const banDialogVisible = ref(false);
 const banSubmitting = ref(false);
-const selectedUser = ref(null);
-const banFormRef = ref(null);
+const selectedUser = ref<any>(null);
+const banFormRef = ref<FormInstance | null>(null);
 
 // 封禁表单数据
 const banForm = ref({
@@ -747,7 +785,7 @@ const openBanDialog = (user: any = null) => {
 // 提交封禁用户
 const submitBanUser = () => {
   if (banFormRef.value) {
-    banFormRef.value.validate(async (valid) => {
+    banFormRef.value.validate(async (valid: boolean) => {
       if (valid) {
         try {
           banSubmitting.value = true;

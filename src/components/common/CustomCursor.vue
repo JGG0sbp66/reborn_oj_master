@@ -6,14 +6,17 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { onMounted, onUnmounted } from 'vue';
 
 onMounted(() => {
   // 获取光标元素
-  const cursor = document.querySelector('.custom-cursor');
-  const cursorFollower = document.querySelector('.cursor-follower');
-  const focusEffect = document.querySelector('.focus-effect');
+  const cursor = document.querySelector<HTMLElement>('.custom-cursor');
+  const cursorFollower = document.querySelector<HTMLElement>('.cursor-follower');
+  const focusEffect = document.querySelector<HTMLElement>('.focus-effect');
+
+  // 元素不存在时直接退出，避免空引用
+  if (!cursor || !cursorFollower || !focusEffect) return;
 
   let mouseX = 0;
   let mouseY = 0;
@@ -41,7 +44,7 @@ onMounted(() => {
   };
 
   // 鼠标移动时更新位置
-  const handleMouseMove = (e) => {
+  const handleMouseMove = (e: MouseEvent) => {
     mouseX = e.clientX;
     mouseY = e.clientY;
   };
@@ -76,19 +79,19 @@ onMounted(() => {
   };
 
   // 对输入框元素增加特殊悬停效果
-  const handleInputMouseEnter = (e) => {
+  const handleInputMouseEnter = (e: MouseEvent) => {
     // 标记当前元素为输入框
-    e.target.dataset.isInput = 'true';
-    
+    (e.target as HTMLElement).dataset.isInput = 'true';
+
     // 添加输入模式样式类，但不移除其他样式类
     cursor.classList.add('input-mode');
     cursorFollower.classList.add('input-mode');
   };
 
-  const handleInputMouseLeave = (e) => {
+  const handleInputMouseLeave = (e: MouseEvent) => {
     // 移除标记
-    delete e.target.dataset.isInput;
-    
+    delete (e.target as HTMLElement).dataset.isInput;
+
     // 移除输入模式样式类
     cursor.classList.remove('input-mode');
     cursorFollower.classList.remove('input-mode');
@@ -113,15 +116,17 @@ onMounted(() => {
   document.addEventListener('mouseleave', handleMouseLeave);
 
   // 为可点击元素添加交互效果
-  const clickableElements = document.querySelectorAll('a, button, .el-button, input, textarea, select, [role="button"], .link, .nav-item, .logo, img, .project-card, .tech-tag');
-  
-  clickableElements.forEach(element => {
+  const clickableElements = document.querySelectorAll<HTMLElement>(
+    'a, button, .el-button, input, textarea, select, [role="button"], .link, .nav-item, .logo, img, .project-card, .tech-tag'
+  );
+
+  clickableElements.forEach((element) => {
     element.addEventListener('mouseenter', handleElementMouseEnter);
     element.addEventListener('mouseleave', handleElementMouseLeave);
   });
 
   // 为输入框元素添加特殊交互效果 - 使用更精确的选择器
-  const inputElements = document.querySelectorAll(`
+  const inputElements = document.querySelectorAll<HTMLElement>(`
     input[type="text"], 
     input[type="password"], 
     input[type="email"], 
@@ -135,8 +140,8 @@ onMounted(() => {
     .login-form input,
     .password-reset-form input
   `);
-  
-  inputElements.forEach(element => {
+
+  inputElements.forEach((element) => {
     element.addEventListener('mouseenter', handleInputMouseEnter);
     element.addEventListener('mouseleave', handleInputMouseLeave);
   });
@@ -144,24 +149,27 @@ onMounted(() => {
   // 监听整个文档的mousemove事件，处理光标样式优先级
   document.addEventListener('mousemove', (e) => {
     // 检查当前hover的元素是否是输入框
-    let element = document.elementFromPoint(e.clientX, e.clientY);
+    let element = document.elementFromPoint(e.clientX, e.clientY) as HTMLElement | null;
     let isInputElement = false;
     let isClickableElement = false;
-    
+
     // 检查元素或其父元素是否是输入框或可点击元素
     while (element && !(isInputElement && isClickableElement)) {
       // 检查是否是输入框
-      if (!isInputElement && (
-          element.tagName === 'INPUT' || 
-          element.tagName === 'TEXTAREA' || 
+      if (
+        !isInputElement &&
+        (element.tagName === 'INPUT' ||
+          element.tagName === 'TEXTAREA' ||
           element.getAttribute('contenteditable') === 'true' ||
-          element.dataset.isInput === 'true')) {
+          element.dataset.isInput === 'true')
+      ) {
         isInputElement = true;
       }
-      
+
       // 检查是否是可点击元素
-      if (!isClickableElement && (
-          element.tagName === 'A' ||
+      if (
+        !isClickableElement &&
+        (element.tagName === 'A' ||
           element.tagName === 'BUTTON' ||
           element.classList.contains('el-button') ||
           element.classList.contains('link') ||
@@ -170,25 +178,26 @@ onMounted(() => {
           element.tagName === 'IMG' ||
           element.classList.contains('project-card') ||
           element.classList.contains('tech-tag') ||
-          element.hasAttribute('role') && element.getAttribute('role') === 'button')) {
+          (element.hasAttribute('role') && element.getAttribute('role') === 'button'))
+      ) {
         isClickableElement = true;
       }
-      
+
       element = element.parentElement;
     }
-    
+
     // 根据元素类型设置光标样式，优先级：输入框 > 可点击元素 > 默认
     if (isInputElement) {
       cursor.classList.add('input-mode');
       cursorFollower.classList.add('input-mode');
-      
+
       // 确保输入模式下的光标样式不会被其他样式覆盖
       cursor.classList.remove('clickable');
       cursorFollower.classList.remove('clickable');
     } else if (isClickableElement) {
       cursor.classList.remove('input-mode');
       cursorFollower.classList.remove('input-mode');
-      
+
       // 恢复菱形光标样式
       cursor.classList.add('clickable');
       cursorFollower.classList.add('clickable');
@@ -210,12 +219,12 @@ onMounted(() => {
     document.removeEventListener('mouseenter', handleMouseEnter);
     document.removeEventListener('mouseleave', handleMouseLeave);
 
-    clickableElements.forEach(element => {
+    clickableElements.forEach((element) => {
       element.removeEventListener('mouseenter', handleElementMouseEnter);
       element.removeEventListener('mouseleave', handleElementMouseLeave);
     });
 
-    inputElements.forEach(element => {
+    inputElements.forEach((element) => {
       element.removeEventListener('mouseenter', handleInputMouseEnter);
       element.removeEventListener('mouseleave', handleInputMouseLeave);
     });
@@ -227,7 +236,9 @@ onMounted(() => {
 
 <style>
 /* 使用高优先级选择器彻底隐藏原生光标 */
-html, body, *:not(#exclude-cursor) {
+html,
+body,
+*:not(#exclude-cursor) {
   cursor: none !important;
   -webkit-cursor: none !important;
   -moz-cursor: none !important;
@@ -298,23 +309,43 @@ div[onclick], div[onclick] *,
 }
 
 /* 确保动态添加的元素也遵循光标隐藏规则 */
-*[onclick], *[onclick] * {
+*[onclick],
+*[onclick] * {
   cursor: none !important;
 }
 
 /* 题目列表特定选择器 */
-.problems-head *, .problems-body *, .problem-row *, .column-title *, .column-status *, .column-first *, .column-submit *, .column-rate * {
+.problems-head *,
+.problems-body *,
+.problem-row *,
+.column-title *,
+.column-status *,
+.column-first *,
+.column-submit *,
+.column-rate * {
   cursor: none !important;
 }
 
 /* 使用:not选择器，确保在整个文档上应用 */
-*:not(.cursor-exempt), *:not(.cursor-exempt) * {
+*:not(.cursor-exempt),
+*:not(.cursor-exempt) * {
   cursor: none !important;
 }
 
 /* 确保iOS设备上的链接和可点击元素也遵循规则 */
 @supports (-webkit-touch-callout: none) {
-  a, button, input, textarea, select, [role="button"], .link, .nav-item, .logo, img, [class*="btn"], [class*="button"] {
+  a,
+  button,
+  input,
+  textarea,
+  select,
+  [role='button'],
+  .link,
+  .nav-item,
+  .logo,
+  img,
+  [class*='btn'],
+  [class*='button'] {
     cursor: none !important;
   }
 }
@@ -329,13 +360,16 @@ div[onclick], div[onclick] *,
   pointer-events: none;
   mix-blend-mode: difference;
   z-index: 999999;
-  transition: transform 0.2s cubic-bezier(0.215, 0.61, 0.355, 1), 
-              background 0.2s ease,
-              width 0.2s ease,
-              height 0.2s ease,
-              border-radius 0.2s ease;
+  transition:
+    transform 0.2s cubic-bezier(0.215, 0.61, 0.355, 1),
+    background 0.2s ease,
+    width 0.2s ease,
+    height 0.2s ease,
+    border-radius 0.2s ease;
   transform: translate(-50%, -50%);
-  box-shadow: 0 0 10px rgba(66, 185, 131, 0.2), 0 0 2px rgba(255, 255, 255, 0.6);
+  box-shadow:
+    0 0 10px rgba(66, 185, 131, 0.2),
+    0 0 2px rgba(255, 255, 255, 0.6);
   will-change: transform, left, top, width, height, border-radius;
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
@@ -349,11 +383,12 @@ div[onclick], div[onclick] *,
   background: rgba(66, 185, 131, 0.15);
   pointer-events: none;
   z-index: 999998;
-  transition: transform 0.3s cubic-bezier(0.215, 0.61, 0.355, 1), 
-              background 0.3s ease,
-              width 0.3s ease,
-              height 0.3s ease,
-              border-radius 0.3s ease;
+  transition:
+    transform 0.3s cubic-bezier(0.215, 0.61, 0.355, 1),
+    background 0.3s ease,
+    width 0.3s ease,
+    height 0.3s ease,
+    border-radius 0.3s ease;
   transform: translate(-50%, -50%);
   will-change: transform, left, top, width, height, border-radius;
   backface-visibility: hidden;
@@ -367,7 +402,7 @@ div[onclick], div[onclick] *,
   /* 点击时变成加号形状 */
   width: 10px;
   height: 10px;
-  box-shadow: 
+  box-shadow:
     0 0 0 2px rgba(66, 185, 131, 0.7),
     0 0 0 5px rgba(255, 255, 255, 0.3);
 }
@@ -419,10 +454,16 @@ div[onclick], div[onclick] *,
   border-radius: 50%;
   pointer-events: none;
   z-index: -1;
-  background: radial-gradient(circle at center,
-      rgba(66, 185, 131, 0.15),
-      rgba(66, 185, 131, 0) 70%);
-  transition: opacity 0.3s ease, border-radius 0.3s ease, width 0.3s ease, height 0.3s ease;
+  background: radial-gradient(
+    circle at center,
+    rgba(66, 185, 131, 0.15),
+    rgba(66, 185, 131, 0) 70%
+  );
+  transition:
+    opacity 0.3s ease,
+    border-radius 0.3s ease,
+    width 0.3s ease,
+    height 0.3s ease;
   transform: translate(-50%, -50%);
   opacity: 0;
 }
@@ -476,23 +517,38 @@ div[onclick], div[onclick] *,
     display: none;
   }
 
-  html, body, 
-  a, a *, 
-  button, button *, 
-  .el-button, .el-button *, 
-  input, input *, 
-  textarea, textarea *, 
-  select, select *, 
-  [role="button"], [role="button"] *,
-  .link, .link *, 
-  .nav-item, .nav-item *, 
-  .logo, .logo *, 
+  html,
+  body,
+  a,
+  a *,
+  button,
+  button *,
+  .el-button,
+  .el-button *,
+  input,
+  input *,
+  textarea,
+  textarea *,
+  select,
+  select *,
+  [role='button'],
+  [role='button'] *,
+  .link,
+  .link *,
+  .nav-item,
+  .nav-item *,
+  .logo,
+  .logo *,
   img,
-  .project-card, .project-card *,
-  .tech-tag, .tech-tag *,
-  [class*="btn"], [class*="btn"] *,
-  [class*="button"], [class*="button"] * {
+  .project-card,
+  .project-card *,
+  .tech-tag,
+  .tech-tag *,
+  [class*='btn'],
+  [class*='btn'] *,
+  [class*='button'],
+  [class*='button'] * {
     cursor: auto !important; /* 在移动设备上恢复默认光标 */
   }
 }
-</style> 
+</style>

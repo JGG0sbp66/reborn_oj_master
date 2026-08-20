@@ -1,12 +1,16 @@
 <template>
-  <headerheader />
+  <AppHeader />
   <div class="home-container">
     <div class="main-content">
       <!-- 轮播图部分 -->
       <div class="banner-container">
         <div class="banner-image">
-          <div v-for="(slide, index) in bannerSlides" :key="index" class="banner-slide"
-            :class="{ active: currentSlide === index }">
+          <div
+            v-for="(slide, index) in bannerSlides"
+            :key="index"
+            class="banner-slide"
+            :class="{ active: currentSlide === index }"
+          >
             <div class="banner-placeholder" :style="{ background: slide.gradient }">
               <div class="banner-content">
                 <h3 class="fade-in-up" :style="{ animationDelay: '0.1s' }">{{ slide.title }}</h3>
@@ -19,8 +23,13 @@
           </div>
           <div class="banner-controls">
             <div class="banner-dots">
-              <span v-for="(slide, index) in bannerSlides" :key="index" class="dot"
-                :class="{ active: currentSlide === index }" @click="setSlide(index)"></span>
+              <span
+                v-for="(slide, index) in bannerSlides"
+                :key="index"
+                class="dot"
+                :class="{ active: currentSlide === index }"
+                @click="setSlide(index)"
+              ></span>
             </div>
           </div>
         </div>
@@ -48,8 +57,14 @@
 
           <!-- 竞赛列表 -->
           <div class="competition-list">
-            <CompetitionCard v-for="(item, index) in competitions.slice(0, 4)" :key="index" :competition="item"
-              :appear="true" :index="index" :actionLink="`/contest/problems?uid=${item.race_uid}`" />
+            <CompetitionCard
+              v-for="(item, index) in competitions.slice(0, 4)"
+              :key="index"
+              :competition="item"
+              :appear="true"
+              :index="index"
+              :action-link="`/contest/problems?uid=${item.race_uid}`"
+            />
           </div>
         </div>
 
@@ -57,7 +72,7 @@
         <div class="sidebar">
           <!-- 欢迎部分 -->
           <div class="sidebar-section">
-            <WelcomeStats :statsData="statsData" message="开始你的编程之旅，提升算法能力！" />
+            <WelcomeStats :stats-data="statsData" message="开始你的编程之旅，提升算法能力！" />
           </div>
 
           <!-- 推荐题库 -->
@@ -84,41 +99,41 @@
     </div>
   </div>
 
-  <AIAgent title="「黄金判官·葛孚雷」" buttonColor="#3b82f6" />
+  <AIAgent title="「黄金判官·葛孚雷」" button-color="#3b82f6" />
   <foot class="page-footer" />
 </template>
 
 <script setup lang="ts">
-import { ref, computed, reactive, onMounted, onBeforeUnmount } from "vue";
-import headerheader from "@/components/headerheader.vue";
-import ActivityHeatmap from "@/components/ActivityHeatmap.vue";
-import CompetitionCard from "@/components/yao/CompetitionCard.vue";
-import WelcomeStats from "@/components/yao/WelcomeStats.vue";
-import RecommendedSites from "@/components/yao/RecommendedSites.vue";
-import LatestProblems from "@/components/yao/LatestProblems.vue";
-import ProjectLinks from "@/components/yao/ProjectLinks.vue";
-import ServiceLinks from "@/components/yao/ServiceLinks.vue";
-import foot from "@/components/foot.vue";
-import AIAgent from "@/components/AI-Agent.vue";
-import { Trophy } from "@element-plus/icons-vue";
-import { questionApi, raceApi } from "@/api";
+import { ref, computed, reactive, onMounted, onBeforeUnmount } from 'vue';
+import AppHeader from '@/components/AppHeader.vue';
+import ActivityHeatmap from '@/components/ActivityHeatmap.vue';
+import CompetitionCard from '@/components/yao/CompetitionCard.vue';
+import WelcomeStats from '@/components/yao/WelcomeStats.vue';
+import RecommendedSites from '@/components/yao/RecommendedSites.vue';
+import LatestProblems from '@/components/yao/LatestProblems.vue';
+import ProjectLinks from '@/components/yao/ProjectLinks.vue';
+import ServiceLinks from '@/components/yao/ServiceLinks.vue';
+import foot from '@/components/foot.vue';
+import AIAgent from '@/components/AI-Agent.vue';
+import { Trophy } from '@element-plus/icons-vue';
+import { questionApi, raceApi } from '@/api';
 
 // 轮播图数据
 const bannerSlides = [
   {
-    title: "欢迎使用 OJ Master 在线评测系统",
-    subtitle: "挑战算法，提升编程能力",
-    gradient: "linear-gradient(120deg, #42b983 0%, #35a875 50%, #2979ff 100%)",
+    title: '欢迎使用 OJ Master 在线评测系统',
+    subtitle: '挑战算法，提升编程能力',
+    gradient: 'linear-gradient(120deg, #42b983 0%, #35a875 50%, #2979ff 100%)',
   },
   {
-    title: "参加在线编程竞赛",
-    subtitle: "与其他程序员一较高下",
-    gradient: "linear-gradient(120deg, #36a985 0%, #2a9e89 50%, #0072ff 100%)",
+    title: '参加在线编程竞赛',
+    subtitle: '与其他程序员一较高下',
+    gradient: 'linear-gradient(120deg, #36a985 0%, #2a9e89 50%, #0072ff 100%)',
   },
   {
-    title: "丰富的题库资源",
-    subtitle: "从基础到高级的编程挑战",
-    gradient: "linear-gradient(120deg, #33c6aa 0%, #2bb797 50%, #3399ff 100%)",
+    title: '丰富的题库资源',
+    subtitle: '从基础到高级的编程挑战',
+    gradient: 'linear-gradient(120deg, #33c6aa 0%, #2bb797 50%, #3399ff 100%)',
   },
 ];
 
@@ -133,8 +148,7 @@ const nextSlide = () => {
 
 // 上一张轮播图
 const prevSlide = () => {
-  currentSlide.value =
-    (currentSlide.value - 1 + bannerSlides.length) % bannerSlides.length;
+  currentSlide.value = (currentSlide.value - 1 + bannerSlides.length) % bannerSlides.length;
 };
 
 // 设置特定轮播图
@@ -161,33 +175,33 @@ const stopSlideshow = () => {
 };
 
 // 竞赛数据
-const competitions = ref([
+const competitions = ref<any[]>([
   {
-    title: "全国高校编程马拉松",
-    logos: ["ACM", "ICPC", "CCF"],
-    startTime: "2024-04-10 09:00:00",
-    endTime: "2024-04-10 13:00:00",
-    duration: "04 小时 00 分 00 秒",
+    title: '全国高校编程马拉松',
+    logos: ['ACM', 'ICPC', 'CCF'],
+    startTime: '2024-04-10 09:00:00',
+    endTime: '2024-04-10 13:00:00',
+    duration: '04 小时 00 分 00 秒',
     tags: [
-      { name: "未开始", type: "running" },
-      { name: "个人赛", type: "individual" },
-      { name: "OI赛制", type: "oi" },
+      { name: '未开始', type: 'running' },
+      { name: '个人赛', type: 'individual' },
+      { name: 'OI赛制', type: 'oi' },
     ],
   },
 ]);
 
 // 难度等级映射
-const difficultyMap = {
-  '入门': { level: '入门', difficulty: '入门' },
-  '普及': { level: '普及', difficulty: '普及' },
-  '提高': { level: '提高', difficulty: '提高' },
-  '省选': { level: '省选', difficulty: '省选' },
-  'NOI': { level: 'NOI', difficulty: 'NOI' },
-  'CTSC': { level: 'CTSC', difficulty: 'CTSC' }
+const difficultyMap: Record<string, { level: string; difficulty: string }> = {
+  入门: { level: '入门', difficulty: '入门' },
+  普及: { level: '普及', difficulty: '普及' },
+  提高: { level: '提高', difficulty: '提高' },
+  省选: { level: '省选', difficulty: '省选' },
+  NOI: { level: 'NOI', difficulty: 'NOI' },
+  CTSC: { level: 'CTSC', difficulty: 'CTSC' },
 };
 
 // 最新题目 - 改为从API获取
-const latestProblems = ref([]);
+const latestProblems = ref<any[]>([]);
 
 // 获取最新题目数据
 const fetchLatestProblems = async () => {
@@ -195,67 +209,65 @@ const fetchLatestProblems = async () => {
     const data = await questionApi.getHomeQuestions();
     if (data.success) {
       // console.log('获取最新题目数据:', data.questions);
-      latestProblems.value = data.questions.map(question => ({
+      latestProblems.value = data.questions.map((question) => ({
         uid: question.uid,
         title: question.title,
-        ...difficultyMap[question.topic] || { level: '未知', difficulty: 'entry' } // 默认值处理
+        ...(difficultyMap[question.topic] || { level: '未知', difficulty: 'entry' }), // 默认值处理
       }));
       console.log('最新题目数据:', latestProblems.value);
     }
   } catch (error) {
     console.error('获取最新题目失败:', error);
     // 使用默认数据作为备份
-    latestProblems.value = [
-      { title: "暂无数据", level: "入门", difficulty: "入门" }
-    ];
+    latestProblems.value = [{ title: '暂无数据', level: '入门', difficulty: '入门' }];
   }
 };
 
 // 最新题目
 const latestProblemsBackup = [
-  { title: "简单的数学问题", level: "入门", difficulty: "entry" },
-  { title: "字符串反转", level: "基础", difficulty: "easy" },
-  { title: "二叉树遍历", level: "提高", difficulty: "medium" },
-  { title: "动态规划基础", level: "进阶", difficulty: "hard" },
-  { title: "图论算法与最短路径", level: "竞赛", difficulty: "expert" },
+  { title: '简单的数学问题', level: '入门', difficulty: 'entry' },
+  { title: '字符串反转', level: '基础', difficulty: 'easy' },
+  { title: '二叉树遍历', level: '提高', difficulty: 'medium' },
+  { title: '动态规划基础', level: '进阶', difficulty: 'hard' },
+  { title: '图论算法与最短路径', level: '竞赛', difficulty: 'expert' },
 ];
 
 // 统计数据
 const statsData = [
-  { value: 24680, label: "题目总数" },
-  { value: 1243, label: "注册用户" },
-  { value: 89, label: "近期比赛" },
+  { value: 24680, label: '题目总数' },
+  { value: 1243, label: '注册用户' },
+  { value: 89, label: '近期比赛' },
 ];
 
 // 推荐题库数据
 const recommendedSites = [
-  { name: "LibreOJ", url: "https://loj.ac" },
-  { name: "Vijos", url: "https://vijos.org" },
-  { name: "Luogu", url: "https://www.luogu.com.cn" },
-  { name: "CodeForces", url: "https://codeforces.com" },
-  { name: "AtCoder", url: "https://atcoder.jp" },
+  { name: 'LibreOJ', url: 'https://loj.ac' },
+  { name: 'Vijos', url: 'https://vijos.org' },
+  { name: 'Luogu', url: 'https://www.luogu.com.cn' },
+  { name: 'CodeForces', url: 'https://codeforces.com' },
+  { name: 'AtCoder', url: 'https://atcoder.jp' },
 ];
 
 // 开源项目数据
 const openSourceProjects = [
   {
-    title: "CYaRon 测试数据生成器",
-    description: "自动生成高质量的测试数据",
-    url: "https://github.com/luogu-dev/cyaron/wiki",
+    title: 'CYaRon 测试数据生成器',
+    description: '自动生成高质量的测试数据',
+    url: 'https://github.com/luogu-dev/cyaron/wiki',
   },
   {
-    title: "Markdown+Palettes",
-    description: "增强的Markdown编辑器",
-    url: "https://github.com/luogu-dev/markdown-palettes",
+    title: 'Markdown+Palettes',
+    description: '增强的Markdown编辑器',
+    url: 'https://github.com/luogu-dev/markdown-palettes',
   },
 ];
 
 // 在线服务数据
 const onlineServices = [
-  { title: "深入浅出算法设计竞赛", url: "#" },
-  { title: "算法竞赛学习", url: "#" },
-  { title: "学校模拟训练辅助工具", url: "#" },
-  { title: "协办企业院校在线编程比赛", url: "#" },
+  { title: '深入浅出算法设计竞赛', url: '#' },
+  { title: '算法竞赛学习', url: '#' },
+  { title: '学校模拟训练辅助工具', url: '#' },
+  { title: '协办企业院校在线编程比赛', url: '#' },
 ];
 
 // 存储从服务器获取的竞赛数据
@@ -293,12 +305,12 @@ const fetchCompetitions = async () => {
         return dateB.getTime() - dateA.getTime();
       });
 
-      console.log("首页获取到竞赛数据:", competitions.value.slice(0, 4));
+      console.log('首页获取到竞赛数据:', competitions.value.slice(0, 4));
     } else {
-      console.warn("获取到的竞赛数据格式不正确:", data);
+      console.warn('获取到的竞赛数据格式不正确:', data);
     }
   } catch (error) {
-    console.error("获取竞赛数据失败:", error);
+    console.error('获取竞赛数据失败:', error);
   }
 };
 
@@ -321,8 +333,8 @@ onBeforeUnmount(() => {
 
 // 添加隐藏滚动条的全局样式
 const addGlobalStyle = () => {
-  const style = document.createElement("style");
-  style.setAttribute("id", "no-scrollbar-style");
+  const style = document.createElement('style');
+  style.setAttribute('id', 'no-scrollbar-style');
   style.textContent = `
     html, body {
       overflow-x: hidden;
@@ -339,7 +351,7 @@ const addGlobalStyle = () => {
 
 // 删除全局样式
 const removeGlobalStyle = () => {
-  const style = document.getElementById("no-scrollbar-style");
+  const style = document.getElementById('no-scrollbar-style');
   if (style) {
     document.head.removeChild(style);
   }
@@ -354,46 +366,44 @@ onMounted(() => {
   // 添加页面滚动动画 - 优化动画参数
   const observerOptions = {
     threshold: 0.05, // 降低可见阈值，使元素更早触发动画
-    rootMargin: "0px 0px -50px 0px", // 调整触发区域，提前触发
+    rootMargin: '0px 0px -50px 0px', // 调整触发区域，提前触发
   };
 
   const observer = new IntersectionObserver((entries) => {
     entries.forEach((entry) => {
       if (entry.isIntersecting) {
-        entry.target.classList.add("appear");
+        entry.target.classList.add('appear');
         observer.unobserve(entry.target);
       }
     });
   }, observerOptions);
 
   // 只监听热力图组件，不再监听竞赛卡片和侧边栏
-  document.querySelectorAll(".heatmap-container").forEach((el) => {
+  document.querySelectorAll('.heatmap-container').forEach((el) => {
     observer.observe(el);
   });
 
   // 预先添加热力图组件的出现类，避免滚动触发
   setTimeout(() => {
-    document.querySelectorAll(".heatmap-container").forEach((el) => {
-      el.classList.add("appear");
+    document.querySelectorAll('.heatmap-container').forEach((el) => {
+      el.classList.add('appear');
     });
   }, 100);
 
   // 页面平滑滚动设置
-  document.documentElement.style.scrollBehavior = "smooth";
+  document.documentElement.style.scrollBehavior = 'smooth';
 });
 
 onBeforeUnmount(() => {
   stopSlideshow();
   // 移除平滑滚动设置
-  document.documentElement.style.scrollBehavior = "";
+  document.documentElement.style.scrollBehavior = '';
   // 移除隐藏滚动条的全局样式
   removeGlobalStyle();
 });
 
-const yourApiEndpoint = ref("https://your-ai-api.com/chat"); // 替换为你的实际API端点
+const yourApiEndpoint = ref('https://your-ai-api.com/chat'); // 替换为你的实际API端点
 </script>
-
-
 
 <style scoped>
 /* 全局滚动条样式，在组件级别设置global属性 */
@@ -484,7 +494,8 @@ const yourApiEndpoint = ref("https://your-ai-api.com/chat"); // 替换为你的�
   height: 350px;
   border-radius: 16px;
   overflow: hidden;
-  box-shadow: 0 10px 35px rgba(66, 185, 131, 0.15),
+  box-shadow:
+    0 10px 35px rgba(66, 185, 131, 0.15),
     0 5px 25px rgba(41, 121, 255, 0.1);
   color: white;
   transform: translateZ(0);
@@ -496,7 +507,8 @@ const yourApiEndpoint = ref("https://your-ai-api.com/chat"); // 替换为你的�
   width: 100%;
   height: 100%;
   opacity: 0;
-  transition: opacity 1.5s cubic-bezier(0.215, 0.61, 0.355, 1),
+  transition:
+    opacity 1.5s cubic-bezier(0.215, 0.61, 0.355, 1),
     transform 1.5s cubic-bezier(0.215, 0.61, 0.355, 1);
   transform: scale(1.05);
   z-index: 1;
@@ -537,15 +549,13 @@ const yourApiEndpoint = ref("https://your-ai-api.com/chat"); // 替换为你的�
 }
 
 .banner-placeholder::before {
-  content: "";
+  content: '';
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: radial-gradient(circle at center,
-      transparent 0%,
-      rgba(0, 0, 0, 0.2) 100%);
+  background: radial-gradient(circle at center, transparent 0%, rgba(0, 0, 0, 0.2) 100%);
   opacity: 0.7;
   z-index: 0;
 }
@@ -595,15 +605,13 @@ const yourApiEndpoint = ref("https://your-ai-api.com/chat"); // 替换为你的�
 }
 
 .banner-btn::after {
-  content: "";
+  content: '';
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg,
-      rgba(66, 185, 131, 0.1),
-      rgba(0, 196, 255, 0.1));
+  background: linear-gradient(90deg, rgba(66, 185, 131, 0.1), rgba(0, 196, 255, 0.1));
   z-index: -1;
   transform: scaleX(0);
   transform-origin: right;
@@ -768,11 +776,11 @@ const yourApiEndpoint = ref("https://your-ai-api.com/chat"); // 替换为你的�
 }
 
 .welcome-icon::before {
-  content: "👋";
+  content: '👋';
 }
 
 .problem-icon::before {
-  content: "📝";
+  content: '📝';
 }
 
 .welcome-content p {
@@ -899,7 +907,7 @@ const yourApiEndpoint = ref("https://your-ai-api.com/chat"); // 替换为你的�
 }
 
 .problem-icon::before {
-  content: "📝";
+  content: '📝';
 }
 
 /* 链接列表样式 */

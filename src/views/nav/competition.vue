@@ -1,5 +1,5 @@
 <template>
-  <headerheader />
+  <AppHeader />
   <div class="competition-page">
     <div class="container">
       <!-- 简化的标题栏设计，参照首页 -->
@@ -209,8 +209,9 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted, onBeforeUnmount, watch } from 'vue';
+import type { CSSProperties } from 'vue';
 import showtitle from '@/components/test/showtitle.vue';
-import headerheader from '@/components/headerheader.vue';
+import AppHeader from '@/components/AppHeader.vue';
 import foot from '@/components/foot.vue';
 import { raceApi } from '@/api';
 import AIAgent from '@/components/AI-Agent.vue';
@@ -349,7 +350,7 @@ const handleClickOutside = (event: MouseEvent) => {
 // scrollTick 作为响应式依赖：页面滚动时自增，驱动下面两个计算属性重新求值
 const scrollTick = ref(0);
 
-const statusDropdownStyle = computed(() => {
+const statusDropdownStyle = computed<CSSProperties>(() => {
   void scrollTick.value; // 建立响应式依赖
   if (!statusDropdownWrapper.value) return {};
 
@@ -362,7 +363,7 @@ const statusDropdownStyle = computed(() => {
   };
 });
 
-const typeDropdownStyle = computed(() => {
+const typeDropdownStyle = computed<CSSProperties>(() => {
   void scrollTick.value; // 建立响应式依赖
   if (!typeDropdownWrapper.value) return {};
 

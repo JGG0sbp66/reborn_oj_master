@@ -7,13 +7,14 @@
       width="600px"
       :close-on-click-modal="false"
       :close-on-press-escape="false"
-      class="problem-edit-dialog" style="margin-top: 100px;"
+      class="problem-edit-dialog"
+      style="margin-top: 100px"
     >
       <div class="dialog-content-wrapper">
-        <el-form 
-          ref="problemFormRef" 
-          :model="problem" 
-          :rules="problemRules" 
+        <el-form
+          ref="problemFormRef"
+          :model="problem"
+          :rules="problemRules"
           label-width="120px"
           label-position="top"
           class="scrollable-form"
@@ -21,7 +22,7 @@
           <el-form-item label="题目名称" prop="title">
             <el-input v-model="problem.title" placeholder="请输入题目名称"></el-input>
           </el-form-item>
-          
+
           <el-form-item label="题目难度" prop="topic">
             <el-select v-model="problem.topic" placeholder="请选择题目难度" style="width: 100%">
               <el-option
@@ -37,106 +38,117 @@
               </el-option>
             </el-select>
           </el-form-item>
-          
+
           <div class="form-row">
             <el-form-item label="时间限制(ms)" prop="time_limit">
-              <el-input-number v-model="problem.time_limit" :min="100" :max="10000" :step="100"></el-input-number>
+              <el-input-number
+                v-model="problem.time_limit"
+                :min="100"
+                :max="10000"
+                :step="100"
+              ></el-input-number>
             </el-form-item>
-            
+
             <el-form-item label="内存限制(MB)" prop="memory_limit">
-              <el-input-number v-model="problem.memory_limit" :min="16" :max="1024" :step="16"></el-input-number>
+              <el-input-number
+                v-model="problem.memory_limit"
+                :min="16"
+                :max="1024"
+                :step="16"
+              ></el-input-number>
             </el-form-item>
           </div>
-          
+
           <el-form-item label="题目描述" prop="description">
-            <el-input 
-              v-model="problem.description" 
-              type="textarea" 
-              :rows="5" 
+            <el-input
+              v-model="problem.description"
+              type="textarea"
+              :rows="5"
               placeholder="请输入题目描述"
             ></el-input>
           </el-form-item>
-          
+
           <el-form-item label="输入格式" prop="input_format">
-            <el-input 
-              v-model="problem.input_format" 
-              type="textarea" 
-              :rows="3" 
+            <el-input
+              v-model="problem.input_format"
+              type="textarea"
+              :rows="3"
               placeholder="请描述输入格式"
             ></el-input>
           </el-form-item>
-          
+
           <el-form-item label="输出格式" prop="output_format">
-            <el-input 
-              v-model="problem.output_format" 
-              type="textarea" 
-              :rows="3" 
+            <el-input
+              v-model="problem.output_format"
+              type="textarea"
+              :rows="3"
               placeholder="请描述输出格式"
             ></el-input>
           </el-form-item>
-          
+
           <el-form-item label="约束条件">
             <div class="constraints-section">
               <div class="constraint-input-group">
-                <el-input 
-                  v-model="constraint" 
+                <el-input
+                  v-model="constraint"
                   placeholder="请输入约束条件"
                   @keyup.enter="addConstraint"
                 ></el-input>
-                <el-button @click="addConstraint" :disabled="!constraint">添加</el-button>
+                <el-button :disabled="!constraint" @click="addConstraint">添加</el-button>
               </div>
-              <div class="constraints-list" v-if="problem.constraints.length > 0">
-                <div 
-                  v-for="(item, index) in problem.constraints" 
+              <div v-if="problem.constraints.length > 0" class="constraints-list">
+                <div
+                  v-for="(item, index) in problem.constraints"
                   :key="index"
                   class="constraint-item"
                 >
                   <span>{{ item }}</span>
-                  <el-icon @click="removeConstraint(index)" class="delete-icon"><Delete /></el-icon>
+                  <el-icon class="delete-icon" @click="removeConstraint(index)"><Delete /></el-icon>
                 </div>
               </div>
               <el-empty v-else description="暂无约束条件" :image-size="80"></el-empty>
             </div>
           </el-form-item>
-          
+
           <el-form-item label="示例">
             <div class="examples-section">
               <div class="example-inputs">
-                <el-input 
-                  v-model="currentExample.input" 
-                  type="textarea" 
-                  :rows="2" 
+                <el-input
+                  v-model="currentExample.input"
+                  type="textarea"
+                  :rows="2"
                   placeholder="示例输入"
                 ></el-input>
-                <el-input 
-                  v-model="currentExample.output" 
-                  type="textarea" 
-                  :rows="2" 
+                <el-input
+                  v-model="currentExample.output"
+                  type="textarea"
+                  :rows="2"
                   placeholder="示例输出"
                 ></el-input>
-                <el-input 
-                  v-model="currentExample.explanation" 
-                  type="textarea" 
-                  :rows="2" 
+                <el-input
+                  v-model="currentExample.explanation"
+                  type="textarea"
+                  :rows="2"
                   placeholder="示例解释 (可选)"
                 ></el-input>
               </div>
-              <el-button @click="addExample" :disabled="!currentExample.input || !currentExample.output">
+              <el-button
+                :disabled="!currentExample.input || !currentExample.output"
+                @click="addExample"
+              >
                 添加示例
               </el-button>
-              
-              <div class="examples-list" v-if="problem.examples.length > 0">
-                <div 
-                  v-for="(example, index) in problem.examples" 
-                  :key="index"
-                  class="example-item"
-                >
+
+              <div v-if="problem.examples.length > 0" class="examples-list">
+                <div v-for="(example, index) in problem.examples" :key="index" class="example-item">
                   <div class="example-content">
                     <div><strong>输入:</strong> {{ example.input }}</div>
                     <div><strong>输出:</strong> {{ example.output }}</div>
-                    <div v-if="example.explanation"><strong>解释:</strong> {{ example.explanation }}</div>
+                    <div v-if="example.explanation">
+                      <strong>解释:</strong> {{ example.explanation }}
+                    </div>
                   </div>
-                  <el-icon @click="removeExample(index)" class="delete-icon"><Delete /></el-icon>
+                  <el-icon class="delete-icon" @click="removeExample(index)"><Delete /></el-icon>
                 </div>
               </div>
               <el-empty v-else description="暂无示例" :image-size="80"></el-empty>
@@ -144,11 +156,11 @@
           </el-form-item>
         </el-form>
       </div>
-      
+
       <template #footer>
         <span class="dialog-footer">
           <el-button @click="dialogVisible = false">取消</el-button>
-          <el-button type="primary" @click="updateProblem" :loading="updating">保存</el-button>
+          <el-button type="primary" :loading="updating" @click="updateProblem">保存</el-button>
         </span>
       </template>
     </el-dialog>
@@ -168,8 +180,8 @@ import type { QuestionDetail } from '@/api';
 const props = defineProps({
   alertBoxRef: {
     type: Object,
-    default: null
-  }
+    default: null,
+  },
 });
 
 const emits = defineEmits(['refreshData']);
@@ -214,27 +226,19 @@ const problem = reactive<ProblemData>({
   input_format: '',
   output_format: '',
   constraints: [],
-  examples: []
+  examples: [],
 });
 
 // 表单验证规则
 const problemRules = reactive<FormRules>({
-  'title': [
+  title: [
     { required: true, message: '请输入题目名称', trigger: 'blur' },
-    { min: 3, max: 50, message: '长度在 3 到 50 个字符', trigger: 'blur' }
+    { min: 3, max: 50, message: '长度在 3 到 50 个字符', trigger: 'blur' },
   ],
-  'description': [
-    { required: true, message: '请输入题目描述', trigger: 'blur' }
-  ],
-  'topic': [
-    { required: true, message: '请选择题目分类', trigger: 'change' }
-  ],
-  'input_format': [
-    { required: true, message: '请输入输入格式', trigger: 'blur' }
-  ],
-  'output_format': [
-    { required: true, message: '请输入输出格式', trigger: 'blur' }
-  ]
+  description: [{ required: true, message: '请输入题目描述', trigger: 'blur' }],
+  topic: [{ required: true, message: '请选择题目分类', trigger: 'change' }],
+  input_format: [{ required: true, message: '请输入输入格式', trigger: 'blur' }],
+  output_format: [{ required: true, message: '请输入输出格式', trigger: 'blur' }],
 });
 
 // 难度选项配置
@@ -244,7 +248,7 @@ const difficultyOptions = [
   { label: '提高', value: '提高', class: 'improve' },
   { label: '省选', value: '省选', class: 'provincial' },
   { label: 'NOI', value: 'NOI', class: 'noi' },
-  { label: 'CTSC', value: 'CTSC', class: 'ctsc' }
+  { label: 'CTSC', value: 'CTSC', class: 'ctsc' },
 ];
 
 // 当前正在编辑的约束条件和示例
@@ -252,7 +256,7 @@ const constraint = ref('');
 const currentExample = reactive<Example>({
   input: '',
   output: '',
-  explanation: ''
+  explanation: '',
 });
 
 // 打开编辑题目对话框
@@ -261,18 +265,20 @@ const openEditDialog = async (problemIdOrData: string | ProblemData) => {
   if (problemFormRef.value) {
     problemFormRef.value.resetFields();
   }
-  
+
   try {
     // 判断入参是否为ID字符串
     if (typeof problemIdOrData === 'string') {
       console.log(`正在通过ID获取题目数据进行编辑，ID: ${problemIdOrData}`);
-      
+
       // 通过ID获取题目详细数据
-      const apiData = (await adminApi.getAdminQuestionDetail(Number(problemIdOrData))) as {
+      const apiData = (await adminApi.getAdminQuestionDetail(
+        Number(problemIdOrData)
+      )) as unknown as {
         question: Partial<QuestionDetail>;
         topic?: string;
       };
-      
+
       // 填充题目数据
       Object.assign(problem, {
         id: problemIdOrData,
@@ -284,19 +290,19 @@ const openEditDialog = async (problemIdOrData: string | ProblemData) => {
         input_format: apiData.question.input_format || '',
         output_format: apiData.question.output_format || '',
         constraints: apiData.question.constraints || [],
-        examples: apiData.question.examples || []
+        examples: apiData.question.examples || [],
       });
-      
+
       console.log('通过ID获取的题目数据已填充:', JSON.stringify(problem));
     } else {
       console.log('打开编辑题目对话框，接收完整数据:', JSON.stringify(problemIdOrData));
-      
+
       // 确保problemData不为空并且包含必要的字段
       if (!problemIdOrData || !problemIdOrData.id) {
         ElMessage.error('题目数据无效，无法编辑');
         return;
       }
-      
+
       // 填充题目数据
       Object.assign(problem, {
         id: problemIdOrData.id || '',
@@ -307,13 +313,15 @@ const openEditDialog = async (problemIdOrData: string | ProblemData) => {
         memory_limit: problemIdOrData.memory_limit || 128,
         input_format: problemIdOrData.input_format || '',
         output_format: problemIdOrData.output_format || '',
-        constraints: Array.isArray(problemIdOrData.constraints) ? [...problemIdOrData.constraints] : [],
-        examples: Array.isArray(problemIdOrData.examples) ? [...problemIdOrData.examples] : []
+        constraints: Array.isArray(problemIdOrData.constraints)
+          ? [...problemIdOrData.constraints]
+          : [],
+        examples: Array.isArray(problemIdOrData.examples) ? [...problemIdOrData.examples] : [],
       });
-      
+
       console.log('题目数据已填充:', JSON.stringify(problem));
     }
-    
+
     // 显示对话框
     dialogVisible.value = true;
   } catch (error) {
@@ -328,7 +336,7 @@ const addConstraint = () => {
     ElMessage.warning('约束条件不能为空');
     return;
   }
-  
+
   problem.constraints.push(constraint.value.trim());
   constraint.value = '';
 };
@@ -344,13 +352,13 @@ const addExample = () => {
     ElMessage.warning('示例输入和输出不能为空');
     return;
   }
-  
+
   problem.examples.push({
     input: currentExample.input.trim(),
     output: currentExample.output.trim(),
-    explanation: currentExample.explanation.trim()
+    explanation: currentExample.explanation.trim(),
   });
-  
+
   // 重置当前示例
   currentExample.input = '';
   currentExample.output = '';
@@ -365,18 +373,18 @@ const removeExample = (index: number) => {
 // 提交更新题目表单
 const updateProblem = async () => {
   if (!problemFormRef.value) return;
-  
+
   try {
     // 表单验证
     await problemFormRef.value.validate();
-    
+
     updating.value = true;
-    
+
     // 提取题目ID号
     const numericId = problem.id;
-    
+
     console.log(`正在更新题目，ID: ${numericId}`);
-    
+
     // 准备提交数据
     const submitData = {
       question: {
@@ -387,28 +395,27 @@ const updateProblem = async () => {
         input_format: problem.input_format,
         output_format: problem.output_format,
         constraints: problem.constraints,
-        examples: problem.examples
+        examples: problem.examples,
       },
-      topic: problem.topic
+      topic: problem.topic,
     };
-    
+
     console.log('提交题目更新数据:', JSON.stringify(submitData));
-    
+
     // 发送更新题目请求
     await adminApi.updateQuestion(Number(numericId), submitData);
-    
+
     // 更新成功
     if (props.alertBoxRef) {
       props.alertBoxRef.show('题目更新成功!', 0);
     } else {
       ElMessage.success('题目更新成功!');
     }
-    
+
     dialogVisible.value = false;
-    
+
     // 通知父组件刷新数据
     emits('refreshData');
-    
   } catch (error: any) {
     if (error.message?.includes('validate')) {
       ElMessage.error('请填写所有必填字段');
@@ -427,7 +434,7 @@ const updateProblem = async () => {
 
 // 暴露方法给父组件
 defineExpose({
-  openEditDialog
+  openEditDialog,
 });
 </script>
 
@@ -480,7 +487,8 @@ defineExpose({
   flex: 1;
 }
 
-.constraints-section, .examples-section {
+.constraints-section,
+.examples-section {
   width: 100%;
 }
 
@@ -494,14 +502,16 @@ defineExpose({
   flex: 1;
 }
 
-.constraints-list, .examples-list {
+.constraints-list,
+.examples-list {
   margin-top: 12px;
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
-.constraint-item, .example-item {
+.constraint-item,
+.example-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -569,12 +579,24 @@ defineExpose({
 }
 
 /* 难度指示器颜色 */
-.difficulty-indicator.easy { background-color: #fe4c61; }
-.difficulty-indicator.popularize { background-color: #f39c11; }
-.difficulty-indicator.improve { background-color: #ffc116; }
-.difficulty-indicator.provincial { background-color: #52c41a; }
-.difficulty-indicator.noi { background-color: #9d3dcf; }
-.difficulty-indicator.ctsc { background-color: #0e1d69; }
+.difficulty-indicator.easy {
+  background-color: #fe4c61;
+}
+.difficulty-indicator.popularize {
+  background-color: #f39c11;
+}
+.difficulty-indicator.improve {
+  background-color: #ffc116;
+}
+.difficulty-indicator.provincial {
+  background-color: #52c41a;
+}
+.difficulty-indicator.noi {
+  background-color: #9d3dcf;
+}
+.difficulty-indicator.ctsc {
+  background-color: #0e1d69;
+}
 
 /* 选项悬停效果 */
 :deep(.el-select-dropdown__item:hover) {
@@ -592,7 +614,7 @@ defineExpose({
     flex-direction: column;
     gap: 0;
   }
-  
+
   .form-row .el-form-item {
     width: 100%;
   }

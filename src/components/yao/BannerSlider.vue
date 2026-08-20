@@ -1,10 +1,12 @@
 <template>
   <div class="banner-container">
     <div class="banner-image">
-      <div v-for="(slide, index) in slides" 
-           :key="index" 
-           class="banner-slide" 
-           :class="{ active: currentSlide === index }">
+      <div
+        v-for="(slide, index) in slides"
+        :key="index"
+        class="banner-slide"
+        :class="{ active: currentSlide === index }"
+      >
         <div class="banner-placeholder" :style="{ background: slide.gradient }">
           <div class="banner-content">
             <h3 class="fade-in-up" :style="{ animationDelay: '0.1s' }">{{ slide.title }}</h3>
@@ -16,7 +18,7 @@
           </div>
         </div>
       </div>
-      
+
       <!-- 左右切换按钮 -->
       <button class="banner-nav-btn prev" @click="prevSlide">
         <span class="nav-icon">←</span>
@@ -27,11 +29,13 @@
 
       <div class="banner-controls">
         <div class="banner-dots">
-          <span v-for="(slide, index) in slides" 
-                :key="index" 
-                class="dot" 
-                :class="{ active: currentSlide === index }"
-                @click="setSlide(index)"></span>
+          <span
+            v-for="(slide, index) in slides"
+            :key="index"
+            class="dot"
+            :class="{ active: currentSlide === index }"
+            @click="setSlide(index)"
+          ></span>
         </div>
       </div>
     </div>
@@ -39,7 +43,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount, defineProps } from 'vue';
+import { ref, onMounted, onBeforeUnmount } from 'vue';
 
 interface Slide {
   title: string;
@@ -50,16 +54,16 @@ interface Slide {
 const props = defineProps({
   slides: {
     type: Array as () => Slide[],
-    required: true
+    required: true,
   },
   buttonText: {
     type: String,
-    default: '立即探索'
+    default: '立即探索',
   },
   interval: {
     type: Number,
-    default: 5000
-  }
+    default: 5000,
+  },
 });
 
 const currentSlide = ref(0);
@@ -70,21 +74,21 @@ const nextSlide = () => {
   if (isTransitioning) return;
   isTransitioning = true;
   currentSlide.value = (currentSlide.value + 1) % props.slides.length;
-  setTimeout(() => isTransitioning = false, 1500);
+  setTimeout(() => (isTransitioning = false), 1500);
 };
 
 const prevSlide = () => {
   if (isTransitioning) return;
   isTransitioning = true;
   currentSlide.value = (currentSlide.value - 1 + props.slides.length) % props.slides.length;
-  setTimeout(() => isTransitioning = false, 1500);
+  setTimeout(() => (isTransitioning = false), 1500);
 };
 
 const setSlide = (index: number) => {
   if (isTransitioning || currentSlide.value === index) return;
   isTransitioning = true;
   currentSlide.value = index;
-  setTimeout(() => isTransitioning = false, 1500);
+  setTimeout(() => (isTransitioning = false), 1500);
   startSlideshow();
 };
 
@@ -125,7 +129,9 @@ onBeforeUnmount(() => {
   height: 350px;
   border-radius: 16px;
   overflow: hidden;
-  box-shadow: 0 10px 35px rgba(66, 185, 131, 0.15), 0 5px 25px rgba(41, 121, 255, 0.1);
+  box-shadow:
+    0 10px 35px rgba(66, 185, 131, 0.15),
+    0 5px 25px rgba(41, 121, 255, 0.1);
   color: white;
   transform: translateZ(0);
   backface-visibility: hidden;
@@ -162,9 +168,15 @@ onBeforeUnmount(() => {
 }
 
 @keyframes gradientBG {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
 }
 
 .banner-placeholder::before {
@@ -386,4 +398,4 @@ onBeforeUnmount(() => {
     font-size: 16px;
   }
 }
-</style> 
+</style>

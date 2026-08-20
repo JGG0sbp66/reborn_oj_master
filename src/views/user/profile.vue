@@ -1,5 +1,5 @@
 <template>
-  <headerheader />
+  <AppHeader />
   <div class="profile-container">
     <div class="profile-content">
       <!-- 左侧用户信息 -->
@@ -25,26 +25,35 @@
                   <span>上传头像</span>
                 </div>
               </div>
-              <input type="file" ref="fileInput" accept="image/*" style="display: none" @change="onFileChange" />
+              <input
+                ref="fileInput"
+                type="file"
+                accept="image/*"
+                style="display: none"
+                @change="onFileChange"
+              />
             </div>
           </div>
           <h2 class="user-name">{{ username }}</h2>
           <div class="user-role">{{ userRole }}</div>
-          <div class="user-joined">
-            加入时间: {{ formatDate(userJoinDate) }}
-          </div>
+          <div class="user-joined">加入时间: {{ formatDate(userJoinDate) }}</div>
           <div class="user-stats">
             <div class="stat-item">
-              <div class="stat-value" :class="{ 'animate-number': isAnimatingStats }">{{ displayProblemSolved }}</div>
+              <div class="stat-value" :class="{ 'animate-number': isAnimatingStats }">
+                {{ displayProblemSolved }}
+              </div>
               <div class="stat-label">已解题目</div>
             </div>
             <div class="stat-item">
-              <div class="stat-value" :class="{ 'animate-number': isAnimatingStats }">{{ displayCompetitionsJoined }}
+              <div class="stat-value" :class="{ 'animate-number': isAnimatingStats }">
+                {{ displayCompetitionsJoined }}
               </div>
               <div class="stat-label">参与比赛</div>
             </div>
             <div class="stat-item">
-              <div class="stat-value" :class="{ 'animate-number': isAnimatingStats }">{{ displayRank }}</div>
+              <div class="stat-value" :class="{ 'animate-number': isAnimatingStats }">
+                {{ displayRank }}
+              </div>
               <div class="stat-label">Rating</div>
             </div>
           </div>
@@ -52,30 +61,44 @@
 
         <!-- 侧边导航菜单 -->
         <div class="user-nav">
-          <div class="nav-item" :class="{ active: activeSection === 'profile' }" @click="activeSection = 'profile'">
+          <div
+            class="nav-item"
+            :class="{ active: activeSection === 'profile' }"
+            @click="activeSection = 'profile'"
+          >
             <el-icon>
               <UserFilled />
             </el-icon>
             <span>个人资料</span>
           </div>
 
-          <div class="nav-item" :class="{ active: activeSection === 'solved-problems' }"
-            @click="activeSection = 'solved-problems'">
+          <div
+            class="nav-item"
+            :class="{ active: activeSection === 'solved-problems' }"
+            @click="activeSection = 'solved-problems'"
+          >
             <el-icon>
               <List />
             </el-icon>
             <span>解题记录</span>
           </div>
 
-          <div class="nav-item" :class="{ active: activeSection === 'competitions' }"
-            @click="activeSection = 'competitions'">
+          <div
+            class="nav-item"
+            :class="{ active: activeSection === 'competitions' }"
+            @click="activeSection = 'competitions'"
+          >
             <el-icon>
               <Trophy />
             </el-icon>
             <span>参赛记录</span>
           </div>
 
-          <div class="nav-item" :class="{ active: activeSection === 'settings' }" @click="activeSection = 'settings'">
+          <div
+            class="nav-item"
+            :class="{ active: activeSection === 'settings' }"
+            @click="activeSection = 'settings'"
+          >
             <el-icon>
               <Setting />
             </el-icon>
@@ -84,7 +107,12 @@
         </div>
 
         <!-- 管理员后台入口按钮, 只对admin和superAdmin角色可见 -->
-        <router-link v-if="userRole === 'admin' || userRole === 'superAdmin'" to="/user/manager" class="admin-button" target="_blank">
+        <router-link
+          v-if="userRole === 'admin' || userRole === 'superAdmin'"
+          to="/user/manager"
+          class="admin-button"
+          target="_blank"
+        >
           <el-icon>
             <Monitor />
           </el-icon>
@@ -101,36 +129,57 @@
         </div>
 
         <transition name="fade" mode="out-in">
-          <div v-if="activeSection === 'profile'" class="section-container" key="profile">
+          <div v-if="activeSection === 'profile'" key="profile" class="section-container">
             <!-- 用户资料 -->
-            <UserProfile :user-profile="{
-              username,
-              email,
-              bio
-            }" :alert-box="alertBox" @profile-updated="handleProfileUpdated" />
+            <UserProfile
+              :user-profile="{
+                username,
+                email,
+                bio,
+              }"
+              :alert-box="alertBox"
+              @profile-updated="handleProfileUpdated"
+            />
           </div>
 
-          <div v-else-if="activeSection === 'solved-problems'" class="section-container" key="solved-problems">
+          <div
+            v-else-if="activeSection === 'solved-problems'"
+            key="solved-problems"
+            class="section-container"
+          >
             <!-- 解题记录 -->
             <SolvedProblems :problems="solvedProblemsData" :loading="isLoadingSolvedProblems" />
           </div>
 
-          <div v-else-if="activeSection === 'competitions'" class="section-container" key="competitions">
+          <div
+            v-else-if="activeSection === 'competitions'"
+            key="competitions"
+            class="section-container"
+          >
             <!-- 比赛记录 -->
-            <CompetitionRecords v-if="activeSection === 'competitions'" :competitions="competitionRecordsData"
-              :loading="isLoadingCompetitions" />
+            <CompetitionRecords
+              v-if="activeSection === 'competitions'"
+              :competitions="competitionRecordsData"
+              :loading="isLoadingCompetitions"
+            />
           </div>
 
-          <div v-else-if="activeSection === 'settings'" class="section-container" key="settings">
+          <div v-else-if="activeSection === 'settings'" key="settings" class="section-container">
             <!-- 账户设置 -->
-            <AccountSettings :security-settings="{
-              twoFactorEnabled,
-              loginNotificationsEnabled
-            }" :privacy-settings="{
+            <AccountSettings
+              :security-settings="{
+                twoFactorEnabled,
+                loginNotificationsEnabled,
+              }"
+              :privacy-settings="{
                 publicSolvedProblems,
-                publicRanking
-              }" :alert-box="alertBox" @security-settings-updated="handleSecuritySettingsUpdated"
-              @privacy-settings-updated="handlePrivacySettingsUpdated" @password-changed="handlePasswordChanged" />
+                publicRanking,
+              }"
+              :alert-box="alertBox"
+              @security-settings-updated="handleSecuritySettingsUpdated"
+              @privacy-settings-updated="handlePrivacySettingsUpdated"
+              @password-changed="handlePasswordChanged"
+            />
           </div>
         </transition>
       </div>
@@ -143,10 +192,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch, defineAsyncComponent, defineExpose, onBeforeUnmount } from 'vue';
+import { ref, computed, onMounted, watch, defineAsyncComponent, onBeforeUnmount } from 'vue';
 import type { Ref } from 'vue';
 import { useRoute } from 'vue-router';
-import headerheader from '@/components/headerheader.vue';
+import AppHeader from '@/components/AppHeader.vue';
 import foot from '@/components/foot.vue';
 import UserProfile from '@/components/yao/UserProfile.vue';
 import SolvedProblems from '@/components/yao/SolvedProblems.vue';
@@ -155,14 +204,13 @@ import AccountSettings from '@/components/yao/AccountSettings.vue';
 // 引入alertbox组件
 import alertbox from '@/components/JGG/alertbox.vue';
 // 使用异步组件延迟加载热力图组件
-const ActivityHeatmap = defineAsyncComponent(() =>
-  import('@/components/ActivityHeatmap.vue')
-);
+const ActivityHeatmap = defineAsyncComponent(() => import('@/components/ActivityHeatmap.vue'));
 import { UserFilled, List, Trophy, Setting, Upload, Monitor } from '@element-plus/icons-vue';
 import { userApi, authApi, questionApi, raceApi } from '@/api';
 import type { ApiError } from '@/api';
 import { ElMessage, ElLoading } from 'element-plus';
 import emitter from '@/utils/eventBus';
+import { generateAvatarSvg } from '@/utils/avatar';
 
 // 控制当前显示的内容区域
 const activeSection = ref('profile');
@@ -226,7 +274,7 @@ const animateStats = () => {
   const startTime = Date.now();
 
   // 缓动函数 - 使用与热力图相同的三次贝塞尔
-  const easing = (t: number) => t < 0.5 ? 4 * t * t * t : (t - 1) * (2 * t - 2) * (2 * t - 2) + 1;
+  const easing = (t: number) => (t < 0.5 ? 4 * t * t * t : (t - 1) * (2 * t - 2) * (2 * t - 2) + 1);
 
   const updateValues = () => {
     const currentTime = Date.now();
@@ -279,94 +327,7 @@ const userInitials = computed(() => {
   return cachedInitials;
 });
 
-// 生成随机矢量图头像 - 添加缓存避免重复生成
-const avatarCache = new Map<string, string>();
-const generateAvatarSvg = (seed: string): string => {
-  // 检查缓存
-  if (avatarCache.has(seed)) {
-    return avatarCache.get(seed) || '';
-  }
-
-  // 从种子字符串生成一个稳定的哈希值，确保同一字符串总是生成相同的图案
-  const hash = seed.split('').reduce((acc: number, char: string, i: number) => {
-    return acc + (char.charCodeAt(0) * (i + 1));
-  }, 0);
-
-  // 定义一些颜色方案
-  const colorSchemes = [
-    { bg: '#E8F4F8', fg: ['#2980b9', '#3498db', '#1abc9c', '#16a085'] },
-    { bg: '#F8F4E8', fg: ['#E67E22', '#F39C12', '#D35400', '#FFA07A'] },
-    { bg: '#F4E8F8', fg: ['#8E44AD', '#9B59B6', '#745399', '#B19CD9'] },
-    { bg: '#E8F8F4', fg: ['#27AE60', '#2ECC71', '#1E8449', '#A0DAA9'] },
-    { bg: '#F8E8E8', fg: ['#C0392B', '#E74C3C', '#922B21', '#F5B7B1'] },
-    { bg: '#E8F0F8', fg: ['#3498DB', '#2874A6', '#2E86C1', '#85C1E9'] }
-  ];
-
-  // 根据哈希值选择颜色方案
-  const schemeIndex = hash % colorSchemes.length;
-  const colorScheme = colorSchemes[schemeIndex];
-
-  // 生成SVG的尺寸
-  const size = 200;
-
-  // 生成一些随机形状
-  const shapes = [];
-  const shapesCount = 4 + (hash % 4); // 4到7个形状
-
-  for (let i = 0; i < shapesCount; i++) {
-    const shapeType = (hash + i) % 3; // 0: 圆形, 1: 矩形, 2: 多边形
-    const color = colorScheme.fg[i % colorScheme.fg.length];
-    const shapeSeed = hash + (i * 13);
-
-    if (shapeType === 0) {
-      // 圆形
-      const cx = 30 + (shapeSeed % (size - 60));
-      const cy = 30 + ((shapeSeed * 5) % (size - 60));
-      const r = 10 + (shapeSeed % 40);
-      shapes.push(`<circle cx="${cx}" cy="${cy}" r="${r}" fill="${color}" opacity="0.8" />`);
-    } else if (shapeType === 1) {
-      // 矩形
-      const x = 20 + (shapeSeed % (size - 80));
-      const y = 20 + ((shapeSeed * 7) % (size - 80));
-      const width = 15 + (shapeSeed % 50);
-      const height = 15 + ((shapeSeed * 3) % 50);
-      const rx = shapeSeed % 15; // 圆角
-      shapes.push(`<rect x="${x}" y="${y}" width="${width}" height="${height}" rx="${rx}" fill="${color}" opacity="0.8" />`);
-    } else {
-      // 多边形 (三角形或其他简单形状)
-      const points = [];
-      const sides = 3 + (shapeSeed % 3); // 3到5条边
-      const centerX = 30 + (shapeSeed % (size - 60));
-      const centerY = 30 + ((shapeSeed * 11) % (size - 60));
-      const radius = 10 + (shapeSeed % 30);
-
-      for (let j = 0; j < sides; j++) {
-        const angle = (j * 2 * Math.PI / sides) + (shapeSeed % Math.PI);
-        const x = centerX + radius * Math.cos(angle);
-        const y = centerY + radius * Math.sin(angle);
-        points.push(`${x},${y}`);
-      }
-
-      shapes.push(`<polygon points="${points.join(' ')}" fill="${color}" opacity="0.8" />`);
-    }
-  }
-
-  // 组合SVG
-  const svg = `
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${size} ${size}" width="${size}" height="${size}">
-      <rect width="${size}" height="${size}" fill="${colorScheme.bg}" />
-      ${shapes.join('\n      ')}
-    </svg>
-  `;
-
-  // 返回Data URL形式的SVG
-  const svgUrl = `data:image/svg+xml;utf8,${encodeURIComponent(svg.trim())}`;
-
-  // 存入缓存
-  avatarCache.set(seed, svgUrl);
-
-  return svgUrl;
-};
+// 默认头像生成逻辑已抽取至 @/utils/avatar 的 generateAvatarSvg（内置缓存）
 
 // 获取用户头像
 const refreshUserAvatar = async (userId: string): Promise<void> => {
@@ -443,7 +404,7 @@ const formatDate = (date: Date): string => {
   const formatted = new Date(date).toLocaleDateString('zh-CN', {
     year: 'numeric',
     month: 'long',
-    day: 'numeric'
+    day: 'numeric',
   });
 
   // 存入缓存
@@ -500,11 +461,14 @@ const fetchUserProfile = async (): Promise<void> => {
         username?: string;
         email?: string;
         description?: string;
+        questions_num?: number;
+        races_num?: number;
+        create_time?: string;
+        rating?: number;
         [key: string]: unknown;
       };
 
       if (userData) {
-
         // 用户名
         if (userData.username) {
           username.value = userData.username;
@@ -558,7 +522,8 @@ const fetchUserProfile = async (): Promise<void> => {
       // 如果API调用失败，确保从localStorage获取的用户名是正确的格式
       if (username.value && !isNaN(Number(username.value))) {
         // 尝试从本地存储获取其他可能保存了正确username的位置
-        const possibleUsername = localStorage.getItem('user_name') ||
+        const possibleUsername =
+          localStorage.getItem('user_name') ||
           localStorage.getItem('displayName') ||
           'user' + username.value; // 格式化为"userN"
         username.value = possibleUsername;
@@ -605,14 +570,14 @@ const saveProfile = async (): Promise<void> => {
     setTimeout(() => {
       ElMessage({
         message: '个人资料已更新',
-        type: 'success' as const
+        type: 'success' as const,
       });
     }, 500);
   } catch (error) {
     console.error('保存用户资料失败:', error);
     ElMessage({
       message: '保存失败，请稍后重试',
-      type: 'error' as const
+      type: 'error' as const,
     });
   }
 };
@@ -622,7 +587,7 @@ const changePassword = async (): Promise<void> => {
   if (!oldPassword.value || !newPassword.value || !confirmPassword.value) {
     ElMessage({
       message: '请填写所有密码字段',
-      type: 'warning' as const
+      type: 'warning' as const,
     });
     return;
   }
@@ -630,7 +595,7 @@ const changePassword = async (): Promise<void> => {
   if (newPassword.value !== confirmPassword.value) {
     ElMessage({
       message: '两次输入的新密码不一致',
-      type: 'error' as const
+      type: 'error' as const,
     });
     return;
   }
@@ -646,7 +611,7 @@ const changePassword = async (): Promise<void> => {
     setTimeout(() => {
       ElMessage({
         message: '密码已成功修改',
-        type: 'success' as const
+        type: 'success' as const,
       });
       // 清空表单
       oldPassword.value = '';
@@ -657,7 +622,7 @@ const changePassword = async (): Promise<void> => {
     console.error('修改密码失败:', error);
     ElMessage({
       message: '修改密码失败，请稍后重试',
-      type: 'error' as const
+      type: 'error' as const,
     });
   }
 };
@@ -670,7 +635,7 @@ interface UserProfileData {
 }
 
 // 添加alertBox引用，使用简单方式声明
-const alertBox = ref(null);
+const alertBox = ref<{ show: (message: string, type: number) => void } | null>(null);
 
 const handleProfileUpdated = (updatedProfile: UserProfileData) => {
   // 更新本地状态
@@ -680,7 +645,7 @@ const handleProfileUpdated = (updatedProfile: UserProfileData) => {
     localStorage.setItem('username', updatedProfile.username);
 
     // 强制更新DOM，确保页面立即反映新用户名
-    document.querySelectorAll('.user-name').forEach(el => {
+    document.querySelectorAll('.user-name').forEach((el) => {
       (el as HTMLElement).innerText = updatedProfile.username;
     });
 
@@ -742,8 +707,8 @@ const handlePasswordChanged = () => {
 };
 
 // 添加新的状态变量，用于预加载数据
-const solvedProblemsData = ref([]);
-const competitionRecordsData = ref([]);
+const solvedProblemsData = ref<any[]>([]);
+const competitionRecordsData = ref<any[]>([]);
 const isLoadingSolvedProblems = ref(true);
 const isLoadingCompetitions = ref(true);
 
@@ -824,19 +789,21 @@ const onFileChange = (event: Event): void => {
     const reader = new FileReader();
     reader.onload = (e) => {
       if (e.target && typeof e.target.result === 'string') {
+        const base64 = e.target.result;
         // 本地临时预览
-        avatarUrl.value = e.target.result;
+        avatarUrl.value = base64;
 
         // 显示上传中提示
         const loadingInstance = ElLoading.service({
           lock: true,
           text: '头像上传中...',
-          background: 'rgba(0, 0, 0, 0.7)'
+          background: 'rgba(0, 0, 0, 0.7)',
         });
 
         // 将头像上传到服务器
-        userApi.uploadAvatar(file)
-          .then(data => {
+        userApi
+          .uploadAvatar(file)
+          .then((data) => {
             loadingInstance.close();
 
             if (data && data.success) {
@@ -845,15 +812,15 @@ const onFileChange = (event: Event): void => {
               localStorage.setItem('avatar_timestamp', timestamp.toString());
 
               // 保存Base64格式的图片到localStorage
-              localStorage.setItem('avatarBase64', e.target.result);
+              localStorage.setItem('avatarBase64', base64);
 
               // 保存用户ID与头像的关联
               localStorage.setItem('avatar_user_id', userId);
 
               // 触发全局事件，通知其他组件更新头像
               emitter.emit('avatar-updated', {
-                avatarUrl: e.target.result,
-                timestamp: timestamp
+                avatarUrl: base64,
+                timestamp: timestamp,
               });
 
               // 替换ElMessage为alertBox
@@ -868,7 +835,7 @@ const onFileChange = (event: Event): void => {
               avatarUrl.value = localStorage.getItem('avatarBase64') || '';
             }
           })
-          .catch(error => {
+          .catch((error) => {
             loadingInstance.close();
             console.error('头像上传失败:', error);
 
@@ -902,7 +869,7 @@ defineExpose({
   avatarUrl,
   defaultAvatarUrl,
   userInitials,
-  onFileChange
+  onFileChange,
 });
 
 // 在onBeforeUnmount中添加资源清理
@@ -1119,7 +1086,9 @@ onBeforeUnmount(() => {
   display: inline-block;
   min-width: 2em;
   /* 保持数字宽度稳定，防止闪烁 */
-  transition: color 0.3s ease, transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition:
+    color 0.3s ease,
+    transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .stat-label {
@@ -1192,7 +1161,9 @@ onBeforeUnmount(() => {
 
 .nav-item .el-icon {
   font-size: 18px;
-  transition: transform 0.3s ease, color 0.3s ease;
+  transition:
+    transform 0.3s ease,
+    color 0.3s ease;
 }
 
 .nav-item:hover .el-icon {
@@ -1202,7 +1173,9 @@ onBeforeUnmount(() => {
 
 .nav-item span {
   font-size: 15px;
-  transition: transform 0.3s ease, color 0.3s ease;
+  transition:
+    transform 0.3s ease,
+    color 0.3s ease;
 }
 
 .nav-item:hover span {
@@ -1663,7 +1636,9 @@ onBeforeUnmount(() => {
 /* 过渡动画 */
 .fade-enter-active,
 .fade-leave-active {
-  transition: opacity 0.3s ease, transform 0.3s ease;
+  transition:
+    opacity 0.3s ease,
+    transform 0.3s ease;
 }
 
 .fade-enter-from,

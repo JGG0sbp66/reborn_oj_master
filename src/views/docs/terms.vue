@@ -1,6 +1,6 @@
 <template>
   <div>
-    <headerheader />
+    <AppHeader />
     <div class="docs-content">
       <div class="docs-card">
         <h1>服务条款</h1>
@@ -78,7 +78,7 @@
 </template>
 
 <script setup lang="ts">
-import headerheader from '@/components/headerheader.vue';
+import AppHeader from '@/components/AppHeader.vue';
 import foot from '@/components/foot.vue';
 </script>
 

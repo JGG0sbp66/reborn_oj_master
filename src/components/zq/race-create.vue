@@ -10,10 +10,10 @@
       class="race-create-dialog"
     >
       <div class="dialog-content-wrapper">
-        <el-form 
-          ref="competitionFormRef" 
-          :model="competition" 
-          :rules="competitionRules" 
+        <el-form
+          ref="competitionFormRef"
+          :model="competition"
+          :rules="competitionRules"
           label-width="120px"
           label-position="top"
           class="scrollable-form"
@@ -21,7 +21,7 @@
           <el-form-item label="竞赛名称" prop="title">
             <el-input v-model="competition.title" placeholder="请输入竞赛名称"></el-input>
           </el-form-item>
-          
+
           <el-form-item label="竞赛标签" prop="logos">
             <el-select v-model="competition.logos" multiple placeholder="请选择竞赛标签">
               <el-option label="ACM" value="ACM"></el-option>
@@ -29,49 +29,61 @@
               <el-option label="蓝桥杯" value="蓝桥杯"></el-option>
               <el-option label="NOI" value="NOI"></el-option>
             </el-select>
-            <div class="custom-tag-input" v-if="showCustomTagInput">
-              <el-input 
-                v-model="customTagName" 
-                placeholder="输入自定义标签名称" 
+            <div v-if="showCustomTagInput" class="custom-tag-input">
+              <el-input
+                v-model="customTagName"
+                placeholder="输入自定义标签名称"
                 @keyup.enter="addCustomTag"
               ></el-input>
-              <el-button @click="addCustomTag" :disabled="!customTagName.trim()">添加</el-button>
+              <el-button :disabled="!customTagName.trim()" @click="addCustomTag">添加</el-button>
               <el-button @click="showCustomTagInput = false">取消</el-button>
             </div>
-            <el-button size="small" @click="showCustomTagInput = true" v-if="!showCustomTagInput" class="mt-2">
+            <el-button
+              v-if="!showCustomTagInput"
+              size="small"
+              class="mt-2"
+              @click="showCustomTagInput = true"
+            >
               + 添加自定义标签
             </el-button>
           </el-form-item>
-          
+
           <el-form-item label="比赛类型" prop="tags">
-            <el-select 
-              v-model="competition.tags" 
-              multiple 
-              placeholder="请选择比赛类型" 
+            <el-select
+              v-model="competition.tags"
+              multiple
+              placeholder="请选择比赛类型"
               value-key="type"
               :popper-append-to-body="false"
             >
-              <el-option 
-                v-for="option in tagTypeOptions" 
-                :key="option.type" 
-                :label="option.name" 
+              <el-option
+                v-for="option in tagTypeOptions"
+                :key="option.type"
+                :label="option.name"
                 :value="option"
               ></el-option>
             </el-select>
-            <div class="custom-tag-type-input" v-if="showCustomTagTypeInput">
-              <el-input 
-                v-model="customTagTypeName" 
-                placeholder="输入自定义比赛类型名称" 
+            <div v-if="showCustomTagTypeInput" class="custom-tag-type-input">
+              <el-input
+                v-model="customTagTypeName"
+                placeholder="输入自定义比赛类型名称"
                 @keyup.enter="addCustomTagType"
               ></el-input>
-              <el-button @click="addCustomTagType" :disabled="!customTagTypeName.trim()">添加</el-button>
+              <el-button :disabled="!customTagTypeName.trim()" @click="addCustomTagType"
+                >添加</el-button
+              >
               <el-button @click="showCustomTagTypeInput = false">取消</el-button>
             </div>
-            <el-button size="small" @click="showCustomTagTypeInput = true" v-if="!showCustomTagTypeInput" class="mt-2">
+            <el-button
+              v-if="!showCustomTagTypeInput"
+              size="small"
+              class="mt-2"
+              @click="showCustomTagTypeInput = true"
+            >
               + 添加自定义比赛类型
             </el-button>
           </el-form-item>
-          
+
           <div class="form-row">
             <el-form-item label="开始时间" prop="start_time">
               <el-date-picker
@@ -82,7 +94,7 @@
                 value-format="YYYY-MM-DD HH:mm:ss"
               ></el-date-picker>
             </el-form-item>
-            
+
             <el-form-item label="结束时间" prop="end_time">
               <el-date-picker
                 v-model="competition.end_time"
@@ -93,22 +105,22 @@
               ></el-date-picker>
             </el-form-item>
           </div>
-          
+
           <el-form-item label="题目列表" prop="problems_list">
-            <el-select 
-              v-model="competition.problems_list" 
-              multiple 
-              filterable 
-              remote 
+            <el-select
+              v-model="competition.problems_list"
+              multiple
+              filterable
+              remote
               :remote-method="searchProblems"
               :loading="problemsLoading"
               placeholder="选择或搜索题目"
               style="width: 100%"
             >
-              <el-option 
-                v-for="problem in filteredProblems" 
-                :key="problem.id" 
-                :label="problem.title" 
+              <el-option
+                v-for="problem in filteredProblems"
+                :key="problem.id"
+                :label="problem.title"
                 :value="problem.id"
               >
                 <div class="problem-option">
@@ -116,8 +128,8 @@
                   <span class="problem-title">{{ problem.title }}</span>
                 </div>
               </el-option>
-              <div 
-                v-if="currentPage < totalPages && !isLoadingMore" 
+              <div
+                v-if="currentPage < totalPages && !isLoadingMore"
                 class="load-more-item"
                 @click.stop="loadMoreQuestions"
               >
@@ -131,11 +143,11 @@
           </el-form-item>
         </el-form>
       </div>
-      
+
       <template #footer>
         <span class="dialog-footer">
           <el-button @click="dialogVisible = false">取消</el-button>
-          <el-button type="primary" @click="submitCompetition" :loading="creating">创建</el-button>
+          <el-button type="primary" :loading="creating" @click="submitCompetition">创建</el-button>
         </span>
       </template>
     </el-dialog>
@@ -164,8 +176,15 @@ interface CreateCompetitionData {
   start_time: string;
   end_time: string;
   problems_list: number[];
+  description: string;
+  time_limit: number;
+  memory_limit: number;
+  input_format: string;
+  output_format: string;
+  constraints: string[];
+  examples: ExampleItem[];
   topic?: string;
-  tags?: Array<{name: string, type: string}>;
+  tags: Array<{ name: string; type: string }>;
 }
 
 // 题目信息缓存
@@ -229,21 +248,17 @@ const competition = reactive<CreateCompetitionData>({
   constraints: [],
   examples: [],
   topic: '入门',
-  tags: [{name: '个人赛', type: 'individual'}] // 默认选择个人赛
+  tags: [{ name: '个人赛', type: 'individual' }], // 默认选择个人赛
 });
 
 // 表单验证规则
 const competitionRules = reactive<FormRules>({
-  'title': [
+  title: [
     { required: true, message: '请输入竞赛名称', trigger: 'blur' },
-    { min: 3, max: 50, message: '长度在 3 到 50 个字符', trigger: 'blur' }
+    { min: 3, max: 50, message: '长度在 3 到 50 个字符', trigger: 'blur' },
   ],
-  'start_time': [
-    { required: true, message: '请设置开始时间', trigger: 'blur' }
-  ],
-  'end_time': [
-    { required: true, message: '请设置结束时间', trigger: 'blur' }
-  ]
+  start_time: [{ required: true, message: '请设置开始时间', trigger: 'blur' }],
+  end_time: [{ required: true, message: '请设置结束时间', trigger: 'blur' }],
 });
 
 // 当前正在编辑的约束条件和示例
@@ -251,7 +266,7 @@ const constraint = ref('');
 const currentExample = reactive<CurrentExample>({
   input: '',
   output: '',
-  explanation: ''
+  explanation: '',
 });
 
 // 自定义标签相关
@@ -271,10 +286,10 @@ const allProblems = ref<QuestionInfo[]>([]);
 
 // 比赛类型选项
 const tagTypeOptions = [
-  {name: '个人赛', type: 'individual'},
-  {name: '团队赛', type: 'team'},
-  {name: 'OI赛制', type: 'oi'},
-  {name: 'ACM赛制', type: 'acm'}
+  { name: '个人赛', type: 'individual' },
+  { name: '团队赛', type: 'team' },
+  { name: 'OI赛制', type: 'oi' },
+  { name: 'ACM赛制', type: 'acm' },
 ];
 
 // 分页相关
@@ -285,14 +300,17 @@ const searchQuery = ref('');
 const isLoadingMore = ref(false);
 
 // 获取题目
-const fetchQuestionsByPage = async (page: number, query: string = searchQuery.value): Promise<void> => {
+const fetchQuestionsByPage = async (
+  page: number,
+  query: string = searchQuery.value
+): Promise<void> => {
   isLoadingMore.value = true;
   try {
     const data = await adminApi.getAdminQuestions({ page, input: query });
     if (data && data.success && Array.isArray(data.questions)) {
       const questions = data.questions.map((item: any) => ({
         id: item.uid,
-        title: item.question?.title || `题目 ${item.uid}`
+        title: item.question?.title || `题目 ${item.uid}`,
       }));
       if (page === 1) {
         filteredProblems.value = questions;
@@ -328,7 +346,7 @@ const searchProblems = async (query: string): Promise<void> => {
 // 获取题目标题信息
 const fetchQuestionsInfo = async (problemIds: number[] = []): Promise<void> => {
   problemsLoading.value = true;
-  
+
   try {
     // 如果已有所有题目数据，不再重复获取
     if (allProblems.value.length > 0) {
@@ -336,29 +354,28 @@ const fetchQuestionsInfo = async (problemIds: number[] = []): Promise<void> => {
       filteredProblems.value = allProblems.value;
       return;
     }
-    
+
     // 获取所有可用题目
-    const apiData = (await adminApi.getAdminQuestionListAll()) as ApiProblemItem[];
-    
+    const apiData = (await adminApi.getAdminQuestionListAll()) as unknown as ApiProblemItem[];
+
     // 处理API返回的数据
     const results = apiData.map((item: ApiProblemItem) => ({
       id: item.uid || apiData.indexOf(item) + 1,
-      title: item.question?.title || ''
+      title: item.question?.title || '',
     }));
-    
+
     // 过滤掉没有标题的题目
-    const validResults = results.filter(item => item.title);
-    
+    const validResults = results.filter((item) => item.title);
+
     // 如果有标题为空的题目，尝试单独获取它们的标题
-    const emptyTitleItems = results.filter(item => !item.title);
+    const emptyTitleItems = results.filter((item) => !item.title);
     if (emptyTitleItems.length > 0) {
-      await Promise.all(emptyTitleItems.map(item => fetchSingleProblemTitle(item.id)));
+      await Promise.all(emptyTitleItems.map((item) => fetchSingleProblemTitle(item.id)));
     }
-    
+
     allProblems.value = results;
     filteredProblems.value = results;
     problemsInfo.value = results;
-    
   } catch (error) {
     console.error('获取题目信息失败:', error);
   } finally {
@@ -375,10 +392,10 @@ const fetchSingleProblemTitle = async (problemId: number): Promise<void> => {
     const title = question?.title || '';
     if (title) {
       // 更新到缓存
-      const index = allProblems.value.findIndex(p => p.id === problemId);
+      const index = allProblems.value.findIndex((p) => p.id === problemId);
       if (index >= 0) {
         allProblems.value[index].title = title;
-        const filterIndex = filteredProblems.value.findIndex(p => p.id === problemId);
+        const filterIndex = filteredProblems.value.findIndex((p) => p.id === problemId);
         if (filterIndex >= 0) {
           filteredProblems.value[filterIndex].title = title;
         }
@@ -400,7 +417,7 @@ const addCustomTag = (): void => {
     }
     return;
   }
-  
+
   // 检查是否已有相同名称的标签
   if (competition.logos.includes(tagName)) {
     if (props.alertBoxRef) {
@@ -410,7 +427,7 @@ const addCustomTag = (): void => {
     }
     return;
   }
-  
+
   // 添加自定义标签
   competition.logos.push(tagName);
   if (props.alertBoxRef) {
@@ -418,7 +435,7 @@ const addCustomTag = (): void => {
   } else {
     ElMessage.success(`添加了自定义标签 "${tagName}"`);
   }
-  
+
   // 重置表单
   customTagName.value = '';
   showCustomTagInput.value = false;
@@ -427,7 +444,7 @@ const addCustomTag = (): void => {
 // 添加自定义比赛类型
 const addCustomTagType = (): void => {
   const tagName = customTagTypeName.value.trim();
-  
+
   if (!tagName) {
     if (props.alertBoxRef) {
       props.alertBoxRef.show('比赛类型名称不能为空', 1);
@@ -436,9 +453,9 @@ const addCustomTagType = (): void => {
     }
     return;
   }
-  
+
   // 检查是否已有相同名称的类型
-  if (competition.tags.some(tag => tag.name === tagName)) {
+  if (competition.tags.some((tag) => tag.name === tagName)) {
     if (props.alertBoxRef) {
       props.alertBoxRef.show(`比赛类型 "${tagName}" 已存在`, 1);
     } else {
@@ -446,17 +463,17 @@ const addCustomTagType = (): void => {
     }
     return;
   }
-  
+
   // 添加自定义类型
   const customType = 'custom_' + tagName.toLowerCase().replace(/\s+/g, '_');
-  competition.tags.push({name: tagName, type: customType});
-  
+  competition.tags.push({ name: tagName, type: customType });
+
   if (props.alertBoxRef) {
     props.alertBoxRef.show(`添加了自定义比赛类型 "${tagName}"`, 0);
   } else {
     ElMessage.success(`添加了自定义比赛类型 "${tagName}"`);
   }
-  
+
   // 重置表单
   customTagTypeName.value = '';
   showCustomTagTypeInput.value = false;
@@ -472,27 +489,27 @@ const openCreateDialog = async (): Promise<void> => {
     start_time: '',
     end_time: '',
     problems_list: [],
-    tags: [{name: '个人赛', type: 'individual'}]
+    tags: [{ name: '个人赛', type: 'individual' }],
   });
-  
+
   // 获取题目数据
   await fetchQuestionsByPage(1);
-  
+
   // 显示对话框
   dialogVisible.value = true;
-  
+
   // 重置其他表单状态
   constraint.value = '';
   Object.assign(currentExample, {
     input: '',
     output: '',
-    explanation: ''
+    explanation: '',
   });
-  
+
   // 重置自定义标签表单
   customTagName.value = '';
   showCustomTagInput.value = false;
-  
+
   // 重置自定义比赛类型表单
   customTagTypeName.value = '';
   customTagTypeValue.value = '';
@@ -502,42 +519,41 @@ const openCreateDialog = async (): Promise<void> => {
 // 提交创建竞赛表单
 const submitCompetition = async (): Promise<void> => {
   if (!competitionFormRef.value) return;
-  
+
   try {
     // 表单验证
     await competitionFormRef.value.validate();
-    
+
     creating.value = true;
-    
+
     // 确保开始时间和结束时间是ISO格式
     if (typeof competition.start_time !== 'string' || competition.start_time === '') {
       competition.start_time = new Date().toISOString();
     }
-    
+
     if (typeof competition.end_time !== 'string' || competition.end_time === '') {
       // 默认设置为开始时间后24小时
       const endDate = new Date(competition.start_time);
       endDate.setHours(endDate.getHours() + 24);
       competition.end_time = endDate.toISOString();
     }
-    
+
     console.log('提交竞赛数据:', JSON.stringify(competition));
-    
+
     // 发送创建竞赛请求
     await adminApi.createRace(competition);
-    
+
     // 创建成功
     if (props.alertBoxRef) {
       props.alertBoxRef.show('竞赛创建成功!', 0);
     } else {
       ElMessage.success('竞赛创建成功!');
     }
-    
+
     dialogVisible.value = false;
-    
+
     // 通知父组件刷新数据
     emits('refreshData');
-    
   } catch (error: any) {
     if (error.message?.includes('validate')) {
       if (props.alertBoxRef) {
@@ -560,7 +576,7 @@ const submitCompetition = async (): Promise<void> => {
 
 // 暴露方法给父组件
 defineExpose({
-  openCreateDialog
+  openCreateDialog,
 });
 </script>
 
@@ -613,14 +629,16 @@ defineExpose({
   flex: 1;
 }
 
-.constraints-list, .examples-list {
+.constraints-list,
+.examples-list {
   margin-top: 12px;
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
-.constraint-item, .example-item {
+.constraint-item,
+.example-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -630,12 +648,14 @@ defineExpose({
   font-size: 14px;
 }
 
-.constraint-item .el-icon, .example-item .el-icon {
+.constraint-item .el-icon,
+.example-item .el-icon {
   cursor: pointer;
   color: #909399;
 }
 
-.constraint-item .el-icon:hover, .example-item .el-icon:hover {
+.constraint-item .el-icon:hover,
+.example-item .el-icon:hover {
   color: #f56c6c;
 }
 

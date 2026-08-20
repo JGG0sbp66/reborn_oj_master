@@ -27,12 +27,11 @@ jobs:
       - run: npm run lint
 
   # TypeScript 类型检查
-  # 注意：存量类型错误约千级（模板推断噪音为主），暂只报告不拦截。
-  # 待基线清零后，请将 continue-on-error 改为 false。
+  # 类型基线已清零（186→0），作为硬门禁拦截回归。
   typecheck:
     name: vue-tsc
     runs-on: ubuntu-latest
-    continue-on-error: true
+    continue-on-error: false
     steps:
       - uses: actions/checkout@v4
 

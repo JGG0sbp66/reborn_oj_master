@@ -1,7 +1,7 @@
 <template>
   <div>
     <!-- 导航栏组件 -->
-    <headerheader />
+    <AppHeader />
     <!-- 题库组件 -->
     <div class="content">
       <Transition name="fade">
@@ -10,21 +10,18 @@
     </div>
     <!-- 页尾组件 -->
     <foot />
-    <AIAgent
-      title="「黄金判官·葛孚雷」"
-      buttonColor="#3b82f6"
-    />
+    <AIAgent title="「黄金判官·葛孚雷」" button-color="#3b82f6" />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
-import showtitle from "@/components/test/showtitle.vue";
-import navlinks from "@/components/test/navlinks.vue";
-import questiobSum from "@/components/chy/questionSum.vue";
-import foot from "@/components/foot.vue";
-import headerheader from "@/components/headerheader.vue";
-import AIAgent from "@/components/AI-Agent.vue";
+import { ref, onMounted } from 'vue';
+import showtitle from '@/components/test/showtitle.vue';
+import navlinks from '@/components/test/navlinks.vue';
+import questiobSum from '@/components/chy/questionSum.vue';
+import foot from '@/components/foot.vue';
+import AppHeader from '@/components/AppHeader.vue';
+import AIAgent from '@/components/AI-Agent.vue';
 
 const showComponent = ref(false);
 
@@ -57,5 +54,4 @@ onMounted(() => {
   opacity: 0;
   transform: scale(1.1);
 }
-
 </style>

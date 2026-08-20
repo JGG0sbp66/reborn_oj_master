@@ -1,5 +1,5 @@
 // src/global.d.ts
-export { };
+export {};
 
 declare global {
   interface Window {
@@ -12,7 +12,7 @@ declare global {
           callback?: (token: string) => void;
           'error-callback'?: () => void;
         }
-      ) => void;
+      ) => string;
       reset: (container?: string | HTMLElement) => void;
     };
   }
