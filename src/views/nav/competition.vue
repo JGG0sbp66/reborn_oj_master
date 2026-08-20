@@ -1,5 +1,5 @@
 <template>
-  <headerheader />
+  <AppHeader />
   <div class="competition-page">
     <div class="container">
       <!-- 简化的标题栏设计，参照首页 -->
@@ -210,7 +210,7 @@
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted, onBeforeUnmount, watch } from 'vue';
 import showtitle from '@/components/test/showtitle.vue';
-import headerheader from '@/components/headerheader.vue';
+import AppHeader from '@/components/AppHeader.vue';
 import foot from '@/components/foot.vue';
 import { raceApi } from '@/api';
 import AIAgent from '@/components/AI-Agent.vue';

@@ -1,34 +1,31 @@
 <template>
-  <managerhead />
+  <AppHeader variant="title" title="后台管理" />
   <div class="manager-container">
     <managerslider @sidebar-state-change="handleSidebarStateChange" />
-    <div
-      class="content-container"
-      :class="{ 'collapsed-content': isCollapsed }"
-    >
+    <div class="content-container" :class="{ 'collapsed-content': isCollapsed }">
       <managerrace />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
-import managerslider from "@/components/zq/manager-sidebar.vue";
-import managerhead from "@/components/zq/manager-head.vue";
-import managerrace from "@/components/zq/manager-race.vue";
+import { ref, onMounted } from 'vue';
+import managerslider from '@/components/zq/manager-sidebar.vue';
+import AppHeader from '@/components/AppHeader.vue';
+import managerrace from '@/components/zq/manager-race.vue';
 import { useRouter, useRoute } from 'vue-router';
 import { checkAuth } from '@/utils/auth';
 const router = useRouter();
 const route = useRoute();
 
 const verifyAuth = async () => {
-    const { authenticated } = await checkAuth();
-    if (!authenticated) {
-        router.push({
-            path: '/account/login',
-            query: { redirect: route.fullPath }
-        });
-    }
+  const { authenticated } = await checkAuth();
+  if (!authenticated) {
+    router.push({
+      path: '/account/login',
+      query: { redirect: route.fullPath },
+    });
+  }
 };
 verifyAuth();
 // 获取侧边栏折叠状态
@@ -46,7 +43,6 @@ onMounted(() => {
 </script>
 
 <style scoped>
-
 .manager-container {
   display: flex;
   min-height: calc(100vh - 80px);

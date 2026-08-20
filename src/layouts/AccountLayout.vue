@@ -2,13 +2,13 @@
   <div class="account-layout">
     <!-- 恢复彩色气泡背景 -->
     <AnimatedBackground />
-    
+
     <!-- 添加代码背景组件 -->
     <CodeBackground />
-    
+
     <!-- 固定不变的页眉 -->
-    <headerheader ref="headerRef" />
-    
+    <AppHeader ref="headerRef" />
+
     <!-- 只对主内容应用过渡效果 -->
     <div class="content-container">
       <router-view v-slot="{ Component }">
@@ -19,7 +19,7 @@
         </transition>
       </router-view>
     </div>
-    
+
     <!-- 固定不变的页脚 -->
     <div class="footer-wrapper">
       <foot />
@@ -29,9 +29,9 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue';
-import AnimatedBackground from "@/components/yao/AnimatedBackground.vue";
-import headerheader from "@/components/headerheader.vue";
-import foot from "@/components/foot.vue";
+import AnimatedBackground from '@/components/yao/AnimatedBackground.vue';
+import AppHeader from '@/components/AppHeader.vue';
+import foot from '@/components/foot.vue';
 import { checkAuth } from '@/utils/auth';
 import { useRouter } from 'vue-router';
 import CodeBackground from '@/components/JGG/CodeBackground.vue';
@@ -70,7 +70,7 @@ const checkAuthStatus = async () => {
 onMounted(async () => {
   // 首次检查
   await checkAuthStatus();
-  
+
   // 每60秒检查一次身份验证状态
   authCheckInterval = setInterval(checkAuthStatus, 60000);
 });
@@ -135,4 +135,4 @@ onUnmounted(() => {
 .footer-wrapper > * {
   width: 100%;
 }
-</style> 
+</style>

@@ -1,5 +1,5 @@
 <template>
-  <competitionheader :raceInfo="raceInfo" />
+  <AppHeader variant="title" :title="raceInfo?.race_info?.title" />
   <main>
     <div class="main-content">
       <div class="left-panel">
@@ -8,7 +8,7 @@
       <div class="content-area">
         <div class="content-wrapper">
           <div class="left-main">
-            <rank :raceRank="raceRank" />
+            <rank :race-rank="raceRank" />
           </div>
         </div>
       </div>
@@ -17,78 +17,75 @@
 </template>
 
 <script setup>
-import { ref } from "vue"
-import competitionheader from "@/components/zq/competitionheader.vue";
-import sidebarrank from "@/components/zq/contest-sidebar.vue";
-import rank from "@/components/zq/rank.vue";
-import { raceApi } from "@/api";
-import { onMounted } from "vue";
-import { useRoute } from "vue-router";
+import { ref } from 'vue';
+import AppHeader from '@/components/AppHeader.vue';
+import sidebarrank from '@/components/zq/contest-sidebar.vue';
+import rank from '@/components/zq/rank.vue';
+import { raceApi } from '@/api';
+import { onMounted } from 'vue';
+import { useRoute } from 'vue-router';
 
 const raceInfo = ref({});
 const raceRank = ref({
-    race_rank: []
+  race_rank: [],
 });
 
 const route = useRoute();
 const uid = route.query.uid;
 
 const get_race_info = async () => {
-    try {
-        const data = await raceApi.getRaceInfo(uid);
-        console.log('比赛信息:', data);
-        return data.race_info; // 直接返回race_info对象
-    } catch (error) {
-        console.error('获取比赛信息失败:', error);
-        return {
-            title: '加载失败',
-            start_time: '',
-            end_time: '',
-            tags: [],
-            problems: [],
-            user_num: 0,
-            user_status: '游客'
-        };
-    }
+  try {
+    const data = await raceApi.getRaceInfo(uid);
+    console.log('比赛信息:', data);
+    return data.race_info; // 直接返回race_info对象
+  } catch (error) {
+    console.error('获取比赛信息失败:', error);
+    return {
+      title: '加载失败',
+      start_time: '',
+      end_time: '',
+      tags: [],
+      problems: [],
+      user_num: 0,
+      user_status: '游客',
+    };
+  }
 };
 
 const get_race_rank = async () => {
-    try {
-        const data = await raceApi.getRaceRank(uid);
-        console.log('排名数据:', data);
-        return data;
-    } catch (error) {
-        console.error('获取排名数据失败:', error);
-        return { race_rank: [] };
-    }
+  try {
+    const data = await raceApi.getRaceRank(uid);
+    console.log('排名数据:', data);
+    return data;
+  } catch (error) {
+    console.error('获取排名数据失败:', error);
+    return { race_rank: [] };
+  }
 };
 
 const fetchData = async () => {
-    try {
-        const [race_info_data, race_rank_data] = await Promise.all([
-            get_race_info(),
-            get_race_rank()
-        ]);
-        
-        // 合并比赛信息和排名数据
-        raceInfo.value = race_info_data;
-        raceRank.value = {
-            race_info: race_info_data,  // 包含problems等信息
-            race_rank: race_rank_data.race_rank || []
-        };
-        
-        console.log('合并后的数据:', {
-            raceInfo: raceInfo.value,
-            raceRank: raceRank.value
-        });
-    } catch (error) {
-        console.error('更新数据失败:', error);
-    }
+  try {
+    const [race_info_data, race_rank_data] = await Promise.all([get_race_info(), get_race_rank()]);
+
+    // 合并比赛信息和排名数据
+    raceInfo.value = race_info_data;
+    raceRank.value = {
+      race_info: race_info_data, // 包含problems等信息
+      race_rank: race_rank_data.race_rank || [],
+    };
+
+    console.log('合并后的数据:', {
+      raceInfo: raceInfo.value,
+      raceRank: raceRank.value,
+    });
+  } catch (error) {
+    console.error('更新数据失败:', error);
+  }
 };
 
 onMounted(() => {
-    console.log('组件挂载，开始获取数据');
-    fetchData();
+  console.log('组件挂载，开始获取数据');
+  fetchData();
 });
 </script>
 
@@ -191,7 +188,9 @@ onMounted(() => {
   padding: 24px;
   animation: fadeInUp 0.6s ease-out 0.1s;
   animation-fill-mode: both;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
   position: relative;
   overflow: hidden;
   backdrop-filter: blur(10px);
@@ -385,7 +384,7 @@ main::before {
   position: absolute;
   width: 100%;
   height: 100%;
-  background-image: 
+  background-image:
     radial-gradient(circle at 20% 20%, rgba(16, 185, 129, 0.03) 0, transparent 200px),
     radial-gradient(circle at 80% 80%, rgba(59, 130, 246, 0.03) 0, transparent 200px);
 }
