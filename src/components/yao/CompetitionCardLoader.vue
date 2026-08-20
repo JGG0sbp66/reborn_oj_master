@@ -19,9 +19,7 @@
         :action-link="getActionLink(competition)"
         :action-text="actionText"
       />
-      <div v-if="competitions.length === 0" class="no-data">
-        暂无竞赛信息
-      </div>
+      <div v-if="competitions.length === 0" class="no-data">暂无竞赛信息</div>
     </div>
   </div>
 </template>
@@ -62,7 +60,7 @@ const props = withDefaults(defineProps<Props>(), {
   limit: 10,
   actionText: "Let's go",
   customActionLink: '',
-  filterOptions: () => ({})
+  filterOptions: () => ({}),
 });
 
 // 状态变量
@@ -75,15 +73,15 @@ const errorMessage = ref('加载竞赛数据失败，请稍后重试');
 const fetchCompetitions = async () => {
   loading.value = true;
   error.value = false;
-  
+
   try {
     // request 实例 baseURL 已是 /api，这里去掉重复前缀
     const url = props.apiUrl.replace(/^\/api/, '');
     const { data } = await request.post(url, {
       limit: props.limit,
-      ...props.filterOptions
+      ...props.filterOptions,
     });
-    
+
     if (data.success) {
       competitions.value = data.competitions || [];
       console.log('获取到竞赛列表:', competitions.value);
@@ -104,14 +102,12 @@ const getActionLink = (competition: Competition): string => {
   if (typeof props.customActionLink === 'function') {
     return props.customActionLink(competition);
   }
-  
+
   if (props.customActionLink) {
     return props.customActionLink;
   }
-  
-  return competition.id 
-    ? `/contest/problems/${competition.id}` 
-    : '/contest/problems';
+
+  return competition.id ? `/contest/problems/${competition.id}` : '/contest/problems';
 };
 
 // 组件挂载时获取数据
@@ -188,7 +184,7 @@ onMounted(() => {
 
 .retry-button {
   padding: 8px 16px;
-  background-color: #42b983;
+  background-color: var(--color-primary);
   color: white;
   border: none;
   border-radius: 4px;
@@ -198,7 +194,7 @@ onMounted(() => {
 }
 
 .retry-button:hover {
-  background-color: #33a06f;
+  background-color: var(--color-primary-hover);
   transform: translateY(-2px);
 }
 
@@ -207,4 +203,4 @@ onMounted(() => {
   font-size: 16px;
   padding: 40px;
 }
-</style> 
+</style>

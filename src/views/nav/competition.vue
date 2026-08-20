@@ -10,12 +10,12 @@
           <span class="subtitle">竞赛系统</span>
         </div>
       </div>
-      
+
       <!-- 将搜索和筛选部分移到单独的行 -->
       <div class="search-filter-container">
         <div class="filter-container">
           <!-- 自定义状态下拉框 -->
-          <div class="filter-wrapper" ref="statusDropdownWrapper">
+          <div ref="statusDropdownWrapper" class="filter-wrapper">
             <span
               class="filter-button"
               :class="{ 'active-filter': statusFilter !== 'all' }"
@@ -39,9 +39,9 @@
               </svg>
             </span>
           </div>
-          
+
           <!-- 自定义类型下拉框 -->
-          <div class="filter-wrapper" ref="typeDropdownWrapper">
+          <div ref="typeDropdownWrapper" class="filter-wrapper">
             <span
               class="filter-button"
               :class="{ 'active-filter': typeFilter !== 'all' }"
@@ -49,11 +49,7 @@
               @click="toggleTypeDropdown"
             >
               {{ getTypeText }}
-              <svg
-                class="filter-arrow"
-                :class="{ rotated: typeDropdownOpen }"
-                viewBox="0 0 24 24"
-              >
+              <svg class="filter-arrow" :class="{ rotated: typeDropdownOpen }" viewBox="0 0 24 24">
                 <path
                   d="M6 15l6-6l6 6"
                   fill="none"
@@ -66,51 +62,44 @@
             </span>
           </div>
         </div>
-        
+
         <!-- 搜索框 -->
         <div class="search-container">
-          <svg
-            class="search-icon"
-            viewBox="0 0 1024 1024"
-          >
+          <svg class="search-icon" viewBox="0 0 1024 1024">
             <path
               d="M909.6 854.5L649.9 594.8C690.2 542.7 712 479 712 412c0-80.2-31.3-155.4-87.9-212.1c-56.6-56.7-132-87.9-212.1-87.9s-155.5 31.3-212.1 87.9C143.2 256.5 112 331.8 112 412c0 80.1 31.3 155.5 87.9 212.1C256.5 680.8 331.8 712 412 712c67 0 130.6-21.8 182.7-62l259.7 259.6a8.2 8.2 0 0 0 11.6 0l43.6-43.5a8.2 8.2 0 0 0 0-11.6zM570.4 570.4C528 612.7 471.8 636 412 636s-116-23.3-158.4-65.6C211.3 528 188 471.8 188 412s23.3-116.1 65.6-158.4C296 211.3 352.2 188 412 188s116.1 23.2 158.4 65.6S636 352.2 636 412s-23.3 116.1-65.6 158.4z"
               fill="currentColor"
             ></path>
           </svg>
-          <input 
+          <input
+            v-model="searchQuery"
             class="search-input"
             type="search"
             placeholder="搜索竞赛..."
-            v-model="searchQuery"
-          >
+          />
         </div>
       </div>
-      
+
       <div class="competition-list">
         <!-- 竞赛卡片 -->
-        <div 
-          v-for="(competition, index) in paginatedCompetitions" 
+        <div
+          v-for="(competition, index) in paginatedCompetitions"
           :key="index"
           class="competition-card"
-          :class="{ 
-            'ended': competition.status === 'ended',
-            'upcoming': competition.status === 'upcoming'
+          :class="{
+            ended: competition.status === 'ended',
+            upcoming: competition.status === 'upcoming',
           }"
         >
           <div class="card-header" :class="getStatusClass(competition.status)">
             <h2 class="competition-title">{{ competition.title }}</h2>
             <div class="competition-logos">
-              <div 
-                v-for="(logo, i) in competition.logos" 
-                :key="i" 
-                class="logo-badge"
-              >
+              <div v-for="(logo, i) in competition.logos" :key="i" class="logo-badge">
                 {{ logo }}
               </div>
             </div>
           </div>
-          
+
           <div class="card-content">
             <div class="info-section">
               <div class="time-info">
@@ -127,10 +116,10 @@
                   <span class="time-value">{{ competition.duration }}</span>
                 </div>
               </div>
-              
+
               <div class="tags-section">
-                <span 
-                  v-for="(tag, i) in competition.tags" 
+                <span
+                  v-for="(tag, i) in competition.tags"
                   :key="i"
                   class="competition-tag"
                   :class="tag.type"
@@ -140,24 +129,28 @@
                 </span>
               </div>
             </div>
-            
+
             <div class="action-section">
-              <router-link :to="`/contest/problems?uid=${competition.race_uid}`" class="action-btn" target="_blank">
+              <router-link
+                :to="`/contest/problems?uid=${competition.race_uid}`"
+                class="action-btn"
+                target="_blank"
+              >
                 <span>Let's go</span>
                 <i class="btn-arrow">→</i>
               </router-link>
             </div>
           </div>
         </div>
-        
+
         <!-- 分页控件 -->
         <div class="pagination">
           <button class="page-btn prev-btn" :disabled="currentPage === 1" @click="prevPage">
             <span class="chevron-left"></span>
           </button>
           <div class="page-numbers">
-            <button 
-              v-for="num in totalPages" 
+            <button
+              v-for="num in totalPages"
               :key="num"
               class="page-number"
               :class="{ active: currentPage === num }"
@@ -166,7 +159,11 @@
               {{ num }}
             </button>
           </div>
-          <button class="page-btn next-btn" :disabled="currentPage === totalPages" @click="nextPage">
+          <button
+            class="page-btn next-btn"
+            :disabled="currentPage === totalPages"
+            @click="nextPage"
+          >
             <span class="chevron-right"></span>
           </button>
         </div>
@@ -174,61 +171,49 @@
     </div>
   </div>
   <foot class="page-footer" />
-  
+
   <!-- 将下拉菜单放在页面最顶层 -->
   <!-- 状态下拉菜单 -->
-  <div
-    class="dropdown-menu"
-    v-if="statusDropdownOpen"
-    :style="statusDropdownStyle"
-  >
+  <div v-if="statusDropdownOpen" class="dropdown-menu" :style="statusDropdownStyle">
     <div class="dropdown-arrow"></div>
     <div class="dropdown-content">
       <div
-        class="dropdown-item"
-        v-for="option in statusOptions" 
+        v-for="option in statusOptions"
         :key="option.value"
+        class="dropdown-item"
+        :class="{ active: statusFilter === option.value }"
         @click="selectStatus(option.value)"
-        :class="{ 'active': statusFilter === option.value }"
       >
         <span>{{ option.label }}</span>
       </div>
     </div>
   </div>
-  
+
   <!-- 类型下拉菜单 -->
-  <div
-    class="dropdown-menu"
-    v-if="typeDropdownOpen"
-    :style="typeDropdownStyle"
-  >
+  <div v-if="typeDropdownOpen" class="dropdown-menu" :style="typeDropdownStyle">
     <div class="dropdown-arrow"></div>
     <div class="dropdown-content">
       <div
-        class="dropdown-item"
-        v-for="option in typeOptions" 
+        v-for="option in typeOptions"
         :key="option.value"
+        class="dropdown-item"
+        :class="{ active: typeFilter === option.value }"
         @click="selectType(option.value)"
-        :class="{ 'active': typeFilter === option.value }"
       >
         <span>{{ option.label }}</span>
       </div>
     </div>
   </div>
-  <AIAgent
-    title="「黄金判官·葛孚雷」"
-    buttonColor="#3b82f6"
-  />
+  <AIAgent title="「黄金判官·葛孚雷」" button-color="#3b82f6" />
 </template>
 
-
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted, onBeforeUnmount, watch } from "vue"
-import showtitle from "@/components/test/showtitle.vue"
-import headerheader from "@/components/headerheader.vue";
-import foot from "@/components/foot.vue";
-import { raceApi } from "@/api";
-import AIAgent from "@/components/AI-Agent.vue";
+import { ref, reactive, computed, onMounted, onBeforeUnmount, watch } from 'vue';
+import showtitle from '@/components/test/showtitle.vue';
+import headerheader from '@/components/headerheader.vue';
+import foot from '@/components/foot.vue';
+import { raceApi } from '@/api';
+import AIAgent from '@/components/AI-Agent.vue';
 
 // 定义类型
 interface Tag {
@@ -237,8 +222,8 @@ interface Tag {
 }
 
 interface Competition {
-  uid: number;        // 保留uid字段来兼容内部使用
-  race_uid?: number;  // 可选字段，保留原始race_uid
+  uid: number; // 保留uid字段来兼容内部使用
+  race_uid?: number; // 可选字段，保留原始race_uid
   title: string;
   logos: string[];
   startTime: string;
@@ -264,24 +249,24 @@ const statusOptions = [
   { value: 'all', label: '全部状态' },
   { value: 'upcoming', label: '报名中' },
   { value: 'running', label: '进行中' },
-  { value: 'ended', label: '已结束' }
+  { value: 'ended', label: '已结束' },
 ];
 
 const typeOptions = [
   { value: 'all', label: '全部类型' },
   { value: 'individual', label: '个人赛' },
   { value: 'team', label: '团队赛' },
-  { value: 'regional', label: '官方比赛' }
+  { value: 'regional', label: '官方比赛' },
 ];
 
 // 下拉菜单文本显示
 const getStatusText = computed(() => {
-  const option = statusOptions.find(option => option.value === statusFilter.value);
+  const option = statusOptions.find((option) => option.value === statusFilter.value);
   return option ? option.label : '全部状态';
 });
 
 const getTypeText = computed(() => {
-  const option = typeOptions.find(option => option.value === typeFilter.value);
+  const option = typeOptions.find((option) => option.value === typeFilter.value);
   return option ? option.label : '全部类型';
 });
 
@@ -333,15 +318,15 @@ const selectType = (value: string) => {
 const handleClickOutside = (event: MouseEvent) => {
   // 检查点击目标是否是筛选按钮或其子元素
   const target = event.target as HTMLElement;
-  
+
   // 检查是否点击了状态筛选按钮或其子元素（包括SVG图标）
-  const isStatusButtonOrChild = target.closest('.filter-button') && 
-                          statusDropdownWrapper.value?.contains(target);
-  
+  const isStatusButtonOrChild =
+    target.closest('.filter-button') && statusDropdownWrapper.value?.contains(target);
+
   // 检查是否点击了类型筛选按钮或其子元素（包括SVG图标）
-  const isTypeButtonOrChild = target.closest('.filter-button') && 
-                        typeDropdownWrapper.value?.contains(target);
-  
+  const isTypeButtonOrChild =
+    target.closest('.filter-button') && typeDropdownWrapper.value?.contains(target);
+
   // 如果点击的不是筛选按钮或其子元素，且不在下拉菜单内，则关闭下拉菜单
   if (!isStatusButtonOrChild && !target.closest('.dropdown-menu')) {
     if (statusDropdownOpen.value) {
@@ -350,7 +335,7 @@ const handleClickOutside = (event: MouseEvent) => {
       window.removeEventListener('scroll', handleScroll);
     }
   }
-  
+
   if (!isTypeButtonOrChild && !target.closest('.dropdown-menu')) {
     if (typeDropdownOpen.value) {
       typeDropdownOpen.value = false;
@@ -361,43 +346,46 @@ const handleClickOutside = (event: MouseEvent) => {
 };
 
 // 下拉菜单位置计算
+// scrollTick 作为响应式依赖：页面滚动时自增，驱动下面两个计算属性重新求值
+const scrollTick = ref(0);
+
 const statusDropdownStyle = computed(() => {
+  void scrollTick.value; // 建立响应式依赖
   if (!statusDropdownWrapper.value) return {};
-  
+
   const rect = statusDropdownWrapper.value.getBoundingClientRect();
   return {
     position: 'absolute',
     top: `${rect.bottom + 8}px`,
     left: `${rect.left}px`,
-    width: `${rect.width}px`
+    width: `${rect.width}px`,
   };
 });
 
 const typeDropdownStyle = computed(() => {
+  void scrollTick.value; // 建立响应式依赖
   if (!typeDropdownWrapper.value) return {};
-  
+
   const rect = typeDropdownWrapper.value.getBoundingClientRect();
   return {
     position: 'absolute',
     top: `${rect.bottom + 8}px`,
     left: `${rect.left}px`,
-    width: `${rect.width}px`
+    width: `${rect.width}px`,
   };
 });
 
-// 直接更新下拉菜单位置的函数
-const updateDropdownPositions = () => {
-  // 不需要额外的实现，因为下拉菜单将通过绑定计算属性自动更新位置
-};
-
 // 处理页面滚动时更新下拉菜单位置
 const handleScroll = () => {
-  // 强制重新计算计算属性
   if (statusDropdownOpen.value || typeDropdownOpen.value) {
-    // 触发Vue更新机制，让计算属性重新计算
-    statusDropdownOpen.value = statusDropdownOpen.value;
-    typeDropdownOpen.value = typeDropdownOpen.value;
+    // 自增计数器，触发计算属性重新计算下拉框位置
+    scrollTick.value++;
   }
+};
+
+// 打开下拉菜单后立即重算一次位置（通过 scrollTick 驱动计算属性重新求值）
+const updateDropdownPositions = () => {
+  scrollTick.value++;
 };
 
 // 监听点击事件，不再需要全局监听滚动事件
@@ -412,19 +400,22 @@ onBeforeUnmount(() => {
 });
 
 // 监听下拉菜单状态变化
-watch([statusDropdownOpen, typeDropdownOpen], ([newStatusOpen, newTypeOpen], [oldStatusOpen, oldTypeOpen]) => {
-  // 从关闭到打开状态时，添加滚动事件监听并立即更新位置
-  if ((!oldStatusOpen && newStatusOpen) || (!oldTypeOpen && newTypeOpen)) {
-    window.addEventListener('scroll', handleScroll);
-    // 立即执行一次以确保初始位置正确
-    setTimeout(updateDropdownPositions, 0);
+watch(
+  [statusDropdownOpen, typeDropdownOpen],
+  ([newStatusOpen, newTypeOpen], [oldStatusOpen, oldTypeOpen]) => {
+    // 从关闭到打开状态时，添加滚动事件监听并立即更新位置
+    if ((!oldStatusOpen && newStatusOpen) || (!oldTypeOpen && newTypeOpen)) {
+      window.addEventListener('scroll', handleScroll);
+      // 立即执行一次以确保初始位置正确
+      setTimeout(updateDropdownPositions, 0);
+    }
+
+    // 从打开到关闭状态，且两个菜单都关闭时，移除滚动事件监听
+    if ((oldStatusOpen || oldTypeOpen) && !newStatusOpen && !newTypeOpen) {
+      window.removeEventListener('scroll', handleScroll);
+    }
   }
-  
-  // 从打开到关闭状态，且两个菜单都关闭时，移除滚动事件监听
-  if ((oldStatusOpen || oldTypeOpen) && !newStatusOpen && !newTypeOpen) {
-    window.removeEventListener('scroll', handleScroll);
-  }
-});
+);
 
 // 分页
 const currentPage = ref(1);
@@ -437,17 +428,17 @@ const fetchCompetitions = async () => {
   try {
     const data = await raceApi.getRaceList();
     console.log(data);
-    
+
     // 添加以下代码来获取和打印每条数据的status
     if (data && data.race_info && Array.isArray(data.race_info)) {
       // // 方法1：直接打印所有status
       // console.log('所有竞赛的status值：', data.race_info.map(race => race.status));
-      
+
       // 方法2：遍历每条数据单独处理
       data.race_info.forEach((race, index) => {
         console.log(`第${index + 1}条竞赛的status值:`, race.status);
       });
-      
+
       // 检查数据结构并提取竞赛信息
       if (data && data.race_info && Array.isArray(data.race_info)) {
         // 将获取到的竞赛数据赋值给competitionData
@@ -462,10 +453,10 @@ const fetchCompetitions = async () => {
             endTime: race.endTime,
             duration: race.duration,
             status: race.status,
-            tags: race.tags || []
+            tags: race.tags || [],
           };
         });
-        
+
         // 按照开始时间排序，将最新的竞赛排在前面
         competitionData.value.sort((a, b) => {
           // 将时间字符串转换为日期对象进行比较
@@ -474,7 +465,7 @@ const fetchCompetitions = async () => {
           // 降序排列，最新的日期在前面
           return dateB.getTime() - dateA.getTime();
         });
-        
+
         console.log('获取到竞赛数据:', competitionData.value);
       } else {
         console.warn('获取到的竞赛数据格式不正确:', data);
@@ -493,7 +484,7 @@ onMounted(() => {
 
 // 获取竞赛状态对应的类名
 const getStatusClass = (status: string) => {
-  switch(status) {
+  switch (status) {
     case 'upcoming':
       return 'status-upcoming';
     case 'running':
@@ -511,12 +502,12 @@ const getTagStyle = (tag: Tag) => {
   if (['running', 'ended', 'individual', 'team', 'oi', 'acm', 'regional'].includes(tag.type)) {
     return {};
   }
-  
+
   // 基于标签名称生成哈希值作为颜色基础
   const nameHash = tag.name.split('').reduce((acc: number, char: string) => {
     return acc + char.charCodeAt(0);
   }, 0);
-  
+
   // 选择预定义的柔和颜色方案
   const colorSchemes = [
     { bg: '#E8F4F8', text: '#2980b9' }, // 蓝色系
@@ -524,45 +515,46 @@ const getTagStyle = (tag: Tag) => {
     { bg: '#F4E8F8', text: '#8E44AD' }, // 紫色系
     { bg: '#E8F8F4', text: '#27AE60' }, // 绿色系
     { bg: '#F8E8E8', text: '#C0392B' }, // 红色系
-    { bg: '#F4F8E8', text: '#16A085' }  // 青绿色系
+    { bg: '#F4F8E8', text: '#16A085' }, // 青绿色系
   ];
-  
+
   // 使用哈希值选择颜色方案，确保同名标签颜色一致
   const colorIndex = nameHash % colorSchemes.length;
   const colors = colorSchemes[colorIndex];
-  
+
   return {
     backgroundColor: colors.bg,
     color: colors.text,
-    borderColor: colors.text + '33' // 添加透明度33 (20%)
+    borderColor: colors.text + '33', // 添加透明度33 (20%)
   };
 };
 
 // 过滤后的竞赛列表
 const filteredCompetitions = computed(() => {
   let results = competitionData.value;
-  
+
   // 按状态筛选
   if (statusFilter.value !== 'all') {
     results = results.filter((comp: Competition) => comp.status === statusFilter.value);
   }
-  
+
   // 按类型筛选
   if (typeFilter.value !== 'all') {
-    results = results.filter((comp: Competition) => 
+    results = results.filter((comp: Competition) =>
       comp.tags.some((tag: Tag) => tag.type === typeFilter.value)
     );
   }
-  
+
   // 按关键字搜索
   if (searchQuery.value) {
     const query = searchQuery.value.toLowerCase();
-    results = results.filter((comp: Competition) => 
-      comp.title.toLowerCase().includes(query) || 
-      comp.tags.some((tag: Tag) => tag.name.toLowerCase().includes(query))
+    results = results.filter(
+      (comp: Competition) =>
+        comp.title.toLowerCase().includes(query) ||
+        comp.tags.some((tag: Tag) => tag.name.toLowerCase().includes(query))
     );
   }
-  
+
   return results;
 });
 
@@ -600,7 +592,6 @@ const goToPage = (page: number) => {
   currentPage.value = page;
 };
 </script>
-
 
 <style scoped>
 .competition-page {
@@ -744,7 +735,7 @@ const goToPage = (page: number) => {
 }
 
 .filter-button.active-filter::after {
-  content: "";
+  content: '';
   position: absolute;
   bottom: 0;
   left: 0;
@@ -921,16 +912,16 @@ const goToPage = (page: number) => {
     flex-direction: column;
     align-items: stretch;
   }
-  
+
   .filter-container {
     width: 100%;
     justify-content: space-between;
   }
-  
+
   .search-container {
     width: 100%;
   }
-  
+
   .status-dropdown,
   .type-dropdown {
     position: fixed;
@@ -1354,7 +1345,8 @@ const goToPage = (page: number) => {
   font-size: 16px;
 }
 
-.chevron-left, .chevron-right {
+.chevron-left,
+.chevron-right {
   position: relative;
   z-index: 1;
   display: inline-block;
@@ -1426,4 +1418,3 @@ const goToPage = (page: number) => {
   box-shadow: 0 6px 30px rgba(0, 0, 0, 0.2);
 }
 </style>
-

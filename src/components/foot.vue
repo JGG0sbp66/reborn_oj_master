@@ -9,7 +9,7 @@
             <span class="logo-icon">⚖️</span>
           </div>
           <div class="footer-branding">
-            <div class="footer-left-title">OJ Mastr 判题大师</div>
+            <div class="footer-left-title">OJ Master 判题大师</div>
             <div class="footer-left-content">在线评测系统</div>
           </div>
           <div class="footer-slogan">高效、公正、智能的编程评测平台</div>
@@ -76,7 +76,7 @@
 
       <!-- 底部版权信息 -->
       <div class="footer-bottom">
-        <div class="copyright">© 2025 OJ Mastr All Rights Reserved</div>
+        <div class="copyright">© 2025 OJ Master All Rights Reserved</div>
         <div class="footer-credits">
           <span class="credit-item">所谓混学</span>
           <span class="link-divider">·</span>
